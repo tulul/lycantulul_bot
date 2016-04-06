@@ -110,8 +110,11 @@ class LycantululBot
         else
           if in_private?(message)
             if game = check_werewolf_in_game(message)
-              if game.add_victim(message.from.id, message.text)
+              case game.add_victim(message.from.id, message.text)
+              when Lycantulul::Game::RESPONSE_OK
                 message_action(game, WEREWOLF_KILL_BROADCAST, [message.from.first_name, message.text])
+              when Lycantulul::Game::RESPONSE_INVALID
+                send_kill_voting(game, message.chat.id)
               end
 
               if game.victim_count == game.living_werewolves_count
@@ -122,9 +125,12 @@ class LycantululBot
                 end
               end
             elsif game = check_voting(message)
-              if game.add_votee(message.from.id, message.text)
+              case game.add_votee(message.from.id, message.text)
+              when Lycantulul::Game::RESPONSE_OK
                 send(message, 'Seeep')
                 message_action(game, VOTING_BROADCAST, [message.from.first_name, message.from.username, message.text])
+              when Lycantulul::Game::RESPONSE_INVALID
+                send_voting(game.living_players, "#{message.from.first_name} #{message.from.last_name}", message.chat.id)
               end
 
               if game.votee_count == game.living_players_count
@@ -163,15 +169,8 @@ class LycantululBot
 
       send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} werewolf culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Werewolf buruan bunuh via PM, kalo ga ntar matahari ga terbit-terbit")
 
-      lw = game.living_werewolves
-      single_w = lw.size == 1
-      killables = game.killables.map{ |kl| kl[:full_name] }
-
-      kill_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: killables, resize_keyboard: true, one_time_keyboard: true)
-
-      lw.each do |ww|
-        send_to_player(ww[:chat_id], "Daftar werewolf yang masih hidup: #{lw.map{ |w| w[:full_name] }.join(', ')}\n\np.s.: harus diskusi dulu. Jawaban semua werewolf dikumpulin dan yang paling banyak dibunuh. Kalo ga ada suara yang mayoritas, ga ada yang terbunuh yaa") unless single_w
-        send_to_player(ww[:chat_id], 'Mau bunuh siapa?', reply_markup: kill_keyboard)
+      game.living_werewolves.each do |ww|
+        send_kill_voting(game, ww[:chat_id])
       end
     when WEREWOLF_KILL_BROADCAST
       lw = game.living_werewolves
@@ -203,8 +202,7 @@ class LycantululBot
 
       livp = game.living_players
       livp.each do |lp|
-        vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: livp.map{ |lv| lv[:full_name] } - lp[:full_name], resize_keyboard: true, one_time_keyboard: true)
-        send_to_player(lp[:chat_id], 'Ayo voting eksekusi siapa nih~', reply_markup: vote_keyboard)
+        send_voting(livp, lp[:full_name], lp[:chat_id])
       end
     when VOTING_BROADCAST
       group_chat_id = game.group_id
@@ -250,6 +248,22 @@ class LycantululBot
       text: text
     })
     @@bot.api.send_message(options)
+  end
+
+  def self.send_kill_voting(game, chat_id)
+    lw = game.living_werewolves
+    single_w = lw.size == 1
+    killables = game.killables.map{ |kl| kl[:full_name] }
+
+    kill_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: killables, resize_keyboard: true, one_time_keyboard: true)
+
+    send_to_player(chat_id, "Daftar werewolf yang masih hidup: #{lw.map{ |w| w[:full_name] }.join(', ')}\n\np.s.: harus diskusi dulu. Jawaban semua werewolf dikumpulin dan yang paling banyak dibunuh. Kalo ga ada suara yang mayoritas, ga ada yang terbunuh yaa") unless single_w
+    send_to_player(chat_id, 'Mau bunuh siapa?', reply_markup: kill_keyboard)
+  end
+
+  def self.send_voting(living_players, player_full_name, player_chat_id)
+    vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - player_full_name, resize_keyboard: true, one_time_keyboard: true)
+    send_to_player(player_chat_id, 'Ayo voting eksekusi siapa nih~', reply_markup: vote_keyboard)
   end
 
   def self.wrong_room(message)

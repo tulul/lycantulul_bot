@@ -7,6 +7,10 @@ module Lycantulul
 
     WEREWOLF_COUNT = -> { (res = $redis.get('lycantulul::werewolf_divisor') ? (self.players.size / res) + 1 : 1) }
 
+    RESPONSE_OK = 0
+    RESPONSE_INVALID = 1
+    RESPONSE_DOUBLE = 2
+
     field :group_id, type: Integer
     field :players, type: Array, default: []
     field :night, type: Boolean, default: true
@@ -45,7 +49,8 @@ module Lycantulul
     end
 
     def add_victim(killer_id, victim)
-      return false if self.victim.any?{ |vi| vi[:killer_id] == killer_id }
+      return RESPONSE_DOUBLE if self.victim.any?{ |vi| vi[:killer_id] == killer_id }
+      return RESPONSE_INVALID unless self.killables.any?{ |ki| ki[:full_name] == victim }
 
       new_victim = {
         killer_id: killer_id,
@@ -53,10 +58,12 @@ module Lycantulul
       }
       self.victim << new_victim
       self.save
+      RESPONSE_OK
     end
 
     def add_votee(voter_id, votee)
-      return false if self.votee.any?{ |vo| vo[:voter_id] == voter_id }
+      return RESPONSE_DOUBLE if self.votee.any?{ |vo| vo[:voter_id] == voter_id }
+      return RESPONSE_INVALID unless self.living_players.any?{ |lp| lp[:full_name] == votee }
 
       new_votee = {
         voter_id: voter_id,
@@ -64,6 +71,7 @@ module Lycantulul
       }
       self.votee << new_votee
       self.save
+      RESPONSE_OK
     end
 
     def assign_role(player, role)
