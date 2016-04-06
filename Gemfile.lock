@@ -1,10 +1,21 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    activemodel (4.2.5.1)
+      activesupport (= 4.2.5.1)
+      builder (~> 3.1)
+    activesupport (4.2.5.1)
+      i18n (~> 0.7)
+      json (~> 1.7, >= 1.7.7)
+      minitest (~> 5.1)
+      thread_safe (~> 0.3, >= 0.3.4)
+      tzinfo (~> 1.1)
     axiom-types (0.1.1)
       descendants_tracker (~> 0.0.4)
       ice_nine (~> 0.11.0)
       thread_safe (~> 0.3, >= 0.3.1)
+    bson (4.0.2)
+    builder (3.2.2)
     coercible (1.0.0)
       descendants_tracker (~> 0.0.1)
     descendants_tracker (0.0.4)
@@ -19,11 +30,21 @@ GEM
     httparty (0.13.7)
       json (~> 1.8)
       multi_xml (>= 0.5.2)
+    i18n (0.7.0)
     ice_nine (0.11.2)
     json (1.8.3)
     mimemagic (0.3.1)
+    minitest (5.8.4)
+    mongo (2.2.3)
+      bson (~> 4.0)
+    mongoid (5.1.1)
+      activemodel (~> 4.0)
+      mongo (~> 2.1)
+      origin (~> 2.2)
+      tzinfo (>= 0.3.37)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
+    origin (2.2.0)
     persistent_http (1.0.6)
       gene_pool (>= 1.3)
     persistent_httparty (0.1.2)
@@ -36,6 +57,8 @@ GEM
       persistent_httparty
       virtus
     thread_safe (0.3.5)
+    tzinfo (1.2.2)
+      thread_safe (~> 0.1)
     virtus (1.0.5)
       axiom-types (~> 0.1)
       coercible (~> 1.0)
@@ -46,6 +69,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  mongoid
   rake
   redis
   telegram-bot-ruby

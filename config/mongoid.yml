@@ -1,0 +1,8 @@
+production:
+  clients:
+    default:
+      database: mongoid
+      hosts:
+        - localhost:27017
+  options:
+    raise_not_found_error: false
