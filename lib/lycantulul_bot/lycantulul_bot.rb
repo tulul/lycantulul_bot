@@ -124,7 +124,7 @@ class LycantululBot
             elsif game = check_voting(message)
               if game.add_votee(message.from.id, message.text)
                 send(message, 'Seeep')
-                message_action(game, VOTING_BROADCAST, [message.from.first_name, message.text])
+                message_action(game, VOTING_BROADCAST, [message.from.first_name, message.from.username, message.text])
               end
 
               if game.votee_count == game.living_players_count
@@ -209,9 +209,12 @@ class LycantululBot
     when VOTING_BROADCAST
       group_chat_id = game.group_id
       voter_name = aux[0]
-      votee_name = aux[1]
+      voter_username = aux[1]
+      votee_name = aux[2]
 
-      send_to_player(group_chat_id, "#{voter_name} memilih untuk mengeksekusi #{votee_name}")
+      voter = voter_username ? "@#{voter_username}" : voter_name
+
+      send_to_player(group_chat_id, "#{voter} memilih untuk mengeksekusi #{votee_name}")
     when VOTING_SUCCEEDED
       group_chat_id = game.group_id
       votee_chat_id = aux[0]
