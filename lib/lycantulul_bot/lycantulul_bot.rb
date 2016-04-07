@@ -179,17 +179,7 @@ class LycantululBot
     when ROUND_START
       group_chat_id = game.group_id
 
-      if game.living_werewolves_count == 0
-        game.finish
-        send_to_player(group_chat_id, 'Dan permainan pun berakhir karena seluruh werewolf telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
-        list_players(game)
-        return
-      elsif game.living_werewolves_count == game.killables_count || game.killables_count == 0
-        game.finish
-        send_to_player(group_chat_id, 'Dan permainan pun berakhir karena werewolf telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
-        list_players(game)
-        return
-      end
+      return if check_win(game)
 
       send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} werewolf culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Werewolf buruan bunuh via PM, kalo ga ntar matahari ga terbit-terbit")
 
@@ -212,6 +202,7 @@ class LycantululBot
       send_to_player(victim_chat_id, 'MPOZ LO DIMAKAN WEREWOLF')
       send_to_player(group_chat_id, "GILS GILS GILS werewolf berhasil membunuh si #{victim_full_name} MPOZ MPOZ MPOZ")
       list_players(game)
+      return if check_win(game)
       discuss(game)
     when WEREWOLF_KILL_FAILED
       group_chat_id = game.group_id
@@ -328,6 +319,23 @@ class LycantululBot
       end
     end
     nil
+  end
+
+  def self.check_win(game)
+    win = false
+    if game.living_werewolves_count == 0
+      game.finish
+      send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh werewolf telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
+      list_players(game)
+      win = true
+    elsif game.living_werewolves_count == game.killables_count || game.killables_count == 0
+      game.finish
+      send_to_player(game.group_id, 'Dan permainan pun berakhir karena werewolf telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
+      list_players(game)
+      win = true
+    end
+
+    win
   end
 
   def self.in_group?(message)
