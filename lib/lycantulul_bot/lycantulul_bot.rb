@@ -111,6 +111,16 @@ class LycantululBot
           else
             wrong_room(message)
           end
+        when /\/siapa_aja/
+          if in_group?(message)
+            if game = check_game(message)
+              list_players(game)
+            else
+              send(message, 'Ga ada, orang ga ada yang maen', true)
+            end
+          else
+            wrong_room(message)
+          end
         else
           if in_private?(message)
             if game = check_werewolf_in_game(message)
@@ -233,7 +243,7 @@ class LycantululBot
   end
 
   def self.discuss(group)
-    send_to_player(group, "Silakan tuduh-tuduhan selama #{DISCUSSION_TIME.call} detik. Ntar gua tanya pada mau eksekusi siapa~")
+    send_to_player(group, "Silakan tuduh-tuduhan selama #{DISCUSSION_TIME.call} detik. Ntar gua tanya pada mau eksekusi siapa~\n\np.s.: jangan kirim command apa-apa ke gua, mau bobok bentar.")
     sleep(DISCUSSION_TIME.call)
   end
 
