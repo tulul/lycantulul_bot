@@ -230,7 +230,7 @@ module Lycantulul
     def role_count(role)
       case role
       when WEREWOLF
-        (res = $redis.get('lycantulul::werewolf_divisor')) ? (self.players.size / res.to_i) + 1 : 1
+        ((self.player_count - LycantululBot::MINIMUM_PLAYER.call) / 4) + 1
       when SEER
         ((self.player_count - LycantululBot::MINIMUM_PLAYER.call) / 8) + 1
       end
