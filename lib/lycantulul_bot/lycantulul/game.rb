@@ -197,6 +197,11 @@ module Lycantulul
       res += "\n\n"
       res += "Udah mati:\n"
       res += (self.players - self.living_players).sort_by{ |lp| lp[:full_name] }.map{ |lp| "#{lp[:full_name]} - #{self.get_role(lp[:role])}" }.join("\n")
+
+      if self.waiting?
+        res += "\n\n/ikutan yuk pada~"
+      end
+
       res
     end
 
