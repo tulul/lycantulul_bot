@@ -194,7 +194,7 @@ class LycantululBot
       opening = 'MULAI! MWA HA HA HA'
       opening += "\n\nJumlah pemain: #{game.player_count}\n"
       opening += "Jumlah peran:\n"
-      opening += "GGS (Ganteng-Ganteng/Genit-Genit Serigala): #{game.role_count(Lycantulul::Game::WEREWOLF)}\n"
+      opening += "TTS (Tulul-Tulul Serigala): #{game.role_count(Lycantulul::Game::WEREWOLF)}\n"
       opening += "Tukang ngintip: #{game.role_count(Lycantulul::Game::SEER)}\n"
       opening += "Sisanya villager kampungan"
       send_to_player(game.group_id, opening)
@@ -341,7 +341,7 @@ class LycantululBot
 
     kill_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: killables, resize_keyboard: true, one_time_keyboard: true)
 
-    send_to_player(chat_id, "Daftar GGS yang masih hidup: #{lw.map{ |w| w[:full_name] }.join(', ')}\n\np.s.: harus diskusi dulu. Jawaban semua GGS dikumpulin dan yang paling banyak dibunuh. Kalo ga ada suara yang mayoritas, ga ada yang terbunuh yaa") unless single_w
+    send_to_player(chat_id, "Daftar TTS yang masih hidup: #{lw.map{ |w| w[:full_name] }.join(', ')}\n\np.s.: harus diskusi dulu. Jawaban semua TTS dikumpulin dan yang paling banyak dibunuh. Kalo ga ada suara yang mayoritas, ga ada yang terbunuh yaa") unless single_w
     send_to_player(chat_id, 'Mau bunuh siapa?', reply_markup: kill_keyboard)
   end
 
@@ -468,13 +468,13 @@ class LycantululBot
     if game.living_werewolves_count == 0
       log('wereworlves ded')
       game.finish
-      send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh GGS telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
+      send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh TTS telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
       list_players(game)
       win = true
     elsif game.living_werewolves_count == game.killables_count || game.killables_count == 0
       log('villagers ded')
       game.finish
-      send_to_player(game.group_id, 'Dan permainan pun berakhir karena GGS telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
+      send_to_player(game.group_id, 'Dan permainan pun berakhir karena TTS telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
       list_players(game)
       win = true
     end
