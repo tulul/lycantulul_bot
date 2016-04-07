@@ -355,6 +355,7 @@ class LycantululBot
   end
 
   def self.check_round_finished(game, force = false)
+    return unless game.night? && !game.waiting? && !game.finished?
     if force || (game.victim_count == game.living_werewolves_count && game.seen_count == game.living_seers_count)
       if killed = game.kill_victim
         message_action(game, WEREWOLF_KILL_SUCCEEDED, killed)
@@ -369,6 +370,7 @@ class LycantululBot
   end
 
   def self.check_voting_finished(game, force = false)
+    return unless !game.night? && !game.waiting? && !game.finished?
     if force || game.votee_count == game.living_players_count
       if killed = game.kill_votee
         message_action(game, VOTING_SUCCEEDED, killed)

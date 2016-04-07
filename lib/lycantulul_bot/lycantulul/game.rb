@@ -118,7 +118,7 @@ module Lycantulul
     end
 
     def kill_victim
-      vc = self.victim.group_by{ |vi| vi[:name] }.map{ |k, v| [k, v.count] }.sort_by{ |vi| vi[1] }.reverse
+      vc = self.victim.group_by{ |vi| vi[:name] }.map{ |k, v| [k, v.count] }.sort_by{ |vi| vi[1] }.compact.reverse
       self.update_attribute(:victim, [])
       self.update_attribute(:night, false)
 
