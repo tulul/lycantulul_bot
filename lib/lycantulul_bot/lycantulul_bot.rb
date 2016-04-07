@@ -273,12 +273,14 @@ class LycantululBot
       list_players(game)
       message_action(game, ROUND_START)
     when ENLIGHTEN_SEER
-      seer_id = game.living_seers[0][:user_id]
-      seen_full_name = aux[0]
-      seen_role = aux[1]
+      aux.each do |seen|
+        seen_full_name = aux[0]
+        seen_role = aux[1]
+        seer_id = seen[2]
 
-      log("sending #{seen_full_name}'s role to seer: #{seen_role}")
-      send_to_player(seer_id, "Dengan kekuatan maksiat, peran si #{seen_full_name} pun terlihat: #{seen_role}")
+        log("sending #{seen_full_name}'s role #{seen_role} to seer: #{seer_id}")
+        send_to_player(seer_id, "Dengan kekuatan maksiat, peran si #{seen_full_name} pun terlihat: #{seen_role}")
+      end
     end
   end
 
@@ -399,7 +401,7 @@ class LycantululBot
         message_action(game, WEREWOLF_KILL_FAILED)
       end
 
-      if seen = game.enlighten_seer
+      if (seen = game.enlighten_seer) && !seen.empty?
         message_action(game, ENLIGHTEN_SEER, seen)
       end
     end

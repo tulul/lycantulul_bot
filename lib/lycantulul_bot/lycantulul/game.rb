@@ -161,23 +161,24 @@ module Lycantulul
     end
 
     def enlighten_seer
-      vc = self.seen[0]
-      LycantululBot.log(vc.to_s)
+      ss = self.seen
+      LycantululBot.log(ss.to_s)
       self.update_attribute(:seen, [])
 
-      return nil unless self.living_seers[0] && self.living_seers[0][:alive]
+      return nil unless self.living_seers_count > 0
 
-      if vc
+      res = []
+      ss && ss.each do |vc|
         seen_name = vc[:name]
         self.players.each_with_index do |vi, idx|
           if vi[:alive] && vi[:full_name] == seen_name
             LycantululBot.log("#{seen_name} is seen (from GAME)")
-            return [self.players[idx][:full_name], self.get_role(self.players[idx][:role])]
+            res << [self.players[idx][:full_name], self.get_role(self.players[idx][:role]), vc[:seer_id]]
           end
         end
       end
 
-      nil
+      res
     end
 
     def active_werewolf_with_victim?(player_id, victim_name)
@@ -231,7 +232,7 @@ module Lycantulul
       when WEREWOLF
         (res = $redis.get('lycantulul::werewolf_divisor')) ? (self.players.size / res.to_i) + 1 : 1
       when SEER
-        1
+        ((self.player_count - LycantululBot::MINIMUM_PLAYER.call) / 8) + 1
       end
     end
 
