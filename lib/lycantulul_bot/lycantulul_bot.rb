@@ -1,5 +1,6 @@
 class LycantululBot
   @@bot = nil
+  @@round = 0
 
   MINIMUM_PLAYER = -> { (res = $redis.get('lycantulul::minimum_player')) ? res.to_i : 5 }
   DISCUSSION_TIME = -> { (res = $redis.get('lycantulul::discussion_time')) ? res.to_i : 60 }
@@ -139,7 +140,7 @@ class LycantululBot
                 send_kill_voting(game, message.chat.id)
               end
 
-              check_round_finished(game)
+              check_round_finished(game, @@round)
             elsif game = check_voting(message)
               case game.add_votee(message.from.id, message.text)
               when Lycantulul::Game::RESPONSE_OK
@@ -150,7 +151,7 @@ class LycantululBot
                 send_voting(game.living_players, full_name, message.chat.id)
               end
 
-              check_voting_finished(game)
+              check_voting_finished(game, @@round)
             elsif game = check_seer(message)
               case game.add_seen(message.from.id, message.text)
               when Lycantulul::Game::RESPONSE_OK
@@ -160,7 +161,7 @@ class LycantululBot
                 send_seer(game.living_players, full_name, message.chat.id)
               end
 
-              check_round_finished(game)
+              check_round_finished(game, @@round)
             else
               send(message, 'WUT?')
             end
@@ -185,9 +186,10 @@ class LycantululBot
       end
     when ROUND_START
       group_chat_id = game.group_id
+      @@round += 1
 
       send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} werewolf culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Werewolf dan Seer buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik!")
-      Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game)
+      Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, @@round)
 
       game.living_werewolves.each do |ww|
         send_kill_voting(game, ww[:user_id])
@@ -223,7 +225,7 @@ class LycantululBot
     when VOTING_START
       group_chat_id = game.group_id
       send_to_player(group_chat_id, "Udah ya tuduh-tuduhannya. Alangkah baiknya bermusyawarah dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma #{VOTING_TIME.call}. kalo ga ada suara mayoritas, ga ada yang mati")
-      Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call, game)
+      Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call, game, @@round)
 
       livp = game.living_players
       livp.each do |lp|
@@ -356,8 +358,8 @@ class LycantululBot
     nil
   end
 
-  def self.check_round_finished(game, force = false)
-    return unless game.night? && !game.waiting? && !game.finished?
+  def self.check_round_finished(game, round, force = false)
+    return unless round == @@round && game.night? && !game.waiting? && !game.finished?
     if force || (game.victim_count == game.living_werewolves_count && game.seen_count == game.living_seers_count)
       if killed = game.kill_victim
         message_action(game, WEREWOLF_KILL_SUCCEEDED, killed)
@@ -371,8 +373,8 @@ class LycantululBot
     end
   end
 
-  def self.check_voting_finished(game, force = false)
-    return unless !game.night? && !game.waiting? && !game.finished?
+  def self.check_voting_finished(game, round, force = false)
+    return unless round == @@round && !game.night? && !game.waiting? && !game.finished?
     if force || game.votee_count == game.living_players_count
       if killed = game.kill_votee
         message_action(game, VOTING_SUCCEEDED, killed)

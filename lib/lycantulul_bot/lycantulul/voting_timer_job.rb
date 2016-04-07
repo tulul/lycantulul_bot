@@ -2,8 +2,8 @@ module Lycantulul
   class VotingTimerJob
     include SuckerPunch::Job
 
-    def perform(game)
-      LycantululBot.check_voting_finished(game, true)
+    def perform(game, round)
+      LycantululBot.check_voting_finished(game, round, true)
     end
   end
 end
