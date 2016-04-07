@@ -297,7 +297,7 @@ class LycantululBot
   end
 
   def self.unregistered(message)
-    send(message, 'Lau belom terdaftar cuy. PM gua @lycantulul_bot terus /daftar', true)
+    send(message, 'Lau belom terdaftar cuy. PM gua @lycantulul_bot terus /daftar, baru balik sini dan lakukan lagi apa yang mau lu lakukan tadi', true)
   end
 
   def self.list_players(game)
