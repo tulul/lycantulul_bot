@@ -36,7 +36,7 @@ class LycantululBot
               send(message, 'Udah kedaftar wey!')
             else
               Lycantulul::Player.create_from_message(message)
-              send(message, 'Terdaftar! Fave hun!')
+              send(message, 'Terdaftar! Fave hun! Kalo mau ikutan main, balik ke grup tadi, terus pencet /ikutan')
             end
           else
             wrong_room(message)
@@ -44,7 +44,7 @@ class LycantululBot
         when /\/bikin_baru/
           if in_group?(message)
             if check_game(message)
-              send(message, 'Udah ada yang ngemulai gan tadi', true)
+              send(message, 'Udah ada yang ngemulai gan tadi. /ikutan ae', true)
             else
               if check_player(message)
                 Lycantulul::Game.create_from_message(message)
@@ -66,7 +66,7 @@ class LycantululBot
                 send(message, 'Udah mulai tjoy ga bisa batal enak aje', true)
               end
             else
-              send(message, 'Batal apaan gan orang ga ada yang maen dah', true)
+              send(message, 'Batal apaan gan orang ga ada yang maen dah. Mending /bikin_baru', true)
             end
           else
             wrong_room(message)
@@ -96,7 +96,7 @@ class LycantululBot
                 unregistered(message)
               end
             else
-              send(message, 'Ikutan apaan gan orang ga ada yang maen dah', true)
+              send(message, 'Ikutan apaan gan orang ga ada yang maen dah, kalo mau /bikin_baru', true)
             end
           else
             wrong_room(message)
@@ -110,13 +110,13 @@ class LycantululBot
                   message_action(game, BROADCAST_ROLE)
                   message_action(game, ROUND_START)
                 else
-                  send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~", true)
+                  send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", true)
                 end
               else
                 send(message, 'Udah mulai tjoy dari tadi', true)
               end
             else
-              send(message, 'Apa yang mau dimulai heh?', true)
+              send(message, 'Apa yang mau dimulai heh? /bikin_baru dulu!', true)
             end
           else
             wrong_room(message)
@@ -126,7 +126,7 @@ class LycantululBot
             if game = check_game(message)
               list_players(game)
             else
-              send(message, 'Ga ada, orang ga ada yang maen', true)
+              send(message, 'Ga ada, orang ga ada yang maen. /bikin_baru gih', true)
             end
           else
             wrong_room(message)
