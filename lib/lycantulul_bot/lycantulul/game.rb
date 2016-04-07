@@ -131,7 +131,7 @@ module Lycantulul
             self.players[idx][:alive] = false
             self.save
             LycantululBot.log("#{victim_name} is mauled (from GAME)")
-            return [self.players[idx][:user_id], self.players[idx][:full_name]]
+            return [self.players[idx][:user_id], self.players[idx][:full_name], self.get_role(self.players[idx][:role])]
           end
         end
       else
@@ -152,7 +152,7 @@ module Lycantulul
             self.players[idx][:alive] = false
             self.save
             LycantululBot.log("#{votee_name} is executed (from GAME)")
-            return [self.players[idx][:user_id], self.players[idx][:full_name]]
+            return [self.players[idx][:user_id], self.players[idx][:full_name], self.get_role(self.players[idx][:role])]
           end
         end
       else
@@ -217,7 +217,7 @@ module Lycantulul
       when VILLAGER
         'Warga kampung'
       when WEREWOLF
-        'Sang penjagal'
+        'GGS'
       when SEER
         'Tukang intip'
       end

@@ -182,7 +182,7 @@ class LycantululBot
       opening = 'MULAI! MWA HA HA HA'
       opening += "\n\nJumlah pemain: #{game.player_count}\n"
       opening += "Jumlah peran:\n"
-      opening += "Penjagal: #{game.role_count(Lycantulul::Game::WEREWOLF)}\n"
+      opening += "GGS (Ganteng-Ganteng/Genit-Genit Serigala): #{game.role_count(Lycantulul::Game::WEREWOLF)}\n"
       opening += "Tukang ngintip: #{game.role_count(Lycantulul::Game::SEER)}\n"
       opening += "Sisanya villager kampungan"
       send_to_player(game.group_id, opening)
@@ -194,7 +194,7 @@ class LycantululBot
       @@round += 1
       log('new round')
 
-      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} penjagal culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Penjagal dan Tukang Ngintip buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik!")
+      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} serigala ganteng dan genit yang culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Serigala dan Tukang Ngintip buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik!")
       log('enqueuing night job')
       Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, @@round)
 
@@ -220,17 +220,18 @@ class LycantululBot
       group_chat_id = game.group_id
       victim_chat_id = aux[0]
       victim_full_name = aux[1]
+      victim_role = aux[2]
 
       log("#{victim_full_name} is killed by werewolves")
-      send_to_player(victim_chat_id, 'MPOZ LO DIJAGAL')
-      send_to_player(group_chat_id, "GILS GILS GILS penjagal berhasil membunuh si #{victim_full_name} MPOZ MPOZ MPOZ")
+      send_to_player(victim_chat_id, 'MPOZ LO MATEK')
+      send_to_player(group_chat_id, "GILS GILS GILS\nserigala berhasil memakan si #{victim_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{victim_role}")
       list_players(game)
       return if check_win(game)
       discuss(game)
     when WEREWOLF_KILL_FAILED
       group_chat_id = game.group_id
       log('no victim')
-      send_to_player(group_chat_id, 'PFFFTTT CUPU BANGET PENJAGAL PADA, ga ada yang mati')
+      send_to_player(group_chat_id, 'PFFFTTT CUPU BANGET SERIGALA PADA, ga ada yang mati')
       list_players(game)
       discuss(game)
     when VOTING_START
@@ -257,10 +258,11 @@ class LycantululBot
       group_chat_id = game.group_id
       votee_chat_id = aux[0]
       votee_full_name = aux[1]
+      votee_role = aux[2]
 
       log("voting succeeded, resulting in #{votee_full_name}'s death")
       send_to_player(votee_chat_id, 'MPOZ LO DIEKSEKUSI')
-      send_to_player(group_chat_id, "Hasil musyawarah berbuah eksekusi si #{votee_full_name} MPOZ MPOZ MPOZ")
+      send_to_player(group_chat_id, "Hasil musyawarah berbuah eksekusi si #{votee_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{votee_role}")
       list_players(game)
       return if check_win(game)
       message_action(game, ROUND_START)
@@ -312,7 +314,7 @@ class LycantululBot
 
     kill_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: killables, resize_keyboard: true, one_time_keyboard: true)
 
-    send_to_player(chat_id, "Daftar penjagal yang masih hidup: #{lw.map{ |w| w[:full_name] }.join(', ')}\n\np.s.: harus diskusi dulu. Jawaban semua penjagal dikumpulin dan yang paling banyak dibunuh. Kalo ga ada suara yang mayoritas, ga ada yang terbunuh yaa") unless single_w
+    send_to_player(chat_id, "Daftar GGS yang masih hidup: #{lw.map{ |w| w[:full_name] }.join(', ')}\n\np.s.: harus diskusi dulu. Jawaban semua GGS dikumpulin dan yang paling banyak dibunuh. Kalo ga ada suara yang mayoritas, ga ada yang terbunuh yaa") unless single_w
     send_to_player(chat_id, 'Mau bunuh siapa?', reply_markup: kill_keyboard)
   end
 
@@ -424,13 +426,13 @@ class LycantululBot
     if game.living_werewolves_count == 0
       log('wereworlves ded')
       game.finish
-      send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh penjagal telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
+      send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh GGS telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
       list_players(game)
       win = true
     elsif game.living_werewolves_count == game.killables_count || game.killables_count == 0
       log('villagers ded')
       game.finish
-      send_to_player(game.group_id, 'Dan permainan pun berakhir karena penjagal telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
+      send_to_player(game.group_id, 'Dan permainan pun berakhir karena GGS telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
       list_players(game)
       win = true
     end
