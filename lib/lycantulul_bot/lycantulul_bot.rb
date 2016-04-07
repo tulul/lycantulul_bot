@@ -4,6 +4,7 @@ class LycantululBot
   MINIMUM_PLAYER = -> { (res = $redis.get('lycantulul::minimum_player')) ? res.to_i : 5 }
   DISCUSSION_TIME = -> { (res = $redis.get('lycantulul::discussion_time')) ? res.to_i : 60 }
   NIGHT_TIME = -> { (res = $redis.get('lycantulul::night_time')) ? res.to_i : 60 }
+  VOTING_TIME = -> { (res = $redis.get('lycantulul::voting_time')) ? res.to_i : 60 }
 
   BROADCAST_ROLE = 0
   ROUND_START = 1
@@ -150,14 +151,7 @@ class LycantululBot
                 send_voting(game.living_players, full_name, message.chat.id)
               end
 
-              if game.votee_count == game.living_players_count
-                if killed = game.kill_votee
-                  message_action(game, VOTING_SUCCEEDED, killed)
-                else
-                  message_action(game, VOTING_FAILED)
-                end
-                message_action(game, ROUND_START)
-              end
+              check_voting_finished(game)
             elsif game = check_seer(game)
               case game.add_seen(message.from.id, message.text)
               when Lycantulul::Game::RESPONSE_OK
@@ -185,8 +179,6 @@ class LycantululBot
       end
     when ROUND_START
       group_chat_id = game.group_id
-
-      return if check_win(game)
 
       send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} werewolf culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Werewolf dan Seer buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik!")
       Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game)
@@ -224,7 +216,8 @@ class LycantululBot
       discuss(game)
     when VOTING_START
       group_chat_id = game.group_id
-      send_to_player(group_chat_id, "Udah ya tuduh-tuduhannya. Alangkah baiknya bermusyawarah dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, kalo ga ga bakal lanjut ini game. kalo ga ada suara mayoritas, ga ada yang mati")
+      send_to_player(group_chat_id, "Udah ya tuduh-tuduhannya. Alangkah baiknya bermusyawarah dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma #{VOTING_TIME.call}. kalo ga ada suara mayoritas, ga ada yang mati")
+      Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call, game)
 
       livp = game.living_players
       livp.each do |lp|
@@ -247,6 +240,7 @@ class LycantululBot
       send_to_player(votee_chat_id, 'MPOZ LO DIEKSEKUSI')
       send_to_player(group_chat_id, "Hasil musyawarah berbuah eksekusi si #{votee_full_name} MPOZ MPOZ MPOZ")
       list_players(game)
+      return if check_win(game)
     when VOTING_FAILED
       group_chat_id = game.group_id
       send_to_player(group_chat_id, 'Musyawarah tidak membuahkan mufakat')
@@ -364,6 +358,17 @@ class LycantululBot
       if seen = game.enlighten_seer
         message_action(game, ENLIGHTEN_SEER, seen)
       end
+    end
+  end
+
+  def self.check_voting_finished(game, force = false)
+    if force || game.votee_count == game.living_players_count
+      if killed = game.kill_votee
+        message_action(game, VOTING_SUCCEEDED, killed)
+      else
+        message_action(game, VOTING_FAILED)
+      end
+      message_action(game, ROUND_START)
     end
   end
 
