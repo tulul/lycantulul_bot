@@ -182,8 +182,8 @@ class LycantululBot
       opening = 'MULAI! MWA HA HA HA'
       opening += "\n\nJumlah pemain: #{game.player_count}\n"
       opening += "Jumlah peran:\n"
-      opening += "Werewolf: #{game.role_count(Lycantulul::Game::WEREWOLF)}\n"
-      opening += "Seer: #{game.role_count(Lycantulul::Game::SEER)}\n"
+      opening += "Penjagal: #{game.role_count(Lycantulul::Game::WEREWOLF)}\n"
+      opening += "Tukang ngintip: #{game.role_count(Lycantulul::Game::SEER)}\n"
       opening += "Sisanya villager kampungan"
       send_to_player(game.group_id, opening)
       game.players.each do |pl|
@@ -194,7 +194,7 @@ class LycantululBot
       @@round += 1
       log('new round')
 
-      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} werewolf culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Werewolf dan Seer buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik!")
+      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} penjagal culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Penjagal dan Tukang Ngintip buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik!")
       log('enqueuing night job')
       Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, @@round)
 
@@ -222,15 +222,15 @@ class LycantululBot
       victim_full_name = aux[1]
 
       log("#{victim_full_name} is killed by werewolves")
-      send_to_player(victim_chat_id, 'MPOZ LO DIMAKAN WEREWOLF')
-      send_to_player(group_chat_id, "GILS GILS GILS werewolf berhasil membunuh si #{victim_full_name} MPOZ MPOZ MPOZ")
+      send_to_player(victim_chat_id, 'MPOZ LO DIJAGAL')
+      send_to_player(group_chat_id, "GILS GILS GILS penjagal berhasil membunuh si #{victim_full_name} MPOZ MPOZ MPOZ")
       list_players(game)
       return if check_win(game)
       discuss(game)
     when WEREWOLF_KILL_FAILED
       group_chat_id = game.group_id
       log('no victim')
-      send_to_player(group_chat_id, 'PFFFTTT CUPU BANGET WEREWOLF ga ada yang mati')
+      send_to_player(group_chat_id, 'PFFFTTT CUPU BANGET PENJAGAL PADA, ga ada yang mati')
       list_players(game)
       discuss(game)
     when VOTING_START
@@ -312,7 +312,7 @@ class LycantululBot
 
     kill_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: killables, resize_keyboard: true, one_time_keyboard: true)
 
-    send_to_player(chat_id, "Daftar werewolf yang masih hidup: #{lw.map{ |w| w[:full_name] }.join(', ')}\n\np.s.: harus diskusi dulu. Jawaban semua werewolf dikumpulin dan yang paling banyak dibunuh. Kalo ga ada suara yang mayoritas, ga ada yang terbunuh yaa") unless single_w
+    send_to_player(chat_id, "Daftar penjagal yang masih hidup: #{lw.map{ |w| w[:full_name] }.join(', ')}\n\np.s.: harus diskusi dulu. Jawaban semua penjagal dikumpulin dan yang paling banyak dibunuh. Kalo ga ada suara yang mayoritas, ga ada yang terbunuh yaa") unless single_w
     send_to_player(chat_id, 'Mau bunuh siapa?', reply_markup: kill_keyboard)
   end
 
@@ -424,13 +424,13 @@ class LycantululBot
     if game.living_werewolves_count == 0
       log('wereworlves ded')
       game.finish
-      send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh werewolf telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
+      send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh penjagal telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
       list_players(game)
       win = true
     elsif game.living_werewolves_count == game.killables_count || game.killables_count == 0
       log('villagers ded')
       game.finish
-      send_to_player(game.group_id, 'Dan permainan pun berakhir karena werewolf telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
+      send_to_player(game.group_id, 'Dan permainan pun berakhir karena penjagal telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
       list_players(game)
       win = true
     end

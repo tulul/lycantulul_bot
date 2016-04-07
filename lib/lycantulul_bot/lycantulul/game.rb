@@ -215,11 +215,11 @@ module Lycantulul
     def get_role(role)
       case role
       when VILLAGER
-        'Villager'
+        'Warga kampung'
       when WEREWOLF
-        'Werewolf'
+        'Sang penjagal'
       when SEER
-        'Seer'
+        'Tukang intip'
       end
     end
 
