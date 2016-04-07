@@ -280,7 +280,7 @@ class LycantululBot
   end
 
   def self.send_voting(living_players, player_full_name, player_chat_id)
-    vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - player_full_name, resize_keyboard: true, one_time_keyboard: true)
+    vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [player_full_name], resize_keyboard: true, one_time_keyboard: true)
     send_to_player(player_chat_id, 'Ayo voting eksekusi siapa nih~', reply_markup: vote_keyboard)
   end
 
