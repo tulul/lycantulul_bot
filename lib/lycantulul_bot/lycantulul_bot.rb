@@ -4,14 +4,15 @@ class LycantululBot
   MINIMUM_PLAYER = -> { (res = $redis.get('lycantulul::minimum_player')) ? res.to_i : 5 }
   DISCUSSION_TIME = -> { (res = $redis.get('lycantulul::discussion_time')) ? res.to_i : 60 }
 
-  ROUND_START = 0
-  WEREWOLF_KILL_BROADCAST = 1
-  WEREWOLF_KILL_SUCCEEDED = 2
-  WEREWOLF_KILL_FAILED= 3
-  VOTING_START = 4
-  VOTING_BROADCAST = 5
-  VOTING_SUCCEEDED = 6
-  VOTING_FAILED= 7
+  BROADCAST_ROLE = 0
+  ROUND_START = 1
+  WEREWOLF_KILL_BROADCAST = 2
+  WEREWOLF_KILL_SUCCEEDED = 3
+  WEREWOLF_KILL_FAILED= 4
+  VOTING_START = 5
+  VOTING_BROADCAST = 6
+  VOTING_SUCCEEDED = 7
+  VOTING_FAILED= 8
 
   def self.start
     Telegram::Bot::Client.run($token) do |bot|
@@ -98,6 +99,7 @@ class LycantululBot
                 if game.player_count >= MINIMUM_PLAYER.call
                   game.start
                   send(message, 'MULAI! MWA HA HA HA')
+                  message_action(game, BROADCAST_ROLE)
                   message_action(game, ROUND_START)
                 else
                   send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~", true)
@@ -166,6 +168,10 @@ class LycantululBot
 
   def self.message_action(game, action, aux = nil)
     case action
+    when BROADCAST_ROLE
+      game.players.each do |pl|
+        send_to_player(pl[:user_id], "Peran kamu kali ini adalah...... #{game.get_role(pl[:role])}!!!")
+      end
     when ROUND_START
       group_chat_id = game.group_id
 

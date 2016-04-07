@@ -94,6 +94,7 @@ module Lycantulul
 
     def assign_werewolf
       WEREWOLF_COUNT.call.times do
+        pl = -1
         loop do
           pl = self.players.sample
           break if pl[:role] == VILLAGER
