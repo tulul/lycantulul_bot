@@ -4,8 +4,7 @@ module Lycantulul
 
     VILLAGER = 0
     WEREWOLF = 1
-
-    WEREWOLF_COUNT = -> { (res = $redis.get('lycantulul::werewolf_divisor') ? (self.players.size / res) + 1 : 1) }
+    SEER = 2
 
     RESPONSE_OK = 0
     RESPONSE_INVALID = 1
@@ -18,6 +17,7 @@ module Lycantulul
     field :finished, type: Boolean, default: false
     field :victim, type: Array, default: []
     field :votee, type: Array, default: []
+    field :seen, type: Array, default: []
 
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
@@ -36,13 +36,10 @@ module Lycantulul
     def add_player(user)
       return false if self.players.any?{ |pl| pl[:user_id] == user.id }
 
-      full_name = user.first_name
-      user.last_name && full_name += " #{user.last_name}"
-
       new_player = {
         user_id: user.id,
         first_name: user.first_name,
-        full_name: full_name,
+        full_name: LycantululBot.get_full_name(user),
         role: VILLAGER,
         alive: true
       }
@@ -76,6 +73,19 @@ module Lycantulul
       RESPONSE_OK
     end
 
+    def add_seen(seer_id, seen)
+      return RESPONSE_DOUBLE if self.seen.any?{ |se| se[:seer_id] == seer_id }
+      return RESPONSE_INVALID unless self.living_players.any?{ |lp| lp[:full_name] == seen }
+
+      new_seen = {
+        seer_id: seer_id,
+        name: seen
+      }
+      self.seen << new_seen
+      self.save
+      RESPONSE_OK
+    end
+
     def assign_role(player, role)
       self.players.each_with_index do |pl, idx|
         if pl[:user_id] == player[:user_id]
@@ -88,21 +98,22 @@ module Lycantulul
 
     def start
       self.update_attribute(:waiting, false)
-      assign_werewolf
+      assign(WEREWOLF)
+      assign(SEER)
     end
 
     def finish
       self.update_attribute(:finished, true)
     end
 
-    def assign_werewolf
-      WEREWOLF_COUNT.call.times do
+    def assign(role)
+      role_count(role).times do
         pl = -1
         loop do
           pl = self.players.sample
           break if pl[:role] == VILLAGER
         end
-        assign_role(pl, WEREWOLF)
+        assign_role(pl, role)
       end
     end
 
@@ -144,12 +155,34 @@ module Lycantulul
       end
     end
 
+    def enlighten_seer
+      vc = self.seen[0]
+      self.update_attribute(:seen, [])
+
+      return nil unless self.living_seers[0][:alive]
+
+      if vc
+        seen_name = vc[:name]
+        self.players.each_with_index do |vi, idx|
+          if vi[:alive] && vi[:full_name] == seen_name
+            return [self.players[idx][:full_name], self.get_role(self.players[idx][:role])]
+          end
+        end
+      end
+
+      nil
+    end
+
     def active_werewolf_with_victim?(player_id, victim_name)
       self.living_werewolves.any?{ |lw| lw[:user_id] == player_id } && self.killables.any?{ |kl| kl[:full_name] == victim_name }
     end
 
     def active_voter?(player_id, votee_name)
       self.living_players.any?{ |lp| lp[:user_id] == player_id } && self.living_players.any?{ |lp| lp[:full_name] == votee_name }
+    end
+
+    def active_seer?(player_id, seen_name)
+      self.living_players.any?{ |lp| lp[:user_id] == player_id } && self.living_players.any?{ |lp| lp[:full_name] == seen_name }
     end
 
     def list_players
@@ -173,6 +206,17 @@ module Lycantulul
         'Villager'
       when WEREWOLF
         'Werewolf'
+      when SEER
+        'Seer'
+      end
+    end
+
+    def role_count(role)
+      case role
+      when WEREWOLF
+        (res = $redis.get('lycantulul::werewolf_divisor')) ? (self.players.size / res.to_i) + 1 : 1
+      when SEER
+        1
       end
     end
 
@@ -183,6 +227,12 @@ module Lycantulul
     def living_werewolves
       self.players.select do |pl|
         pl[:role] == WEREWOLF && pl[:alive]
+      end
+    end
+
+    def living_seers
+      self.players.select do |pl|
+        pl[:role] == SEER && pl[:alive]
       end
     end
 
@@ -204,8 +254,16 @@ module Lycantulul
       self.votee.size
     end
 
+    def seen_count
+      self.seen.size
+    end
+
     def living_werewolves_count
       self.living_werewolves.size
+    end
+
+    def living_seers_count
+      self.living_seers.size
     end
 
     def living_players_count

@@ -3,6 +3,7 @@ class LycantululBot
 
   MINIMUM_PLAYER = -> { (res = $redis.get('lycantulul::minimum_player')) ? res.to_i : 5 }
   DISCUSSION_TIME = -> { (res = $redis.get('lycantulul::discussion_time')) ? res.to_i : 60 }
+  NIGHT_TIME = -> { (res = $redis.get('lycantulul::night_time')) ? res.to_i : 60 }
 
   BROADCAST_ROLE = 0
   ROUND_START = 1
@@ -12,7 +13,8 @@ class LycantululBot
   VOTING_START = 5
   VOTING_BROADCAST = 6
   VOTING_SUCCEEDED = 7
-  VOTING_FAILED= 8
+  VOTING_FAILED = 8
+  ENLIGHTEN_SEER = 9
 
   def self.start
     Telegram::Bot::Client.run($token) do |bot|
@@ -137,20 +139,15 @@ class LycantululBot
                 send_kill_voting(game, message.chat.id)
               end
 
-              if game.victim_count == game.living_werewolves_count
-                if killed = game.kill_victim
-                  message_action(game, WEREWOLF_KILL_SUCCEEDED, killed)
-                else
-                  message_action(game, WEREWOLF_KILL_FAILED)
-                end
-              end
+              check_round_finished(game)
             elsif game = check_voting(message)
               case game.add_votee(message.from.id, message.text)
               when Lycantulul::Game::RESPONSE_OK
                 send(message, 'Seeep')
                 message_action(game, VOTING_BROADCAST, [message.from.first_name, message.from.username, message.text])
               when Lycantulul::Game::RESPONSE_INVALID
-                send_voting(game.living_players, "#{message.from.first_name} #{message.from.last_name}", message.chat.id)
+                full_name = get_full_name(message.from)
+                send_voting(game.living_players, full_name, message.chat.id)
               end
 
               if game.votee_count == game.living_players_count
@@ -161,6 +158,16 @@ class LycantululBot
                 end
                 message_action(game, ROUND_START)
               end
+            elsif game = check_seer(game)
+              case game.add_seen(message.from.id, message.text)
+              when Lycantulul::Game::RESPONSE_OK
+                send(message, 'Seeep. Tunggu ronde berakhir yak, kalo lu atau yang mau lu liat mati, ya jadi ga ngasih tau~')
+              when Lycantulul::Game::RESPONSE_INVALID
+                full_name = get_full_name(message.from)
+                send_seer(game.living_players, full_name, message.chat.id)
+              end
+
+              check_round_finished(game)
             else
               send(message, 'WUT?')
             end
@@ -181,10 +188,16 @@ class LycantululBot
 
       return if check_win(game)
 
-      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} werewolf culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Werewolf buruan bunuh via PM, kalo ga ntar matahari ga terbit-terbit")
+      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} werewolf culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Werewolf dan Seer buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik!")
+      Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game)
 
       game.living_werewolves.each do |ww|
         send_kill_voting(game, ww[:user_id])
+      end
+
+      lp = game.living_players
+      game.living_seers.each do |se|
+        send_seer(lp, se[:full_name], se[:user_id])
       end
     when WEREWOLF_KILL_BROADCAST
       lw = game.living_werewolves
@@ -238,12 +251,18 @@ class LycantululBot
       group_chat_id = game.group_id
       send_to_player(group_chat_id, 'Musyawarah tidak membuahkan mufakat')
       list_players(game)
+    when ENLIGHTEN_SEER
+      seer_id = game.living_seers[0][:user_id]
+      seen_full_name = aux[0]
+      seen_role = aux[1]
+
+      send_to_player(seer_id, "Dengan kekuatan maksiat, peran si #{seen_full_name} pun terlihat: #{seen_role}")
     end
   end
 
   def self.discuss(game)
     send_to_player(game.group_id, "Silakan tuduh-tuduhan selama #{DISCUSSION_TIME.call} detik. Ntar gua tanya pada mau eksekusi siapa~")
-    Lycantulul::VotingJob.perform_in(DISCUSSION_TIME.call, game)
+    Lycantulul::DiscussionTimerJob.perform_in(DISCUSSION_TIME.call, game)
   end
 
   def self.send(message, text, reply = nil)
@@ -277,6 +296,11 @@ class LycantululBot
   def self.send_voting(living_players, player_full_name, player_chat_id)
     vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [player_full_name], resize_keyboard: true, one_time_keyboard: true)
     send_to_player(player_chat_id, 'Ayo voting eksekusi siapa nih~', reply_markup: vote_keyboard)
+  end
+
+  def self.send_seer(living_players, seer_full_name, seer_chat_id)
+    vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [seer_full_name], resize_keyboard: true, one_time_keyboard: true)
+    send_to_player(seer_chat_id, 'Mau ngintip perannya siapa kak? :3', reply_markup: vote_keyboard)
   end
 
   def self.wrong_room(message)
@@ -321,6 +345,28 @@ class LycantululBot
     nil
   end
 
+  def self.check_seer(message)
+    Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
+      if wwg.active_seer?(message.from.id, message.text)
+        return wwg
+      end
+    end
+  end
+
+  def self.check_round_finished(game, force = false)
+    if force || (game.victim_count == game.living_werewolves_count && game.seen_count == game.living_seers_count)
+      if killed = game.kill_victim
+        message_action(game, WEREWOLF_KILL_SUCCEEDED, killed)
+      else
+        message_action(game, WEREWOLF_KILL_FAILED)
+      end
+
+      if seen = game.enlighten_seer
+        message_action(game, ENLIGHTEN_SEER, seen)
+      end
+    end
+  end
+
   def self.check_win(game)
     win = false
     if game.living_werewolves_count == 0
@@ -336,6 +382,12 @@ class LycantululBot
     end
 
     win
+  end
+
+  def self.get_full_name(user)
+    fn = user.first_name
+    user.last_name && fn += " #{user.last_name}"
+    fn
   end
 
   def self.in_group?(message)

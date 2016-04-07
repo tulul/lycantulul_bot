@@ -1,5 +1,5 @@
 module Lycantulul
-  class VotingJob
+  class DiscussionTimerJob
     include SuckerPunch::Job
 
     def perform(game)
