@@ -387,6 +387,7 @@ class LycantululBot
 
   def self.check_round_finished(game, round, force = false)
     log("checking round finished #{round}")
+    game.reload
     return unless round == @@round && game.night? && !game.waiting? && !game.finished?
     log('continuing')
     if force || (game.victim_count == game.living_werewolves_count && game.seen_count == game.living_seers_count)
@@ -404,6 +405,7 @@ class LycantululBot
 
   def self.check_voting_finished(game, round, force = false)
     log("checking voting finished: #{round}")
+    game.reload
     return unless round == @@round && !game.night? && !game.waiting? && !game.finished?
     log('continuing')
     if force || game.votee_count == game.living_players_count
@@ -417,6 +419,7 @@ class LycantululBot
 
   def self.check_win(game)
     log('checking win condition')
+    game.reload
     win = false
     if game.living_werewolves_count == 0
       log('wereworlves ded')
