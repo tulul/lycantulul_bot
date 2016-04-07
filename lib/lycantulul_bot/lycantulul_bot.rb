@@ -105,7 +105,6 @@ class LycantululBot
               if game.waiting?
                 if game.player_count >= MINIMUM_PLAYER.call
                   game.start
-                  send(message, 'MULAI! MWA HA HA HA')
                   message_action(game, BROADCAST_ROLE)
                   message_action(game, ROUND_START)
                 else
@@ -174,6 +173,13 @@ class LycantululBot
   def self.message_action(game, action, aux = nil)
     case action
     when BROADCAST_ROLE
+      opening = 'MULAI! MWA HA HA HA'
+      opening += "\n\nJumlah pemain: #{game.player_count}\n"
+      opening += "Jumlah peran:\n"
+      opening += "Werewolf: #{game.role_count(Lycantulul::Game::WEREWOLF)}\n"
+      opening += "Seer: #{game.role_count(Lycantulul::Game::SEER)}\n"
+      opening += "Sisanya villager kampungan"
+      send_to_player(game.group_id, opening)
       game.players.each do |pl|
         send_to_player(pl[:user_id], "Peran kamu kali ini adalah...... #{game.get_role(pl[:role])}!!!")
       end

@@ -189,14 +189,14 @@ module Lycantulul
       res = "Masi idup:\n"
 
       if self.finished
-        res += self.living_players.map{ |lp| "#{lp[:full_name]} - #{self.get_role(lp[:role])}" }.join("\n")
+        res += self.living_players.sort_by{ |lp| lp[:full_name] }.map{ |lp| "#{lp[:full_name]} - #{self.get_role(lp[:role])}" }.join("\n")
       else
-        res += self.living_players.map{ |lp| lp[:full_name] }.join("\n")
+        res += self.living_players.sort_by{ |lp| lp[:full_name] }.map{ |lp| lp[:full_name] }.join("\n")
       end
 
       res += "\n\n"
       res += "Udah mati:\n"
-      res += (self.players - self.living_players).map{ |lp| "#{lp[:full_name]} - #{self.get_role(lp[:role])}" }.join("\n")
+      res += (self.players - self.living_players).sort_by{ |lp| lp[:full_name] }.map{ |lp| "#{lp[:full_name]} - #{self.get_role(lp[:role])}" }.join("\n")
       res
     end
 
