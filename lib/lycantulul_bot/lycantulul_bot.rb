@@ -247,10 +247,12 @@ class LycantululBot
       send_to_player(group_chat_id, "Hasil musyawarah berbuah eksekusi si #{votee_full_name} MPOZ MPOZ MPOZ")
       list_players(game)
       return if check_win(game)
+      message_action(game, ROUND_START)
     when VOTING_FAILED
       group_chat_id = game.group_id
       send_to_player(group_chat_id, 'Musyawarah tidak membuahkan mufakat')
       list_players(game)
+      message_action(game, ROUND_START)
     when ENLIGHTEN_SEER
       seer_id = game.living_seers[0][:user_id]
       seen_full_name = aux[0]
@@ -377,7 +379,6 @@ class LycantululBot
       else
         message_action(game, VOTING_FAILED)
       end
-      message_action(game, ROUND_START)
     end
   end
 

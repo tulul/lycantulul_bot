@@ -122,7 +122,7 @@ module Lycantulul
       self.update_attribute(:victim, [])
       self.update_attribute(:night, false)
 
-      if vc.count == 1 || vc[0][1] > vc[1][1]
+      if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
         victim_name = vc[0][0]
         self.players.each_with_index do |vi, idx|
           if vi[:full_name] == victim_name
@@ -141,7 +141,7 @@ module Lycantulul
       self.update_attribute(:votee, [])
       self.update_attribute(:night, true)
 
-      if vc.count == 1 || vc[0][1] > vc[1][1]
+      if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
         votee_name = vc[0][0]
         self.players.each_with_index do |vi, idx|
           if vi[:full_name] == votee_name
