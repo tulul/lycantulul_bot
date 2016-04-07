@@ -18,6 +18,7 @@ module Lycantulul
     field :victim, type: Array, default: []
     field :votee, type: Array, default: []
     field :seen, type: Array, default: []
+    field :protectee, type: Array, default: []
 
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
@@ -86,6 +87,19 @@ module Lycantulul
       RESPONSE_OK
     end
 
+    def add_protectee(protector_id, protectee)
+      return RESPONSE_DOUBLE if self.protectee.any?{ |se| se[:protector_id] == protector_id }
+      return RESPONSE_INVALID unless self.living_players.any?{ |lp| lp[:full_name] == protectee }
+
+      new_protectee = {
+        protector_id: protector_id,
+        name: protectee
+      }
+      self.protectee << new_protectee
+      self.save
+      RESPONSE_OK
+    end
+
     def assign_role(player, role)
       self.players.each_with_index do |pl, idx|
         if pl[:user_id] == player[:user_id]
@@ -101,6 +115,7 @@ module Lycantulul
       self.update_attribute(:waiting, false)
       assign(WEREWOLF)
       assign(SEER)
+      assign(PROTECTOR)
     end
 
     def finish
@@ -126,10 +141,9 @@ module Lycantulul
 
       if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
         victim_name = vc[0][0]
-        self.players.each_with_index do |vi, idx|
-          if vi[:full_name] == victim_name
-            self.players[idx][:alive] = false
-            self.save
+        self.living_players.each do |vi|
+          if vi[:full_name] == victim_name && !under_protection?(victim_name)
+            kill(vi[:user_id])
             LycantululBot.log("#{victim_name} is mauled (from GAME)")
             return [self.players[idx][:user_id], self.players[idx][:full_name], self.get_role(self.players[idx][:role])]
           end
@@ -147,10 +161,9 @@ module Lycantulul
 
       if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
         votee_name = vc[0][0]
-        self.players.each_with_index do |vi, idx|
+        self.living_players.each do |vi|
           if vi[:full_name] == votee_name
-            self.players[idx][:alive] = false
-            self.save
+            kill(vi[:user_id])
             LycantululBot.log("#{votee_name} is executed (from GAME)")
             return [self.players[idx][:user_id], self.players[idx][:full_name], self.get_role(self.players[idx][:role])]
           end
@@ -170,10 +183,10 @@ module Lycantulul
       res = []
       ss && ss.each do |vc|
         seen_name = vc[:name]
-        self.players.each_with_index do |vi, idx|
-          if vi[:alive] && vi[:full_name] == seen_name
+        self.living_players.each do |vi|
+          if vi[:full_name] == seen_name
             LycantululBot.log("#{seen_name} is seen (from GAME)")
-            res << [self.players[idx][:full_name], self.get_role(self.players[idx][:role]), vc[:seer_id]]
+            res << [vi[:full_name], self.get_role(vi[:role]), vc[:seer_id]]
           end
         end
       end
@@ -181,16 +194,50 @@ module Lycantulul
       res
     end
 
-    def active_werewolf_with_victim?(player_id, victim_name)
+    def protect_players
+      ss = self.protectee
+      LycantululBot.log(ss.to_s)
+      self.update_attribute(:protectee, [])
+
+      return nil unless self.living_protectors_count > 0
+
+      res = []
+      ss && ss.each do |vc|
+        protectee_name = vc[:name]
+        self.living_players.each do |vi|
+          if vi[:full_name] == protectee_name
+            if vi[:role] == WEREWOLF && rand.round + rand.round == 0 # 25% ded if protecting werewolf
+              LycantululBot.log("#{protectee_name} is protected (from GAME)")
+              ded = kill(vc[:protector_id])
+              res << [ded[:full_name], ded[:user_id]]
+            end
+          end
+        end
+      end
+
+      res
+    end
+
+    def kill(user_id)
+      self.living_players.each_with_index do |vi, idx|
+        if vi[:user_id] == user_id
+          self.players[idx][:alive] = false
+          self.save
+          return self.players[idx]
+        end
+      end
+    end
+
+    def under_protection?(victim_name)
+      self.protectee.any?{ |pr| pr[:name] == victim_name }
+    end
+
+    def valid_werewolf_with_victim?(player_id, victim_name)
       self.living_werewolves.any?{ |lw| lw[:user_id] == player_id } && self.killables.any?{ |kl| kl[:full_name] == victim_name }
     end
 
-    def active_voter?(player_id, votee_name)
-      self.living_players.any?{ |lp| lp[:user_id] == player_id } && self.living_players.any?{ |lp| lp[:full_name] == votee_name }
-    end
-
-    def active_seer?(player_id, seen_name)
-      self.living_players.any?{ |lp| lp[:user_id] == player_id } && self.living_players.any?{ |lp| lp[:full_name] == seen_name }
+    def valid_action?(actor_id, actee_name)
+      self.living_players.any?{ |lp| lp[:user_id] == actor_id } && self.living_players.any?{ |lp| lp[:full_name] == actee_name }
     end
 
     def list_players
@@ -224,15 +271,33 @@ module Lycantulul
         'GGS'
       when SEER
         'Tukang intip'
+      when PROTECTOR
+        'Penjual jimat'
+      end
+    end
+
+    def get_task(role)
+      case role
+      when VILLAGER
+        'Diam menunggu kematian. Seriously. Tapi bisa bantu-bantu yang lain lah sumbang suara buat bunuh para serigala, sekalian berdoa biar dilindungi sama penjual jimat kalo ada'
+      when WEREWOLF
+        "BUNUH, BUNUH, BUNUH\n\nSetiap malam, bakal ditanya mau bunuh siapa (oiya, kalo misalnya ada serigala yang lain, kalian harus berunding soalnya ntar voting, kalo ga ada suara mayoritas siapa yang mau dibunuh, ga ada yang mati, ntar gua kasih tau kok pas gua tanyain)"
+      when SEER
+        'Bantuin kemenangan para rakyat jelata dengan ngintipin ke rumah orang-orang. Pas ngintip ntar bisa tau mereka siapa sebenarnya. Tapi kalo misalnya yang mau diintip (atau elunya sendiri) mati dibunuh serigala, jadi gatau dia siapa sebenarnya :\'( hidup memang keras'
+      when PROTECTOR
+        'Jualin jimat ke orang-orang. Ntar tiap malem ditanyain mau jual ke siapa (sebenernya ga jualan juga sih, ga dapet duit, maap yak). Orang yang dapet jimat akan terlindungi dari serangan para serigala. Hati-hati loh tapi, kalo lu jual jimat ke serigala bisa-bisa lu dibunuh dengan 25% kemungkinan, kecil lah, peluang lu buat dapet pasangan hidup masih lebih gede :)'
       end
     end
 
     def role_count(role)
+      base_count = self.player_count - LycantululBot::MINIMUM_PLAYER.call
       case role
       when WEREWOLF
-        ((self.player_count - LycantululBot::MINIMUM_PLAYER.call) / 4) + 1
+        (base_count / 4) + 1 # [5-8, 1], [9-12, 2], ...
       when SEER
-        ((self.player_count - LycantululBot::MINIMUM_PLAYER.call) / 8) + 1
+        (base_count / 8) + 1 # [5-12, 1], [13-20, 2], ...
+      when PROTECTOR
+        ((base_count - 3) / 9) + 1 # [8-16, 1], [17-25, 2], ...
       end
     end
 
@@ -249,6 +314,12 @@ module Lycantulul
     def living_seers
       self.players.select do |pl|
         pl[:role] == SEER && pl[:alive]
+      end
+    end
+
+    def living_protectors
+      self.players.select do |pl|
+        pl[:role] == PROTECTOR && pl[:alive]
       end
     end
 
@@ -274,12 +345,20 @@ module Lycantulul
       self.seen.size
     end
 
+    def protectee_count
+      self.protectee.size
+    end
+
     def living_werewolves_count
       self.living_werewolves.size
     end
 
     def living_seers_count
       self.living_seers.size
+    end
+
+    def living_protectors_count
+      self.living_protectors.size
     end
 
     def living_players_count

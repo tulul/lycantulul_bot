@@ -17,6 +17,7 @@ class LycantululBot
   VOTING_SUCCEEDED = 7
   VOTING_FAILED = 8
   ENLIGHTEN_SEER = 9
+  DEAD_PROTECTORS = 9
 
   def self.start
     Telegram::Bot::Client.run($token) do |bot|
@@ -166,6 +167,17 @@ class LycantululBot
               end
 
               check_round_finished(game, @@round)
+            elsif game = check_protector(message)
+              log('protector confirmed')
+              case game.add_protectee(message.from.id, message.text)
+              when Lycantulul::Game::RESPONSE_OK
+                send(message, 'Seeep')
+              when Lycantulul::Game::RESPONSE_INVALID
+                full_name = get_full_name(message.from)
+                send_protector(game.living_players, full_name, message.chat.id)
+              end
+
+              check_round_finished(game, @@round)
             else
               send(message, 'WUT?')
             end
@@ -187,14 +199,14 @@ class LycantululBot
       opening += "Sisanya villager kampungan"
       send_to_player(game.group_id, opening)
       game.players.each do |pl|
-        send_to_player(pl[:user_id], "Peran kamu kali ini adalah...... #{game.get_role(pl[:role])}!!!")
+        send_to_player(pl[:user_id], "Peran kamu kali ini adalah......#{game.get_role(pl[:role])}!!!\n\nTugasmu: #{game.get_task(pl[:role])}")
       end
     when ROUND_START
       group_chat_id = game.group_id
       @@round += 1
       log('new round')
 
-      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} serigala ganteng dan genit yang culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Serigala dan Tukang Ngintip buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik!")
+      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} serigala ganteng dan genit yang culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik! Kecuali warga kampung, diam aja menunggu kematian ya")
       log('enqueuing night job')
       Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, @@round)
 
@@ -206,6 +218,10 @@ class LycantululBot
       lp = game.living_players
       game.living_seers.each do |se|
         send_seer(lp, se[:full_name], se[:user_id])
+      end
+
+      game.living_protectors.each do |se|
+        send_protector(lp, se[:full_name], se[:user_id])
       end
     when WEREWOLF_KILL_BROADCAST
       lw = game.living_werewolves
@@ -281,6 +297,15 @@ class LycantululBot
         log("sending #{seen_full_name}'s role #{seen_role} to seer: #{seer_id}")
         send_to_player(seer_id, "Dengan kekuatan maksiat, peran si #{seen_full_name} pun terlihat: #{seen_role}")
       end
+    when DEAD_PROTECTORS
+      aux.each do |dp|
+        protector_name = dp[0]
+        protector_id = dp[1]
+
+        log("sending #{protector_name} failed protection notification")
+        send_to_player(protector_id, "Jangan jualan ke sembarang orang! Lu jualan ke serigala, mati aja.")
+        send_to_player(game.group_id, "Bego nih penjual jimat #{protector_name} malah jualan ke serigala :'))")
+      end
     end
   end
 
@@ -332,6 +357,12 @@ class LycantululBot
     send_to_player(seer_chat_id, 'Mau ngintip perannya siapa kak? :3', reply_markup: vote_keyboard)
   end
 
+  def self.send_protector(living_players, protector_full_name, protector_chat_id)
+    log("sending protector instruction to #{protector_full_name}")
+    vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [protector_full_name], resize_keyboard: true, one_time_keyboard: true)
+    send_to_player(protector_chat_id, 'Mau jual jimat ke siapa?', reply_markup: vote_keyboard)
+  end
+
   def self.wrong_room(message)
     if in_private?(message)
       send(message, 'Di grup doang tjoy ini bisanya')
@@ -359,7 +390,7 @@ class LycantululBot
   def self.check_werewolf_in_game(message)
     log('checking werewolf votes')
     Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
-      if wwg.active_werewolf_with_victim?(message.from.id, message.text)
+      if wwg.valid_werewolf_with_victim?(message.from.id, message.text)
         return wwg
       end
     end
@@ -370,7 +401,7 @@ class LycantululBot
   def self.check_voting(message)
     log('checking voters')
     Lycantulul::Game.where(finished: false, waiting: false, night: false).each do |wwg|
-      if wwg.active_voter?(message.from.id, message.text)
+      if wwg.valid_action?(message.from.id, message.text)
         return wwg
       end
     end
@@ -381,7 +412,7 @@ class LycantululBot
   def self.check_seer(message)
     log('checking seer')
     Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
-      if wwg.active_seer?(message.from.id, message.text)
+      if wwg.valid_action?(message.from.id, message.text)
         return wwg
       end
     end
@@ -394,15 +425,24 @@ class LycantululBot
     game.reload
     return unless round == @@round && game.night? && !game.waiting? && !game.finished?
     log('continuing')
-    if force || (game.victim_count == game.living_werewolves_count && game.seen_count == game.living_seers_count)
-      if killed = game.kill_victim
-        message_action(game, WEREWOLF_KILL_SUCCEEDED, killed)
-      else
-        message_action(game, WEREWOLF_KILL_FAILED)
+    werewolves_done = game.victim_count == game.living_werewolves_count
+    seers_done = game.seen_count == game.living_seers_count
+    protectors_done = game.protectee_count == game.living_protectors_count
+    if force || (werewolves_done && seers_done && protectors_done)
+      killed = game.kill_victim
+
+      if (failed_protection = game.protect_players) && !failed_protection.empty?
+        message_action(game, DEAD_PROTECTORS, failed_protection)
       end
 
       if (seen = game.enlighten_seer) && !seen.empty?
         message_action(game, ENLIGHTEN_SEER, seen)
+      end
+
+      if killed
+        message_action(game, WEREWOLF_KILL_SUCCEEDED, killed)
+      else
+        message_action(game, WEREWOLF_KILL_FAILED)
       end
     end
   end
