@@ -158,7 +158,7 @@ module Lycantulul
         res += self.living_players.map{ |lp| lp[:full_name] }.join("\n")
       end
 
-      res += "\n"
+      res += "\n\n"
       res += "Udah mati:\n"
       res += (self.players - self.living_players).map{ |lp| "#{lp[:full_name]} - #{self.get_role(lp[:role])}" }.join("\n")
       res
