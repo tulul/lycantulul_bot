@@ -235,7 +235,7 @@ class LycantululBot
       discuss(game)
     when VOTING_START
       group_chat_id = game.group_id
-      send_to_player(group_chat_id, "Udah ya tuduh-tuduhannya. Alangkah baiknya bermusyawarah dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma #{VOTING_TIME.call}. kalo ga ada suara mayoritas, ga ada yang mati")
+      send_to_player(group_chat_id, "Udah ya tuduh-tuduhannya. Alangkah baiknya bermusyawarah dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma #{VOTING_TIME.call} detik. kalo ga ada suara mayoritas, ga ada yang mati")
       log('enqueuing voting job')
       Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call, game, @@round)
 
