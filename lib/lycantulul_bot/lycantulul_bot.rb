@@ -85,7 +85,7 @@ class LycantululBot
                     send(message, 'Duh udah masuk lu', true)
                   end
                 else
-                  send(message, 'Telat woy udah mulai!', true
+                  send(message, 'Telat woy udah mulai!', true)
                 end
               else
                 unregistered(message)
