@@ -80,7 +80,7 @@ class LycantululBot
                   if game.add_player(user)
                     additional_text =
                       if game.player_count >= MINIMUM_PLAYER.call
-                        "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih"
+                        "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan"
                       else
                         "#{MINIMUM_PLAYER.call - game.player_count} orang lagi buruan /ikutan"
                       end
