@@ -184,7 +184,7 @@ class LycantululBot
       send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} werewolf culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Werewolf buruan bunuh via PM, kalo ga ntar matahari ga terbit-terbit")
 
       game.living_werewolves.each do |ww|
-        send_kill_voting(game, ww[:chat_id])
+        send_kill_voting(game, ww[:user_id])
       end
     when WEREWOLF_KILL_BROADCAST
       lw = game.living_werewolves
@@ -192,7 +192,7 @@ class LycantululBot
       victim_name = aux[1]
 
       lw.each do |ww|
-        send_to_player(ww[:chat_id], "#{killer} pengen si #{victim_name} modar")
+        send_to_player(ww[:user_id], "#{killer} pengen si #{victim_name} modar")
       end
     when WEREWOLF_KILL_SUCCEEDED
       group_chat_id = game.group_id
@@ -216,7 +216,7 @@ class LycantululBot
 
       livp = game.living_players
       livp.each do |lp|
-        send_voting(livp, lp[:full_name], lp[:chat_id])
+        send_voting(livp, lp[:full_name], lp[:user_id])
       end
     when VOTING_BROADCAST
       group_chat_id = game.group_id

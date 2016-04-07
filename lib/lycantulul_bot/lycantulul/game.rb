@@ -38,7 +38,6 @@ module Lycantulul
 
       new_player = {
         user_id: user.id,
-        chat_id: Lycantulul::Player.find_by(user_id: user.id).chat_id,
         first_name: user.first_name,
         full_name: "#{user.first_name} #{user.last_name}",
         role: VILLAGER,
@@ -114,7 +113,7 @@ module Lycantulul
           if vi[:full_name] == victim_name
             self.players[idx][:alive] = false
             self.save
-            return [self.players[idx][:chat_id], self.players[idx][:full_name]]
+            return [self.players[idx][:user_id], self.players[idx][:full_name]]
           end
         end
       else
@@ -133,7 +132,7 @@ module Lycantulul
           if vi[:full_name] == votee_name
             self.players[idx][:alive] = false
             self.save
-            return [self.players[idx][:chat_id], self.players[idx][:full_name]]
+            return [self.players[idx][:user_id], self.players[idx][:full_name]]
           end
         end
       else
