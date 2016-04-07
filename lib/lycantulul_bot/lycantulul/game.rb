@@ -193,7 +193,10 @@ module Lycantulul
     end
 
     def list_players
-      res = "Masi idup:\n"
+      liv_count = self.living_players_count
+      ded_count = self.player_count - liv_count
+
+      res = "Masi idup: #{liv_count} makhluk\n"
 
       if self.finished
         res += self.living_players.sort_by{ |lp| lp[:full_name] }.map{ |lp| "#{lp[:full_name]} - #{self.get_role(lp[:role])}" }.join("\n")
@@ -202,7 +205,7 @@ module Lycantulul
       end
 
       res += "\n\n"
-      res += "Udah mati:\n"
+      res += "Udah mati: #{ded_count} makhluk\n"
       res += (self.players - self.living_players).sort_by{ |lp| lp[:full_name] }.map{ |lp| "#{lp[:full_name]} - #{self.get_role(lp[:role])}" }.join("\n")
 
       if self.waiting?
