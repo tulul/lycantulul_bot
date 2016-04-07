@@ -19,7 +19,11 @@ class LycantululBot
       bot.listen do |message|
         case message.text
         when '/start'
-          in_private?(message) && send(message, 'Selamat datang! Ciee mau ikutan main werewolf. Pencet /daftar yak!')
+          if in_private?(message)
+            send(message, 'Selamat datang! Ciee mau ikutan main werewolf. Pencet /daftar yak!')
+          else
+            wrong_room(message)
+          end
         when /\/daftar/
           if in_private?(message)
             if check_player(message)
