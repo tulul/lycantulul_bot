@@ -202,14 +202,12 @@ class LycantululBot
       send_to_player(victim_chat_id, 'MPOZ LO DIMAKAN WEREWOLF')
       send_to_player(group_chat_id, "GILS GILS GILS werewolf berhasil membunuh si #{victim_full_name} MPOZ MPOZ MPOZ")
       list_players(game)
-      discuss(group_chat_id)
-      message_action(game, VOTING_START)
+      discuss(game)
     when WEREWOLF_KILL_FAILED
       group_chat_id = game.group_id
       send_to_player(group_chat_id, 'PFFFTTT CUPU BANGET WEREWOLF ga ada yang mati')
       list_players(game)
-      discuss(group_chat_id)
-      message_action(game, VOTING_START)
+      discuss(game)
     when VOTING_START
       group_chat_id = game.group_id
       send_to_player(group_chat_id, "Udah ya tuduh-tuduhannya. Alangkah baiknya bermusyawarah dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, kalo ga ga bakal lanjut ini game. kalo ga ada suara mayoritas, ga ada yang mati")
@@ -242,9 +240,9 @@ class LycantululBot
     end
   end
 
-  def self.discuss(group)
-    send_to_player(group, "Silakan tuduh-tuduhan selama #{DISCUSSION_TIME.call} detik. Ntar gua tanya pada mau eksekusi siapa~\n\np.s.: jangan kirim command apa-apa ke gua, mau bobok bentar.")
-    sleep(DISCUSSION_TIME.call)
+  def self.discuss(game)
+    send_to_player(game.group_id, "Silakan tuduh-tuduhan selama #{DISCUSSION_TIME.call} detik. Ntar gua tanya pada mau eksekusi siapa~")
+    Lycantulul::VotingJob.perform_in(DISCUSSION_TIME.call, game)
   end
 
   def self.send(message, text, reply = nil)

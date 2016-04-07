@@ -18,6 +18,7 @@ GEM
     builder (3.2.2)
     coercible (1.0.0)
       descendants_tracker (~> 0.0.1)
+    concurrent-ruby (1.0.1)
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
     equalizer (0.0.11)
@@ -52,6 +53,8 @@ GEM
       persistent_http (< 2)
     rake (11.1.2)
     redis (3.2.2)
+    sucker_punch (2.0.1)
+      concurrent-ruby (~> 1.0.0)
     telegram-bot-ruby (0.4.2)
       httmultiparty
       persistent_httparty
@@ -72,6 +75,7 @@ DEPENDENCIES
   mongoid
   rake
   redis
+  sucker_punch (~> 2.0)
   telegram-bot-ruby
 
 BUNDLED WITH
