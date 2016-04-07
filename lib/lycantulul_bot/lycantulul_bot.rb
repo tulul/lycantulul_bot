@@ -24,6 +24,14 @@ class LycantululBot
       @@bot = bot
       bot.listen do |message|
         log("incoming message from #{message.from.first_name}: #{message.text}")
+
+        if new_member = message.new_chat_participant
+          unless Lycantulul::Player.find_by(user_id: new_member.id)
+            name = new_member.username ? "@#{new_member.username}" : new_member.first_name
+            send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /daftar yaa~", true)
+          end
+        end
+
         case message.text
         when '/start'
           if in_private?(message)
