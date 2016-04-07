@@ -151,7 +151,7 @@ class LycantululBot
               end
 
               check_voting_finished(game)
-            elsif game = check_seer(game)
+            elsif game = check_seer(message)
               case game.add_seen(message.from.id, message.text)
               when Lycantulul::Game::RESPONSE_OK
                 send(message, 'Seeep. Tunggu ronde berakhir yak, kalo lu atau yang mau lu liat mati, ya jadi ga ngasih tau~')
@@ -351,6 +351,7 @@ class LycantululBot
         return wwg
       end
     end
+    nil
   end
 
   def self.check_round_finished(game, force = false)

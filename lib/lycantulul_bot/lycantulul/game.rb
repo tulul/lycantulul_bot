@@ -159,7 +159,7 @@ module Lycantulul
       vc = self.seen[0]
       self.update_attribute(:seen, [])
 
-      return nil unless self.living_seers[0][:alive]
+      return nil unless self.living_seers[0] && self.living_seers[0][:alive]
 
       if vc
         seen_name = vc[:name]
