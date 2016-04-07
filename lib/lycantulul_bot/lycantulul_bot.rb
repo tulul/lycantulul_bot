@@ -231,7 +231,7 @@ class LycantululBot
 
       voter = voter_username ? "@#{voter_username}" : voter_name
 
-      send_to_player(group_chat_id, "#{voter} memilih untuk mengeksekusi #{votee_name}")
+      send_to_player(group_chat_id, "#{voter} pengen mengeksekusi #{votee_name} mati aja woy lu ah")
     when VOTING_SUCCEEDED
       group_chat_id = game.group_id
       votee_chat_id = aux[0]
