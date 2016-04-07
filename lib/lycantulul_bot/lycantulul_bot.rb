@@ -236,7 +236,7 @@ class LycantululBot
       discuss(game)
     when VOTING_START
       group_chat_id = game.group_id
-      send_to_player(group_chat_id, "Udah ya tuduh-tuduhannya. Alangkah baiknya bermusyawarah dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma #{VOTING_TIME.call} detik. kalo ga ada suara mayoritas, ga ada yang mati")
+      send_to_player(group_chat_id, "Udah ya tuduh-tuduhannya. Alangkah baiknya bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma #{VOTING_TIME.call} detik. kalo ga ada suara mayoritas, ga ada yang mati")
       log('enqueuing voting job')
       Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call, game, @@round)
 
@@ -262,14 +262,14 @@ class LycantululBot
 
       log("voting succeeded, resulting in #{votee_full_name}'s death")
       send_to_player(votee_chat_id, 'MPOZ LO DIEKSEKUSI')
-      send_to_player(group_chat_id, "Hasil musyawarah berbuah eksekusi si #{votee_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{votee_role}")
+      send_to_player(group_chat_id, "Hasil bertulul berbuah eksekusi si #{votee_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{votee_role}")
       list_players(game)
       return if check_win(game)
       message_action(game, ROUND_START)
     when VOTING_FAILED
       group_chat_id = game.group_id
       log('voting failed')
-      send_to_player(group_chat_id, 'Musyawarah tidak membuahkan mufakat')
+      send_to_player(group_chat_id, 'Nulul tidak membuahkan mufakat')
       list_players(game)
       message_action(game, ROUND_START)
     when ENLIGHTEN_SEER
@@ -283,7 +283,7 @@ class LycantululBot
   end
 
   def self.discuss(game)
-    send_to_player(game.group_id, "Silakan tuduh-tuduhan selama #{DISCUSSION_TIME.call} detik. Ntar gua tanya pada mau eksekusi siapa~")
+    send_to_player(game.group_id, "Silakan nulul dan tuduh-tuduhan selama #{DISCUSSION_TIME.call} detik. Ntar gua tanya pada mau eksekusi siapa~")
     log('enqueuing discussion job')
     Lycantulul::DiscussionTimerJob.perform_in(DISCUSSION_TIME.call, game)
   end
