@@ -17,7 +17,7 @@ class LycantululBot
   VOTING_SUCCEEDED = 7
   VOTING_FAILED = 8
   ENLIGHTEN_SEER = 9
-  DEAD_PROTECTORS = 9
+  DEAD_PROTECTORS = 10
 
   def self.start
     Telegram::Bot::Client.run($token) do |bot|
