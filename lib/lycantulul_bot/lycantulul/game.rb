@@ -90,6 +90,7 @@ module Lycantulul
       self.players.each_with_index do |pl, idx|
         if pl[:user_id] == player[:user_id]
           self.players[idx][:role] = role
+          LycantululBot.log("assigning #{get_role(role)} to #{pl[:full_name]}")
           break
         end
       end
@@ -119,6 +120,7 @@ module Lycantulul
 
     def kill_victim
       vc = self.victim.group_by{ |vi| vi[:name] }.map{ |k, v| [k, v.count] }.sort_by{ |vi| vi[1] }.compact.reverse
+      LycantululBot.log(vc.to_s)
       self.update_attribute(:victim, [])
       self.update_attribute(:night, false)
 
@@ -128,6 +130,7 @@ module Lycantulul
           if vi[:full_name] == victim_name
             self.players[idx][:alive] = false
             self.save
+            LycantululBot.log("#{victim_name} is mauled (from GAME)")
             return [self.players[idx][:user_id], self.players[idx][:full_name]]
           end
         end
@@ -138,6 +141,7 @@ module Lycantulul
 
     def kill_votee
       vc = self.votee.group_by{ |vo| vo[:name] }.map{ |k, v| [k, v.count] }.sort_by{ |vo| vo[1] }.reverse
+      LycantululBot.log(vc.to_s)
       self.update_attribute(:votee, [])
       self.update_attribute(:night, true)
 
@@ -147,6 +151,7 @@ module Lycantulul
           if vi[:full_name] == votee_name
             self.players[idx][:alive] = false
             self.save
+            LycantululBot.log("#{votee_name} is executed (from GAME)")
             return [self.players[idx][:user_id], self.players[idx][:full_name]]
           end
         end
@@ -157,6 +162,7 @@ module Lycantulul
 
     def enlighten_seer
       vc = self.seen[0]
+      LycantululBot.log(vc.to_s)
       self.update_attribute(:seen, [])
 
       return nil unless self.living_seers[0] && self.living_seers[0][:alive]
@@ -165,6 +171,7 @@ module Lycantulul
         seen_name = vc[:name]
         self.players.each_with_index do |vi, idx|
           if vi[:alive] && vi[:full_name] == seen_name
+            LycantululBot.log("#{seen_name} is seen (from GAME)")
             return [self.players[idx][:full_name], self.get_role(self.players[idx][:role])]
           end
         end
