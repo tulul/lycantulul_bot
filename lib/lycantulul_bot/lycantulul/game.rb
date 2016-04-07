@@ -36,10 +36,13 @@ module Lycantulul
     def add_player(user)
       return false if self.players.any?{ |pl| pl[:user_id] == user.id }
 
+      full_name = user.first_name
+      user.last_name && full_name += " #{user.last_name}"
+
       new_player = {
         user_id: user.id,
         first_name: user.first_name,
-        full_name: "#{user.first_name} #{user.last_name}",
+        full_name: full_name,
         role: VILLAGER,
         alive: true
       }
