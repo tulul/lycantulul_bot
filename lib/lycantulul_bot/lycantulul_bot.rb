@@ -143,6 +143,26 @@ class LycantululBot
             else
               wrong_room(message)
             end
+          when /\/panggil_semua/
+            if in_group?(message)
+              if game = check_game(message)
+                summon(game, :all)
+              else
+                send(message, 'Ga ada yang lagi main, /bikin_baru dulu', true)
+              end
+            else
+              wrong_room(message)
+            end
+          when /\/panggil_yang_idup/
+            if in_group?(message)
+              if game = check_game(message)
+                summon(game, :alive)
+              else
+                send(message, 'Ga ada yang lagi main, /bikin_baru dulu', true)
+              end
+            else
+              wrong_room(message)
+            end
           else
             if in_private?(message)
               if game = check_werewolf_in_game(message)
@@ -384,6 +404,20 @@ class LycantululBot
     elsif in_group?(message)
       send(message, 'PM mz mb! @lycantulul_bot', true)
     end
+  end
+
+  def self.summon(game, who)
+    to_call =
+      case who
+      when :all
+        game.players
+      when :alive
+        game.living_players
+      end
+
+    message = 'Hoy @'
+    message += to_call.map{ |tc| tc[:username] }.compact.join(' @')
+    send_to_player(game.group_id, message)
   end
 
   def self.unregistered(message)

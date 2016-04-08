@@ -42,6 +42,7 @@ module Lycantulul
         user_id: user.id,
         first_name: user.first_name,
         full_name: LycantululBot.get_full_name(user),
+        username: user.username,
         role: VILLAGER,
         alive: true
       }
