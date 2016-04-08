@@ -91,13 +91,13 @@ class LycantululBot
                     user = message.from
                     if game.add_player(user)
                       additional_text =
-                        if game.player_count >= MINIMUM_PLAYER.call
+                        if game.players.count >= MINIMUM_PLAYER.call
                           "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan"
                         else
-                          "#{MINIMUM_PLAYER.call - game.player_count} orang lagi buruan /ikutan"
+                          "#{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
                         end
 
-                      send(message, "Welcome to the game, #{user.first_name}!\n\nUdah #{game.player_count} orang nich~ #{additional_text}")
+                      send(message, "Welcome to the game, #{user.first_name}!\n\nUdah #{game.players.count} orang nich~ #{additional_text}")
                     else
                       send(message, 'Duh udah masuk lu', true)
                     end
@@ -120,15 +120,15 @@ class LycantululBot
                   if game.waiting?
                     user = message.from
                     if game.remove_player(user)
-                      if game.player_count == 0
+                      if game.players.count == 0
                         game.finish
                         send(message, 'Bubar semua bubar! /bikin_baru lagi dong')
                       else
                         additional_text =
-                          if game.player_count >= MINIMUM_PLAYER.call
+                          if game.players.count >= MINIMUM_PLAYER.call
                             'Ayo deh yang lain juga /ikutan, biar bisa /mulai_main'
                           else
-                            "Orangnya jadi kurang kan. #{MINIMUM_PLAYER.call - game.player_count} orang lagi buruan /ikutan"
+                            "Orangnya jadi kurang kan. #{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
                           end
 
                         send(message, "Jangan /gajadi main dong #{user.first_name} :( /ikutan lagi plis :(\n#{additional_text}")
@@ -152,7 +152,7 @@ class LycantululBot
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
-                  if game.player_count >= MINIMUM_PLAYER.call
+                  if game.players.count >= MINIMUM_PLAYER.call
                     game.start
                     message_action(game, BROADCAST_ROLE)
                     message_action(game, ROUND_START)
@@ -225,7 +225,7 @@ class LycantululBot
                   send(message, 'Seeep')
                   message_action(game, VOTING_BROADCAST, [message.from.first_name, message.from.username, message.text])
                 when Lycantulul::Game::RESPONSE_INVALID
-                  full_name = get_full_name(message.from)
+                  full_name = Lycantulul::Player.get_full_name(message.from)
                   send_voting(game.living_players, full_name, message.chat.id)
                 end
 
@@ -236,7 +236,7 @@ class LycantululBot
                 when Lycantulul::Game::RESPONSE_OK
                   send(message, 'Seeep. Tunggu ronde berakhir yak, kalo lu atau yang mau lu liat mati, ya jadi ga ngasih tau~')
                 when Lycantulul::Game::RESPONSE_INVALID
-                  full_name = get_full_name(message.from)
+                  full_name = Lycantulul::Player.get_full_name(message.from)
                   send_seer(game.living_players, full_name, message.chat.id)
                 end
 
@@ -247,7 +247,7 @@ class LycantululBot
                 when Lycantulul::Game::RESPONSE_OK
                   send(message, 'Seeep')
                 when Lycantulul::Game::RESPONSE_INVALID
-                  full_name = get_full_name(message.from)
+                  full_name = Lycantulul::Player.get_full_name(message.from)
                   send_protector(game.living_players, full_name, message.chat.id)
                 end
 
@@ -269,7 +269,7 @@ class LycantululBot
     when BROADCAST_ROLE
       log('game starts')
       opening = 'MULAI! MWA HA HA HA'
-      opening += "\n\nJumlah pemain: #{game.player_count}\n"
+      opening += "\n\nJumlah pemain: #{game.players.count}\n"
       opening += "Jumlah peran:\n"
       opening += "TTS (Tulul-Tulul Serigala): #{game.role_count(Lycantulul::Game::WEREWOLF)}\n"
       opening += "Tukang ngintip: #{game.role_count(Lycantulul::Game::SEER)}\n"
@@ -284,7 +284,7 @@ class LycantululBot
       @@round += 1
       log('new round')
 
-      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik! Kecuali warga kampung, diam aja menunggu kematian ya")
+      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik! Kecuali warga kampung, diam aja menunggu kematian ya")
       log('enqueuing night job')
       Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, @@round)
 
@@ -399,7 +399,7 @@ class LycantululBot
       text: text,
     }
     options.merge!({ reply_to_message_id: message.message_id }) if reply
-    log("sending #{text}")
+    log("sending to #{message.chat.id}: #{text}")
     @@bot.api.send_message(options)
   end
 
@@ -408,7 +408,7 @@ class LycantululBot
       chat_id: chat_id,
       text: text
     })
-    log("sending #{text}")
+    log("sending to #{chat_id}: #{text}")
     @@bot.api.send_message(options)
   end
 
@@ -481,7 +481,7 @@ class LycantululBot
 
   def self.check_werewolf_in_game(message)
     log('checking werewolf votes')
-    Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
+    Lycantulul::Game.where(group_id: message.chat.id, finished: false, waiting: false, night: true).each do |wwg|
       if wwg.valid_werewolf_with_victim?(message.from.id, message.text)
         return wwg
       end
@@ -492,7 +492,7 @@ class LycantululBot
 
   def self.check_voting(message)
     log('checking voters')
-    Lycantulul::Game.where(finished: false, waiting: false, night: false).each do |wwg|
+    Lycantulul::Game.where(group_id: message.chat.id, finished: false, waiting: false, night: false).each do |wwg|
       if wwg.valid_action?(message.from.id, message.text, 'player')
         return wwg
       end
@@ -503,7 +503,7 @@ class LycantululBot
 
   def self.check_seer(message)
     log('checking seer')
-    Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
+    Lycantulul::Game.where(group_id: message.chat.id, finished: false, waiting: false, night: true).each do |wwg|
       if wwg.valid_action?(message.from.id, message.text, 'seer')
         return wwg
       end
@@ -514,7 +514,7 @@ class LycantululBot
 
   def self.check_protector(message)
     log('checking protector')
-    Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
+    Lycantulul::Game.where(group_id: message.chat.id, finished: false, waiting: false, night: true).each do |wwg|
       if wwg.valid_action?(message.from.id, message.text, 'protector')
         return wwg
       end
@@ -528,9 +528,9 @@ class LycantululBot
     game.reload
     return unless round == @@round && game.night? && !game.waiting? && !game.finished?
     log('continuing')
-    werewolves_done = game.victim_count == game.living_werewolves_count
-    seers_done = game.seen_count == game.living_seers_count
-    protectors_done = game.protectee_count == game.living_protectors_count
+    werewolves_done = game.victim.count == game.living_werewolves.count
+    seers_done = game.seen.count == game.living_seers.count
+    protectors_done = game.protectee.count == game.living_protectors.count
     if force || (werewolves_done && seers_done && protectors_done)
       killed = game.kill_victim
 
@@ -555,7 +555,7 @@ class LycantululBot
     game.reload
     return unless round == @@round && !game.night? && !game.waiting? && !game.finished?
     log('continuing')
-    if force || game.votee_count == game.living_players_count
+    if force || game.votee.count == game.living_players.count
       if killed = game.kill_votee
         message_action(game, VOTING_SUCCEEDED, killed)
       else
@@ -568,13 +568,13 @@ class LycantululBot
     log('checking win condition')
     game.reload
     win = false
-    if game.living_werewolves_count == 0
+    if game.living_werewolves.count == 0
       log('wereworlves ded')
       game.finish
       send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh TTS telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
       list_players(game)
       win = true
-    elsif game.living_werewolves_count == game.killables_count || game.killables_count == 0
+    elsif game.living_werewolves.count == game.killables.count || game.killables.count == 0
       log('villagers ded')
       game.finish
       send_to_player(game.group_id, 'Dan permainan pun berakhir karena TTS telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
@@ -583,12 +583,6 @@ class LycantululBot
     end
 
     win
-  end
-
-  def self.get_full_name(user)
-    fn = user.first_name
-    user.last_name && fn += " #{user.last_name}"
-    fn
   end
 
   def self.in_group?(message)
@@ -600,6 +594,6 @@ class LycantululBot
   end
 
   def self.log(message)
-    puts "#{Time.now.utc} -- log -- #{@@round} -- #{message}"
+    puts "#{Time.now.utc} -- #{@@round} -- #{message}"
   end
 end
