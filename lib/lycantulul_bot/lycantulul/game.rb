@@ -236,8 +236,8 @@ module Lycantulul
       self.living_werewolves.any?{ |lw| lw[:user_id] == player_id } && self.killables.any?{ |kl| kl[:full_name] == victim_name }
     end
 
-    def valid_action?(actor_id, actee_name)
-      self.living_players.any?{ |lp| lp[:user_id] == actor_id } && self.living_players.any?{ |lp| lp[:full_name] == actee_name }
+    def valid_action?(actor_id, actee_name, action)
+      eval("self.living_#{action}s").any?{ |lp| lp[:user_id] == actor_id } && self.living_players.any?{ |lp| lp[:full_name] == actee_name }
     end
 
     def list_players

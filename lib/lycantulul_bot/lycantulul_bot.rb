@@ -409,7 +409,7 @@ class LycantululBot
   def self.check_voting(message)
     log('checking voters')
     Lycantulul::Game.where(finished: false, waiting: false, night: false).each do |wwg|
-      if wwg.valid_action?(message.from.id, message.text)
+      if wwg.valid_action?(message.from.id, message.text, 'player')
         return wwg
       end
     end
@@ -420,7 +420,18 @@ class LycantululBot
   def self.check_seer(message)
     log('checking seer')
     Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
-      if wwg.valid_action?(message.from.id, message.text)
+      if wwg.valid_action?(message.from.id, message.text, 'seer')
+        return wwg
+      end
+    end
+    log('not found')
+    nil
+  end
+
+  def self.check_protector(message)
+    log('checking protector')
+    Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
+      if wwg.valid_action?(message.from.id, message.text, 'protector')
         return wwg
       end
     end
