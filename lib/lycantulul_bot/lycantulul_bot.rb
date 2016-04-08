@@ -35,7 +35,7 @@ class LycantululBot
         case message.text
         when '/start'
           if in_private?(message)
-            send(message, 'Selamat datang! Ciee mau ikutan main werewolf. Pencet /daftar yak!')
+            send(message, 'Selamat datang! Ciee mau ikutan main werewolf. Sebelom bisa mulai main, pencet /daftar dulu yak!')
           else
             wrong_room(message)
           end
@@ -45,7 +45,7 @@ class LycantululBot
               send(message, 'Udah kedaftar wey!')
             else
               Lycantulul::Player.create_from_message(message)
-              send(message, 'Terdaftar! Fave hun! Kalo mau ikutan main, balik ke grup tadi, terus pencet /ikutan')
+              send(message, 'Terdaftar! Lood Guck and Fave hun! Kalo mau ikutan main, balik ke grup, terus pencet /ikutan')
             end
           else
             wrong_room(message)
@@ -516,6 +516,6 @@ class LycantululBot
   end
 
   def self.log(message)
-    puts "log -- #{@@round} -- #{message}"
+    puts "#{Time.now.utc} -- log -- #{@@round} -- #{message}"
   end
 end
