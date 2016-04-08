@@ -481,7 +481,7 @@ class LycantululBot
 
   def self.check_werewolf_in_game(message)
     log('checking werewolf votes')
-    Lycantulul::Game.where(group_id: message.chat.id, finished: false, waiting: false, night: true).each do |wwg|
+    Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
       if wwg.valid_werewolf_with_victim?(message.from.id, message.text)
         return wwg
       end
@@ -492,7 +492,7 @@ class LycantululBot
 
   def self.check_voting(message)
     log('checking voters')
-    Lycantulul::Game.where(group_id: message.chat.id, finished: false, waiting: false, night: false).each do |wwg|
+    Lycantulul::Game.where(finished: false, waiting: false, night: false).each do |wwg|
       if wwg.valid_action?(message.from.id, message.text, 'player')
         return wwg
       end
@@ -503,7 +503,7 @@ class LycantululBot
 
   def self.check_seer(message)
     log('checking seer')
-    Lycantulul::Game.where(group_id: message.chat.id, finished: false, waiting: false, night: true).each do |wwg|
+    Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
       if wwg.valid_action?(message.from.id, message.text, 'seer')
         return wwg
       end
@@ -514,7 +514,7 @@ class LycantululBot
 
   def self.check_protector(message)
     log('checking protector')
-    Lycantulul::Game.where(group_id: message.chat.id, finished: false, waiting: false, night: true).each do |wwg|
+    Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
       if wwg.valid_action?(message.from.id, message.text, 'protector')
         return wwg
       end

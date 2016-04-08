@@ -20,7 +20,8 @@ module Lycantulul
     field :seen, type: Array, default: []
     field :protectee, type: Array, default: []
 
-    index({ group_id: 1, finished: 1, waiting: 1, night: 1 })
+    index({ group_id: 1, finished: 1 })
+    index({ finished: 1, waiting: 1, night: 1 })
 
     has_many :players, class_name: 'Lycantulul::Player'
 
