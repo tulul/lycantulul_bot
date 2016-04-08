@@ -29,7 +29,7 @@ class LycantululBot
 
         if Time.now.to_i - message.date < ALLOWED_DELAY.call
           if new_member = message.new_chat_participant
-            unless Lycantulul::Player.find_by(user_id: new_member.id)
+            unless Lycantulul::RegisteredPlayer.find_by(user_id: new_member.id)
               name = new_member.username ? "@#{new_member.username}" : new_member.first_name
               send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /daftar yaa~", true)
             end
@@ -47,7 +47,7 @@ class LycantululBot
               if check_player(message)
                 send(message, 'Udah kedaftar wey!')
               else
-                Lycantulul::Player.create_from_message(message)
+                Lycantulul::RegisteredPlayer.create_from_message(message)
                 send(message, 'Terdaftar! Lood Guck and Fave hun! Kalo mau ikutan main, balik ke grup, terus pencet /ikutan')
               end
             else
@@ -476,7 +476,7 @@ class LycantululBot
   end
 
   def self.check_player(message)
-    Lycantulul::Player.find_by(user_id: message.from.id)
+    Lycantulul::RegisteredPlayer.find_by(user_id: message.from.id)
   end
 
   def self.check_werewolf_in_game(message)

@@ -1,5 +1,5 @@
 module Lycantulul
-  class Player
+  class RegisteredPlayer
     include Mongoid::Document
 
     field :user_id, type: Integer
