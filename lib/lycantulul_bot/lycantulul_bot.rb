@@ -198,6 +198,14 @@ class LycantululBot
             else
               wrong_room(message)
             end
+          when /\/ilangin_keyboard/
+            if in_private?(message)
+              keyboard = Telegram
+              keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
+              send_to_player(message.chat.id, 'OK', reply_markup: keyboard)
+            else
+              wrong_room(message)
+            end
           else
             if in_private?(message)
               if game = check_werewolf_in_game(message)
