@@ -7,6 +7,8 @@ class LycantululBot
   NIGHT_TIME = -> { (res = $redis.get('lycantulul::night_time')) ? res.to_i : 60 }
   VOTING_TIME = -> { (res = $redis.get('lycantulul::voting_time')) ? res.to_i : 60 }
 
+  ALLOWED_DELAY = -> { (res = $redis.get('lycantulul::allowed_delay')) ? res.to_i : 20 }
+
   BROADCAST_ROLE = 0
   ROUND_START = 1
   WEREWOLF_KILL_BROADCAST = 2
@@ -25,171 +27,175 @@ class LycantululBot
       bot.listen do |message|
         log("incoming message from #{message.from.first_name}: #{message.text}")
 
-        if new_member = message.new_chat_participant
-          unless Lycantulul::Player.find_by(user_id: new_member.id)
-            name = new_member.username ? "@#{new_member.username}" : new_member.first_name
-            send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /daftar yaa~", true)
+        if Time.now.to_i - message.date < ALLOWED_DELAY.call
+          if new_member = message.new_chat_participant
+            unless Lycantulul::Player.find_by(user_id: new_member.id)
+              name = new_member.username ? "@#{new_member.username}" : new_member.first_name
+              send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /daftar yaa~", true)
+            end
           end
-        end
 
-        case message.text
-        when '/start'
-          if in_private?(message)
-            send(message, 'Selamat datang! Ciee mau ikutan main werewolf. Sebelom bisa mulai main, pencet /daftar dulu yak!')
-          else
-            wrong_room(message)
-          end
-        when /\/daftar/
-          if in_private?(message)
-            if check_player(message)
-              send(message, 'Udah kedaftar wey!')
+          case message.text
+          when '/start'
+            if in_private?(message)
+              send(message, 'Selamat datang! Ciee mau ikutan main werewolf. Sebelom bisa mulai main, pencet /daftar dulu yak!')
             else
-              Lycantulul::Player.create_from_message(message)
-              send(message, 'Terdaftar! Lood Guck and Fave hun! Kalo mau ikutan main, balik ke grup, terus pencet /ikutan')
+              wrong_room(message)
             end
-          else
-            wrong_room(message)
-          end
-        when /\/bikin_baru/
-          if in_group?(message)
-            if check_game(message)
-              send(message, 'Udah ada yang ngemulai gan tadi. /ikutan ae', true)
-            else
+          when /\/daftar/
+            if in_private?(message)
               if check_player(message)
-                Lycantulul::Game.create_from_message(message)
-                send(message, "Oke yok maen! Yang mau /ikutan buruan yee. Kalo udah #{MINIMUM_PLAYER.call} pemain ntar bisa dimulai")
+                send(message, 'Udah kedaftar wey!')
               else
-                unregistered(message)
-              end
-            end
-          else
-            wrong_room(message)
-          end
-        when /\/batalin/
-          if in_group?(message)
-            if game = check_game(message)
-              if game.waiting?
-                game.finish
-                send(message, "Sip batal maen :'(", true)
-              else
-                send(message, 'Udah mulai tjoy ga bisa batal enak aje', true)
+                Lycantulul::Player.create_from_message(message)
+                send(message, 'Terdaftar! Lood Guck and Fave hun! Kalo mau ikutan main, balik ke grup, terus pencet /ikutan')
               end
             else
-              send(message, 'Batal apaan gan orang ga ada yang maen dah. Mending /bikin_baru', true)
+              wrong_room(message)
             end
-          else
-            wrong_room(message)
-          end
-        when /\/ikutan/
-          if in_group?(message)
-            if game = check_game(message)
-              if check_player(message)
+          when /\/bikin_baru/
+            if in_group?(message)
+              if check_game(message)
+                send(message, 'Udah ada yang ngemulai gan tadi. /ikutan ae', true)
+              else
+                if check_player(message)
+                  Lycantulul::Game.create_from_message(message)
+                  send(message, "Oke yok maen! Yang mau /ikutan buruan yee. Kalo udah #{MINIMUM_PLAYER.call} pemain ntar bisa dimulai")
+                else
+                  unregistered(message)
+                end
+              end
+            else
+              wrong_room(message)
+            end
+          when /\/batalin/
+            if in_group?(message)
+              if game = check_game(message)
                 if game.waiting?
-                  user = message.from
-                  if game.add_player(user)
-                    additional_text =
-                      if game.player_count >= MINIMUM_PLAYER.call
-                        "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan"
-                      else
-                        "#{MINIMUM_PLAYER.call - game.player_count} orang lagi buruan /ikutan"
-                      end
+                  game.finish
+                  send(message, "Sip batal maen :'(", true)
+                else
+                  send(message, 'Udah mulai tjoy ga bisa batal enak aje', true)
+                end
+              else
+                send(message, 'Batal apaan gan orang ga ada yang maen dah. Mending /bikin_baru', true)
+              end
+            else
+              wrong_room(message)
+            end
+          when /\/ikutan/
+            if in_group?(message)
+              if game = check_game(message)
+                if check_player(message)
+                  if game.waiting?
+                    user = message.from
+                    if game.add_player(user)
+                      additional_text =
+                        if game.player_count >= MINIMUM_PLAYER.call
+                          "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan"
+                        else
+                          "#{MINIMUM_PLAYER.call - game.player_count} orang lagi buruan /ikutan"
+                        end
 
-                    send(message, "Welcome to the game, #{user.first_name}!\n\nUdah #{game.player_count} orang nich~ #{additional_text}")
+                      send(message, "Welcome to the game, #{user.first_name}!\n\nUdah #{game.player_count} orang nich~ #{additional_text}")
+                    else
+                      send(message, 'Duh udah masuk lu', true)
+                    end
                   else
-                    send(message, 'Duh udah masuk lu', true)
+                    send(message, 'Telat woy udah mulai!', true)
                   end
                 else
-                  send(message, 'Telat woy udah mulai!', true)
+                  unregistered(message)
                 end
               else
-                unregistered(message)
+                send(message, 'Ikutan apaan gan orang ga ada yang maen dah, kalo mau /bikin_baru', true)
               end
             else
-              send(message, 'Ikutan apaan gan orang ga ada yang maen dah, kalo mau /bikin_baru', true)
+              wrong_room(message)
             end
-          else
-            wrong_room(message)
-          end
-        when /\/mulai_main/
-          if in_group?(message)
-            if game = check_game(message)
-              if game.waiting?
-                if game.player_count >= MINIMUM_PLAYER.call
-                  game.start
-                  message_action(game, BROADCAST_ROLE)
-                  message_action(game, ROUND_START)
+          when /\/mulai_main/
+            if in_group?(message)
+              if game = check_game(message)
+                if game.waiting?
+                  if game.player_count >= MINIMUM_PLAYER.call
+                    game.start
+                    message_action(game, BROADCAST_ROLE)
+                    message_action(game, ROUND_START)
+                  else
+                    send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", true)
+                  end
                 else
-                  send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", true)
+                  send(message, 'Udah mulai tjoy dari tadi', true)
                 end
               else
-                send(message, 'Udah mulai tjoy dari tadi', true)
+                send(message, 'Apa yang mau dimulai heh? /bikin_baru dulu!', true)
               end
             else
-              send(message, 'Apa yang mau dimulai heh? /bikin_baru dulu!', true)
+              wrong_room(message)
             end
-          else
-            wrong_room(message)
-          end
-        when /\/siapa_aja/
-          if in_group?(message)
-            if game = check_game(message)
-              list_players(game)
+          when /\/siapa_aja/
+            if in_group?(message)
+              if game = check_game(message)
+                list_players(game)
+              else
+                send(message, 'Ga ada, orang ga ada yang maen. /bikin_baru gih', true)
+              end
             else
-              send(message, 'Ga ada, orang ga ada yang maen. /bikin_baru gih', true)
+              wrong_room(message)
             end
           else
-            wrong_room(message)
+            if in_private?(message)
+              if game = check_werewolf_in_game(message)
+                log('werewolf confirmed')
+                case game.add_victim(message.from.id, message.text)
+                when Lycantulul::Game::RESPONSE_OK
+                  message_action(game, WEREWOLF_KILL_BROADCAST, [message.from.first_name, message.text])
+                when Lycantulul::Game::RESPONSE_INVALID
+                  send_kill_voting(game, message.chat.id)
+                end
+
+                check_round_finished(game, @@round)
+              elsif game = check_voting(message)
+                log('voter confirmed')
+                case game.add_votee(message.from.id, message.text)
+                when Lycantulul::Game::RESPONSE_OK
+                  send(message, 'Seeep')
+                  message_action(game, VOTING_BROADCAST, [message.from.first_name, message.from.username, message.text])
+                when Lycantulul::Game::RESPONSE_INVALID
+                  full_name = get_full_name(message.from)
+                  send_voting(game.living_players, full_name, message.chat.id)
+                end
+
+                check_voting_finished(game, @@round)
+              elsif game = check_seer(message)
+                log('seer confirmed')
+                case game.add_seen(message.from.id, message.text)
+                when Lycantulul::Game::RESPONSE_OK
+                  send(message, 'Seeep. Tunggu ronde berakhir yak, kalo lu atau yang mau lu liat mati, ya jadi ga ngasih tau~')
+                when Lycantulul::Game::RESPONSE_INVALID
+                  full_name = get_full_name(message.from)
+                  send_seer(game.living_players, full_name, message.chat.id)
+                end
+
+                check_round_finished(game, @@round)
+              elsif game = check_protector(message)
+                log('protector confirmed')
+                case game.add_protectee(message.from.id, message.text)
+                when Lycantulul::Game::RESPONSE_OK
+                  send(message, 'Seeep')
+                when Lycantulul::Game::RESPONSE_INVALID
+                  full_name = get_full_name(message.from)
+                  send_protector(game.living_players, full_name, message.chat.id)
+                end
+
+                check_round_finished(game, @@round)
+              else
+                send(message, 'WUT?')
+              end
+            end
           end
         else
-          if in_private?(message)
-            if game = check_werewolf_in_game(message)
-              log('werewolf confirmed')
-              case game.add_victim(message.from.id, message.text)
-              when Lycantulul::Game::RESPONSE_OK
-                message_action(game, WEREWOLF_KILL_BROADCAST, [message.from.first_name, message.text])
-              when Lycantulul::Game::RESPONSE_INVALID
-                send_kill_voting(game, message.chat.id)
-              end
-
-              check_round_finished(game, @@round)
-            elsif game = check_voting(message)
-              log('voter confirmed')
-              case game.add_votee(message.from.id, message.text)
-              when Lycantulul::Game::RESPONSE_OK
-                send(message, 'Seeep')
-                message_action(game, VOTING_BROADCAST, [message.from.first_name, message.from.username, message.text])
-              when Lycantulul::Game::RESPONSE_INVALID
-                full_name = get_full_name(message.from)
-                send_voting(game.living_players, full_name, message.chat.id)
-              end
-
-              check_voting_finished(game, @@round)
-            elsif game = check_seer(message)
-              log('seer confirmed')
-              case game.add_seen(message.from.id, message.text)
-              when Lycantulul::Game::RESPONSE_OK
-                send(message, 'Seeep. Tunggu ronde berakhir yak, kalo lu atau yang mau lu liat mati, ya jadi ga ngasih tau~')
-              when Lycantulul::Game::RESPONSE_INVALID
-                full_name = get_full_name(message.from)
-                send_seer(game.living_players, full_name, message.chat.id)
-              end
-
-              check_round_finished(game, @@round)
-            elsif game = check_protector(message)
-              log('protector confirmed')
-              case game.add_protectee(message.from.id, message.text)
-              when Lycantulul::Game::RESPONSE_OK
-                send(message, 'Seeep')
-              when Lycantulul::Game::RESPONSE_INVALID
-                full_name = get_full_name(message.from)
-                send_protector(game.living_players, full_name, message.chat.id)
-              end
-
-              check_round_finished(game, @@round)
-            else
-              send(message, 'WUT?')
-            end
-          end
+          log('stale message. purged')
         end
       end
     end
