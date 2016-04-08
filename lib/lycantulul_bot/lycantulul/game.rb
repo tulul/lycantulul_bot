@@ -5,6 +5,7 @@ module Lycantulul
     VILLAGER = 0
     WEREWOLF = 1
     SEER = 2
+    PROTECTOR = 3
 
     RESPONSE_OK = 0
     RESPONSE_INVALID = 1
@@ -45,6 +46,21 @@ module Lycantulul
         alive: true
       }
       self.players << new_player
+      self.save
+    end
+
+    def restart
+      self.players.each_with_index do |_, idx|
+        self.players[idx][:alive] = true
+        self.players[idx][:role] = VILLAGER
+      end
+      self.night = true
+      self.waiting = true
+      self.finished = false
+      self.victim = []
+      self.votee = []
+      self.seen = []
+      self.protectee = []
       self.save
     end
 
@@ -145,7 +161,7 @@ module Lycantulul
           if vi[:full_name] == victim_name && !under_protection?(victim_name)
             kill(vi[:user_id])
             LycantululBot.log("#{victim_name} is mauled (from GAME)")
-            return [self.players[idx][:user_id], self.players[idx][:full_name], self.get_role(self.players[idx][:role])]
+            return [vi[:user_id], vi[:full_name], self.get_role(vi[:role])]
           end
         end
       else
@@ -165,7 +181,7 @@ module Lycantulul
           if vi[:full_name] == votee_name
             kill(vi[:user_id])
             LycantululBot.log("#{votee_name} is executed (from GAME)")
-            return [self.players[idx][:user_id], self.players[idx][:full_name], self.get_role(self.players[idx][:role])]
+            return [vi[:user_id], vi[:full_name], self.get_role(vi[:role])]
           end
         end
       else

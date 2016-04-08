@@ -204,6 +204,7 @@ class LycantululBot
       opening += "Jumlah peran:\n"
       opening += "TTS (Tulul-Tulul Serigala): #{game.role_count(Lycantulul::Game::WEREWOLF)}\n"
       opening += "Tukang ngintip: #{game.role_count(Lycantulul::Game::SEER)}\n"
+      opening += "Penjual jimat: #{game.role_count(Lycantulul::Game::PROTECTOR)}\n"
       opening += "Sisanya villager kampungan"
       send_to_player(game.group_id, opening)
       game.players.each do |pl|
@@ -214,7 +215,7 @@ class LycantululBot
       @@round += 1
       log('new round')
 
-      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} serigala ganteng dan genit yang culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik! Kecuali warga kampung, diam aja menunggu kematian ya")
+      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves_count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik! Kecuali warga kampung, diam aja menunggu kematian ya")
       log('enqueuing night job')
       Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, @@round)
 
@@ -298,8 +299,8 @@ class LycantululBot
       message_action(game, ROUND_START)
     when ENLIGHTEN_SEER
       aux.each do |seen|
-        seen_full_name = aux[0]
-        seen_role = aux[1]
+        seen_full_name = seen[0]
+        seen_role = seen[1]
         seer_id = seen[2]
 
         log("sending #{seen_full_name}'s role #{seen_role} to seer: #{seer_id}")
