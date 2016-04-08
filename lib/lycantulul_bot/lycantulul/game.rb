@@ -165,13 +165,13 @@ module Lycantulul
       LycantululBot.log(ss.to_s)
       self.update_attribute(:seen, [])
 
-      return nil unless self.living_seers.count > 0
-
       res = []
       ss && ss.each do |vc|
         seen = self.living_players.with_name(vc[:full_name])
-        LycantululBot.log("#{seen.full_name} is seen (from GAME)")
-        res << [seen.full_name, self.get_role(seen.role), vc[:seer_id]]
+        if seen && self.living_seers.with_id(vc[:seer_id])
+          LycantululBot.log("#{seen.full_name} is seen (from GAME)")
+          res << [seen.full_name, self.get_role(seen.role), vc[:seer_id]]
+        end
       end
 
       res
