@@ -207,7 +207,9 @@ module Lycantulul
     end
 
     def valid_action?(actor_id, actee_name, action)
-      eval("self.living_#{action}s").with_id(actor_id) && self.living_players.with_name(actee_name)
+      actor = eval("self.living_#{action}s").with_id(actor_id)
+      actee = self.living_players.with_name(actee_name)
+      actor && actee && actor.user_id != actee.user_id
     end
 
     def list_players
