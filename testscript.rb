@@ -107,6 +107,18 @@ a8.gr('/ikutan')
 a9.gr('/ikutan')
 a0.gr('/mulai_main')
 
+event('cant action to self')
+a0.pm('0')
+a1.pm('1')
+a2.pm('2')
+a3.pm('3')
+a4.pm('4')
+a5.pm('5')
+a6.pm('6')
+a7.pm('7')
+a8.pm('8')
+a9.pm('9')
+
 event('modify game contents')
 @g = Lycantulul::Game.find_by(group_id: 21, finished: false, night: true, waiting: false)
 @g.restart
@@ -147,13 +159,12 @@ print_game
 
 event('execute innocent')
 start_vote
-a0.pm('3')
-a1.pm('3')
+a0.pm('6')
+a1.pm('6')
 a2.pm('6')
 a3.pm('6')
 a4.pm('6')
-a5.pm('6')
-a6.pm('6')
+a6.pm('3')
 a7.pm('6')
 a8.pm('6')
 a9.pm('6')
@@ -162,22 +173,56 @@ print_game
 event('under protection of jimat')
 a0.pm('7')
 a1.pm('7')
-a2.pm('6')
+a2.pm('7')
 a3.pm('7')
 print_game
 
 event('execute werewolf')
 start_vote
 a0.pm('1')
-a1.pm('3')
-a2.pm('6')
-a3.pm('6')
-a4.pm('6')
-a5.pm('6')
-a6.pm('6')
-a7.pm('6')
-a8.pm('6')
-a9.pm('6')
+a1.pm('0')
+a2.pm('0')
+a3.pm('0')
+a4.pm('0')
+a7.pm('0')
+a8.pm('0')
+a9.pm('0')
+print_game
+
+event('seen killed by werewolves')
+a1.pm('7')
+a2.pm('7')
+a3.pm('2')
+print_game
+
+event('execute no one')
+start_vote
+a1.pm('8')
+a2.pm('8')
+a3.pm('8')
+a4.pm('1')
+a8.pm('1')
+a9.pm('1')
+print_game
+
+event('seer killed by werewolves')
+a1.pm('2')
+a2.pm('9')
+a3.pm('4')
+print_game
+
+event('execute innocent')
+start_vote
+a1.pm('9')
+a3.pm('9')
+a4.pm('9')
+a8.pm('9')
+a9.pm('8')
+print_game
+
+event('jimat protects werewolf, dies, werewolf wins')
+a1.pm('8')
+a3.pm('1')
 print_game
 
 event('reset db')
