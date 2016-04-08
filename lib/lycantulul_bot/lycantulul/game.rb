@@ -50,6 +50,11 @@ module Lycantulul
       self.save
     end
 
+    def remove_player(user)
+      return false unless self.players.any?{ |pl| pl[:user_id] == user.id }
+      self.update_attribute(:players, self.players.reject{ |pl| pl[:user_id] == user.id })
+    end
+
     def restart
       self.players.each_with_index do |_, idx|
         self.players[idx][:alive] = true
@@ -274,7 +279,7 @@ module Lycantulul
       res += (self.players - self.living_players).sort_by{ |lp| lp[:full_name] }.map{ |lp| "#{lp[:full_name]} - #{self.get_role(lp[:role])}" }.join("\n")
 
       if self.waiting?
-        res += "\n\n/ikutan yuk pada~"
+        res += "\n\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
       end
 
       res

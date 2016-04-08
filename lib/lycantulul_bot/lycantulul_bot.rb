@@ -113,6 +113,41 @@ class LycantululBot
             else
               wrong_room(message)
             end
+          when /\/gajadi/
+            if in_group?(message)
+              if game = check_game(message)
+                if check_player(message)
+                  if game.waiting?
+                    user = message.from
+                    if game.remove_player(user)
+                      if game.player_count == 0
+                        game.finish
+                        send(message, 'Bubar semua bubar! /bikin_baru lagi dong')
+                      else
+                        additional_text =
+                          if game.player_count >= MINIMUM_PLAYER.call
+                            'Ayo deh yang lain juga /ikutan, biar bisa /mulai_main'
+                          else
+                            "Orangnya jadi kurang kan. #{MINIMUM_PLAYER.call - game.player_count} orang lagi buruan /ikutan"
+                          end
+
+                        send(message, "Jangan /gajadi main dong #{user.first_name} :( /ikutan lagi plis :(\n#{additional_text}")
+                      end
+                    else
+                      send(message, 'Jangan bohong kamu ya. Kamu kan ndak /ikutan', true)
+                    end
+                  else
+                    send(message, 'Udah mulai sih, ga boleh kabur', true)
+                  end
+                else
+                  unregistered(message)
+                end
+              else
+                send(message, 'Ga jadi what? /bikin_baru dulu', true)
+              end
+            else
+              wrong_room(message)
+            end
           when /\/mulai_main/
             if in_group?(message)
               if game = check_game(message)
