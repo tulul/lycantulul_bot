@@ -21,10 +21,7 @@ class LycantululBot
   ENLIGHTEN_SEER = 9
   DEAD_PROTECTORS = 10
 
-  def self.start
-    Telegram::Bot::Client.run($token) do |bot|
-      @@bot = bot
-      bot.listen do |message|
+  def self.start(message)
         log("incoming message from #{message.from.first_name}: #{message.text}")
 
         if Time.now.to_i - message.date < ALLOWED_DELAY.call
@@ -260,8 +257,6 @@ class LycantululBot
         else
           log('stale message. purged')
         end
-      end
-    end
   end
 
   def self.message_action(game, action, aux = nil)
@@ -286,7 +281,7 @@ class LycantululBot
 
       send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik! Kecuali warga kampung, diam aja menunggu kematian ya")
       log('enqueuing night job')
-      Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, @@round)
+      # Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, @@round)
 
       game.living_werewolves.each do |ww|
         log("sending killing instruction to #{ww[:full_name]}")
@@ -332,7 +327,7 @@ class LycantululBot
       group_chat_id = game.group_id
       send_to_player(group_chat_id, "Udah ya tuduh-tuduhannya. Alangkah baiknya bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma #{VOTING_TIME.call} detik. kalo ga ada suara mayoritas, ga ada yang mati")
       log('enqueuing voting job')
-      Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call, game, @@round)
+      # Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call, game, @@round)
 
       livp = game.living_players
       livp.each do |lp|
@@ -390,7 +385,7 @@ class LycantululBot
   def self.discuss(game)
     send_to_player(game.group_id, "Silakan nulul dan tuduh-tuduhan selama #{DISCUSSION_TIME.call} detik. Ntar gua tanya pada mau eksekusi siapa~")
     log('enqueuing discussion job')
-    Lycantulul::DiscussionTimerJob.perform_in(DISCUSSION_TIME.call, game)
+    # Lycantulul::DiscussionTimerJob.perform_in(DISCUSSION_TIME.call, game)
   end
 
   def self.send(message, text, reply = nil)
@@ -400,7 +395,7 @@ class LycantululBot
     }
     options.merge!({ reply_to_message_id: message.message_id }) if reply
     log("sending to #{message.chat.id}: #{text}")
-    @@bot.api.send_message(options)
+    #@@bot.api.send_message(options)
   end
 
   def self.send_to_player(chat_id, text, options = {})
@@ -409,7 +404,7 @@ class LycantululBot
       text: text
     })
     log("sending to #{chat_id}: #{text}")
-    @@bot.api.send_message(options)
+    #@@bot.api.send_message(options)
   end
 
   def self.send_kill_voting(game, chat_id)
@@ -594,6 +589,6 @@ class LycantululBot
   end
 
   def self.log(message)
-    puts "#{Time.now.utc} -- #{@@round} -- #{message}"
+    puts "#{Time.now.utc} -- #{@@round} -- #{message.gsub("\n", ' ||| ')}"
   end
 end
