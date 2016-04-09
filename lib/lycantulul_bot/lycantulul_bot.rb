@@ -410,14 +410,12 @@ class LycantululBot
       log("voting succeeded, resulting in #{votee_full_name}'s death")
       send_to_player(votee_chat_id, 'MPOZ LO DIEKSEKUSI')
       send_to_player(group_chat_id, "Hasil bertulul berbuah eksekusi si #{votee_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{votee_role}")
-      list_voting(game)
       return if check_win(game)
       message_action(game, ROUND_START)
     when VOTING_FAILED
       group_chat_id = game.group_id
       log('voting failed')
       send_to_player(group_chat_id, 'Nulul tidak membuahkan mufakat')
-      list_voting(game)
       message_action(game, ROUND_START)
     when ENLIGHTEN_SEER
       aux.each do |seen|
