@@ -3,6 +3,7 @@ module Lycantulul
     include Mongoid::Document
 
     ROLES = ['villager', 'werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
+    IMPORTANT_ROLES = ROLES - ['villager']
     VILLAGER = 0
     WEREWOLF = 1
     SEER = 2
@@ -141,7 +142,7 @@ module Lycantulul
 
     def start
       self.update_attribute(:waiting, false)
-      (ROLES - ['villager']).each do |role|
+      IMPORTANT_ROLES.each do |role|
         assign(eval(role.upcase))
       end
     end
@@ -282,7 +283,7 @@ module Lycantulul
       ded_count = self.dead_players.count
 
       res = "Masi idup: #{liv_count} makhluk\n"
-      (ROLES - ['villager']).each do |role|
+      IMPORTANT_ROLES.each do |role|
         count = eval("living_#{role.pluralize}.count")
         count > 0 && res += "#{count} #{self.get_role(eval(role.upcase))}\n"
       end
@@ -340,20 +341,40 @@ module Lycantulul
       end
     end
 
-    def role_count(role)
-      base_count = self.players.count - LycantululBot::MINIMUM_PLAYER.call
+    def role_count(role, count = nil)
+      count ||= self.players.count
+      count -= LycantululBot::MINIMUM_PLAYER.call
       case role
       when WEREWOLF
-        (base_count / 4) + 1 # [5-8, 1], [9-12, 2], ...
+        (count / 5) + 1 # [5-9, 1], [10-14, 2], ...
       when SEER
-        (base_count / 8) + 1 # [5-12, 1], [13-20, 2], ...
+        ((count - 1) / 12) + 1 # [6-17, 1], [18-29, 2], ...
       when PROTECTOR
-        ((base_count - 3) / 9) + 1 # [8-16, 1], [17-25, 2], ...
+        ((count - 3) / 14) + 1 # [8-21, 1], [22-35, 2], ...
       when NECROMANCER
-        base_count > 6 ? 1 : 0
+        count > 6 ? 1 : 0
       when SILVER_BULLET
-        base_count > 8 ? 1 : 0
+        ((count - 9) / 10) + 1 # [14-23, 1], [24-33, 2], ...
       end
+    end
+
+    def role_composition(count = nil)
+      res = ''
+
+      IMPORTANT_ROLES.each do |role|
+        cur_count = role_count(eval(role.upcase), count)
+        cur_count > 0 && res += "#{cur_count} #{self.get_role(eval(role.upcase))}\n"
+      end
+      res
+    end
+
+    def next_new_role
+      res = 1
+      current_comp = self.role_composition
+      while current_comp == self.role_composition(self.players.count + res)
+        res += 1
+      end
+      res
     end
 
     def living_players
