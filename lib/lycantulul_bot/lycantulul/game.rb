@@ -158,8 +158,12 @@ module Lycantulul
       self.update_attribute(:finished, true)
     end
 
+    def sort(array)
+      array.group_by{ |vo| vo[:full_name] }.map{ |k, v| [k, v.count] }.sort_by{ |vo| vo[1] }.compact.reverse
+    end
+
     def kill_victim
-      vc = self.victim.group_by{ |vi| vi[:full_name] }.map{ |k, v| [k, v.count] }.sort_by{ |vi| vi[1] }.compact.reverse
+      vc = self.sort(victim)
       LycantululBot.log(vc.to_s)
       self.update_attribute(:victim, [])
       self.update_attribute(:night, false)
@@ -185,7 +189,7 @@ module Lycantulul
     end
 
     def kill_votee
-      vc = self.votee.group_by{ |vo| vo[:full_name] }.map{ |k, v| [k, v.count] }.sort_by{ |vo| vo[1] }.reverse
+      vc = self.sort(votee)
       LycantululBot.log(vc.to_s)
       self.update_attribute(:votee, [])
       self.update_attribute(:night, true)
@@ -307,6 +311,15 @@ module Lycantulul
       res
     end
 
+    def list_voting
+      res = ''
+      self.sort(votee).each do |votee|
+        res += "#{votee[0]} - #{votee[1]} suara\n"
+      end
+      return 'Belum ada yang mulai voting. Mulai woy!' if res.empty?
+      res
+    end
+
     def get_role(role)
       case role
       when VILLAGER
@@ -389,6 +402,10 @@ module Lycantulul
 
     def killables
       self.living_players.without_role(WEREWOLF)
+    end
+
+    def pending_voters
+      self.living_players.map(&:user_id) - self.votee.map{ |a| self.players.with_id(a[:voter_id]) }
     end
 
     def dead_players

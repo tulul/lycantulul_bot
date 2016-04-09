@@ -175,6 +175,20 @@ class LycantululBot
             else
               wrong_room(message)
             end
+          when /\/hasil_voting/
+            if in_group?(message)
+              if game = check_game(message)
+                unless game.night?
+                  list_voting(game)
+                else
+                  send(message, 'Masih malem, belom mulai voting', true)
+                end
+              else
+                send(message, 'No game coy. /bikin_baru dulu', true)
+              end
+            else
+              wrong_room(message)
+            end
           when /\/panggil_semua/
             if in_group?(message)
               if game = check_game(message)
@@ -191,6 +205,20 @@ class LycantululBot
                 summon(game, :alive)
               else
                 send(message, 'Ga ada yang lagi main, /bikin_baru dulu', true)
+              end
+            else
+              wrong_room(message)
+            end
+          when /\/panggil_yang_belom_voting/
+            if in_group?(message)
+              if game = check_game(message)
+                unless game.night?
+                  summon(game, :voting)
+                else
+                  send(message, 'Masih malem, belom mulai voting', true)
+                end
+              else
+                send(message, 'No game coy. /bikin_baru dulu', true)
               end
             else
               wrong_room(message)
@@ -377,12 +405,14 @@ class LycantululBot
       log("voting succeeded, resulting in #{votee_full_name}'s death")
       send_to_player(votee_chat_id, 'MPOZ LO DIEKSEKUSI')
       send_to_player(group_chat_id, "Hasil bertulul berbuah eksekusi si #{votee_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{votee_role}")
+      list_voting(game)
       return if check_win(game)
       message_action(game, ROUND_START)
     when VOTING_FAILED
       group_chat_id = game.group_id
       log('voting failed')
       send_to_player(group_chat_id, 'Nulul tidak membuahkan mufakat')
+      list_voting(game)
       message_action(game, ROUND_START)
     when ENLIGHTEN_SEER
       aux.each do |seen|
@@ -489,6 +519,8 @@ class LycantululBot
         game.players
       when :alive
         game.living_players
+      when :voting
+        game.pending_voters
       end
 
     message = 'Hoy @'
@@ -502,6 +534,10 @@ class LycantululBot
 
   def self.list_players(game)
     send_to_player(game.group_id, game.list_players)
+  end
+
+  def self.list_voting(game)
+    send_to_player(game.group_id, game.list_voting)
   end
 
   def self.check_game(message)
