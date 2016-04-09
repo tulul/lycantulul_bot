@@ -141,11 +141,9 @@ module Lycantulul
 
     def start
       self.update_attribute(:waiting, false)
-      assign(WEREWOLF)
-      assign(SEER)
-      assign(PROTECTOR)
-      assign(NECROMANCER)
-      assign(SILVER_BULLET)
+      (ROLES - ['villager']).each do |role|
+        assign(eval(role.upcase))
+      end
     end
 
     def assign(role)
@@ -284,11 +282,10 @@ module Lycantulul
       ded_count = self.dead_players.count
 
       res = "Masi idup: #{liv_count} makhluk\n"
-      living_werewolves.count > 0 && res += "#{living_werewolves.count} #{self.get_role(WEREWOLF)}\n"
-      living_seers.count > 0 && res += "#{living_seers.count} #{self.get_role(SEER)}\n"
-      living_protectors.count > 0 && res += "#{living_protectors.count} #{self.get_role(PROTECTOR)}\n"
-      living_necromancers.count > 0 && res += "#{living_necromancers.count} #{self.get_role(NECROMANCER)}\n"
-      living_silver_bullets.count > 0 && res += "#{living_silver_bullets.count} #{self.get_role(SILVER_BULLET)}\n"
+      (ROLES - ['villager']).each do |role|
+        count = eval("living_#{role.pluralize}.count")
+        count > 0 && res += "#{count} #{self.get_role(eval(role.upcase))}\n"
+      end
 
       if self.finished
         res += self.living_players.map{ |lp| "#{lp.full_name} - #{self.get_role(lp.role)}" }.sort.join("\n")
