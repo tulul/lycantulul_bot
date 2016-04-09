@@ -583,7 +583,7 @@ class LycantululBot
         message_action(game, DEAD_PROTECTORS, failed_protection)
       end
 
-      if (necromancee = game.raise_the dead) && !necromancee.empty?
+      if (necromancee = game.raise_the_dead) && !necromancee.empty?
         message_action(game, ZOMBIE_REVIVED, necromancee)
       end
 
