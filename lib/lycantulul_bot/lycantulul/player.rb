@@ -34,6 +34,10 @@ module Lycantulul
       self.where(alive: true)
     end
 
+    def self.dead
+      self.where(alive: false)
+    end
+
     def self.create_player(user, game_id)
       self.create(
         user_id: user.id,
