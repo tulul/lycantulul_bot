@@ -363,7 +363,7 @@ module Lycantulul
 
       IMPORTANT_ROLES.each do |role|
         cur_count = role_count(eval(role.upcase), count)
-        cur_count > 0 && res += "#{count} #{self.get_role(eval(role.upcase))}\n"
+        cur_count > 0 && res += "#{cur_count} #{self.get_role(eval(role.upcase))}\n"
       end
       res
     end
