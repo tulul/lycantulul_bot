@@ -375,7 +375,7 @@ module Lycantulul
     end
 
     def dead_players
-      self.players - self.living_players
+      self.players.dead
     end
   end
 end
