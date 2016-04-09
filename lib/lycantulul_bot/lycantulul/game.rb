@@ -116,7 +116,6 @@ module Lycantulul
 
     def add_necromancee(necromancer_id, necromancee)
       return RESPONSE_DOUBLE if self.necromancee.any?{ |se| se[:necromancer_id] == necromancer_id }
-      return RESPONSE_SKIP if necromancee == NECROMANCER_SKIP
       return RESPONSE_INVALID unless valid_action?(necromancer_id, necromancee, 'necromancer')
 
       new_necromancee = {
@@ -125,6 +124,7 @@ module Lycantulul
       }
       self.necromancee << new_necromancee
       self.save
+      return RESPONSE_SKIP if necromancee == NECROMANCER_SKIP
       RESPONSE_OK
     end
 
@@ -235,6 +235,7 @@ module Lycantulul
 
       res = []
       ss && ss.each do |vc|
+        next if vc[:full_name] == NECROMANCER_SKIP
         necromancee = self.dead_players.with_name(vc[:full_name])
         if necromancee && (necromancer = self.living_necromancers.with_id(vc[:necromancer_id]))
           LycantululBot.log("#{necromancee.full_name} is raised from the dead by #{necromancer.full_name} (from GAME)")
