@@ -3,9 +3,8 @@ class LycantululBot
   @@round = 0
 
   MINIMUM_PLAYER = -> { (res = $redis.get('lycantulul::minimum_player')) ? res.to_i : 5 }
-  DISCUSSION_TIME = -> { (res = $redis.get('lycantulul::discussion_time')) ? res.to_i : 60 }
-  NIGHT_TIME = -> { (res = $redis.get('lycantulul::night_time')) ? res.to_i : 60 }
-  VOTING_TIME = -> { (res = $redis.get('lycantulul::voting_time')) ? res.to_i : 60 }
+  NIGHT_TIME = -> { (res = $redis.get('lycantulul::night_time')) ? res.to_i : 90 }
+  VOTING_TIME = -> { (res = $redis.get('lycantulul::voting_time')) ? res.to_i : 180 }
 
   ALLOWED_DELAY = -> { (res = $redis.get('lycantulul::allowed_delay')) ? res.to_i : 20 }
 
@@ -321,16 +320,16 @@ class LycantululBot
       send_to_player(group_chat_id, "GILS GILS GILS\nserigala berhasil memakan si #{victim_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{victim_role}")
       list_players(game)
       return if check_win(game)
-      discuss(game)
+      message_action(game, VOTING_START)
     when WEREWOLF_KILL_FAILED
       group_chat_id = game.group_id
       log('no victim')
       send_to_player(group_chat_id, 'PFFFTTT CUPU BANGET SERIGALA PADA, ga ada yang mati')
       list_players(game)
-      discuss(game)
+      message_action(game, VOTING_START)
     when VOTING_START
       group_chat_id = game.group_id
-      send_to_player(group_chat_id, "Udah ya tuduh-tuduhannya. Alangkah baiknya bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma #{VOTING_TIME.call} detik. kalo ga ada suara mayoritas, ga ada yang mati")
+      send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma #{VOTING_TIME.call} detik. kalo ga ada suara mayoritas, ga ada yang mati")
       log('enqueuing voting job')
       Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call, game, @@round)
 
@@ -385,12 +384,6 @@ class LycantululBot
         send_to_player(game.group_id, "Bego nih penjual jimat #{protector_name} malah jualan ke serigala :'))")
       end
     end
-  end
-
-  def self.discuss(game)
-    send_to_player(game.group_id, "Silakan nulul dan tuduh-tuduhan selama #{DISCUSSION_TIME.call} detik. Ntar gua tanya pada mau eksekusi siapa~")
-    log('enqueuing discussion job')
-    Lycantulul::DiscussionTimerJob.perform_in(DISCUSSION_TIME.call, game)
   end
 
   def self.send(message, text, reply = nil)
