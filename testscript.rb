@@ -264,6 +264,7 @@ a6.pm(Lycantulul::Game::NECROMANCER_SKIP)
 print_game
 
 event('execute innocent')
+a0.gr('/siapa_aja')
 a0.pm('8')
 a1.pm('8')
 a2.pm('8')
