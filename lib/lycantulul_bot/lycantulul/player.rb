@@ -60,6 +60,10 @@ module Lycantulul
       self.update_attribute(:alive, false)
     end
 
+    def revive
+      self.update_attribute(:alive, true)
+    end
+
     def assign(role)
       self.update_attribute(:role, role)
     end

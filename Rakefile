@@ -3,6 +3,7 @@ require 'redis'
 require 'mongoid'
 require 'telegram/bot'
 require 'sucker_punch'
+require 'active_support/inflector'
 
 require File.dirname(__FILE__) + '/config/init.rb'
 require File.dirname(__FILE__) + '/lib/lycantulul_bot/lycantulul/game.rb'
