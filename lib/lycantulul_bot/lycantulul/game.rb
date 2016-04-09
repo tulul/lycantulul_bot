@@ -134,7 +134,7 @@ module Lycantulul
       assign(SEER)
       assign(PROTECTOR)
       assign(NECROMANCER)
-      assign(SILVER BULLET)
+      assign(SILVER_BULLET)
     end
 
     def assign(role)
