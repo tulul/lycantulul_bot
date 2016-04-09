@@ -360,9 +360,10 @@ module Lycantulul
 
     def role_composition(count = nil)
       res = ''
+
       IMPORTANT_ROLES.each do |role|
-        count = role_count(eval(role.upcase), count)
-        count > 0 && res += "#{count} #{self.get_role(eval(role.upcase))}\n"
+        cur_count = role_count(eval(role.upcase), count)
+        cur_count > 0 && res += "#{count} #{self.get_role(eval(role.upcase))}\n"
       end
       res
     end
