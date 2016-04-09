@@ -2,6 +2,7 @@ module Lycantulul
   class Game
     include Mongoid::Document
 
+    ROLES = ['villager', 'werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
     VILLAGER = 0
     WEREWOLF = 1
     SEER = 2
@@ -66,6 +67,8 @@ module Lycantulul
       return RESPONSE_DOUBLE if self.victim.any?{ |vi| vi[:killer_id] == killer_id }
       return RESPONSE_INVALID unless valid_action?(killer_id, victim, 'werewolf')
 
+      victim = self.killables.with_name(victim).full_name
+
       new_victim = {
         killer_id: killer_id,
         full_name: victim
@@ -78,6 +81,8 @@ module Lycantulul
     def add_votee(voter_id, votee)
       return RESPONSE_DOUBLE if self.votee.any?{ |vo| vo[:voter_id] == voter_id }
       return RESPONSE_INVALID unless valid_action?(voter_id, votee, 'player')
+
+      votee = self.living_players.with_name(votee).full_name
 
       new_votee = {
         voter_id: voter_id,
@@ -92,6 +97,8 @@ module Lycantulul
       return RESPONSE_DOUBLE if self.seen.any?{ |se| se[:seer_id] == seer_id }
       return RESPONSE_INVALID unless valid_action?(seer_id, seen, 'seer')
 
+      seen = self.living_players.with_name(seen).full_name
+
       new_seen = {
         seer_id: seer_id,
         full_name: seen
@@ -105,6 +112,8 @@ module Lycantulul
       return RESPONSE_DOUBLE if self.protectee.any?{ |se| se[:protector_id] == protector_id }
       return RESPONSE_INVALID unless valid_action?(protector_id, protectee, 'protector')
 
+      protectee = self.living_players.with_name(protectee).full_name
+
       new_protectee = {
         protector_id: protector_id,
         full_name: protectee
@@ -117,6 +126,8 @@ module Lycantulul
     def add_necromancee(necromancer_id, necromancee)
       return RESPONSE_DOUBLE if self.necromancee.any?{ |se| se[:necromancer_id] == necromancer_id }
       return RESPONSE_INVALID unless valid_action?(necromancer_id, necromancee, 'necromancer')
+
+      necromancee = self.dead_players.with_name(necromancee).full_name unless necromancee == NECROMANCER_SKIP
 
       new_necromancee = {
         necromancer_id: necromancer_id,
@@ -273,6 +284,11 @@ module Lycantulul
       ded_count = self.dead_players.count
 
       res = "Masi idup: #{liv_count} makhluk\n"
+      living_werewolves.count > 0 && res += "#{living_werewolves.count} #{self.get_role(WEREWOLF)}\n"
+      living_seers.count > 0 && res += "#{living_seers.count} #{self.get_role(SEER)}\n"
+      living_protectors.count > 0 && res += "#{living_protectors.count} #{self.get_role(PROTECTOR)}\n"
+      living_necromancers.count > 0 && res += "#{living_necromancers.count} #{self.get_role(NECROMANCER)}\n"
+      living_silver_bullets.count > 0 && res += "#{living_silver_bullets.count} #{self.get_role(SILVER_BULLET)}\n"
 
       if self.finished
         res += self.living_players.map{ |lp| "#{lp.full_name} - #{self.get_role(lp.role)}" }.sort.join("\n")
@@ -347,28 +363,10 @@ module Lycantulul
       self.players.alive
     end
 
-    def living_villagers
-      self.living_players.with_role(VILLAGER)
-    end
-
-    def living_werewolves
-      self.living_players.with_role(WEREWOLF)
-    end
-
-    def living_seers
-      self.living_players.with_role(SEER)
-    end
-
-    def living_protectors
-      self.living_players.with_role(PROTECTOR)
-    end
-
-    def living_necromancers
-      self.living_players.with_role(NECROMANCER)
-    end
-
-    def living_silver_bullets
-      self.living_players.with_role(SILVER_BULLET)
+    ROLES.each do |role|
+      define_method("living_#{role.pluralize}") do
+        self.living_players.with_role(eval(role.upcase))
+      end
     end
 
     def killables
