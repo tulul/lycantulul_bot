@@ -472,7 +472,7 @@ class LycantululBot
   end
 
   def self.send_necromancer(dead_players, necromancer_chat_id)
-    log("sending necromancer instruction to #{necromancer_full_name}")
+    log("sending necromancer instruction to #{necromancer_chat_id}")
     options = [Lycantulul::Game::NECROMANCER_SKIP]
     options << dead_players.map{ |lv| lv[:full_name] }
     vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: options, resize_keyboard: true, one_time_keyboard: true)
