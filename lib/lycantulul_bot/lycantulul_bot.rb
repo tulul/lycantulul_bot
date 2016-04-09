@@ -19,6 +19,7 @@ class LycantululBot
   VOTING_FAILED = 8
   ENLIGHTEN_SEER = 9
   DEAD_PROTECTORS = 10
+  ZOMBIE_REVIVED = 11
 
   def self.start
     Telegram::Bot::Client.run($token) do |bot|
@@ -251,6 +252,18 @@ class LycantululBot
                 end
 
                 check_round_finished(game, @@round)
+              elsif game = check_necromancer(message)
+                log('necromancer confirmed')
+                case game.add_necromancee(message.from.id, message.text)
+                when Lycantulul::Game::RESPONSE_OK
+                  send(message, 'Seeep. Kamu sungguh berjasa :\') Semoga kamu tenang bersama-Nya. Tapi kalo kamu dibunuh serigala, gajadi deh :\'(')
+                when Lycantulul::Game::RESPONSE_SKIP
+                  send(message, 'Okay, sungguh bijaksana')
+                when Lycantulul::Game::RESPONSE_INVALID
+                  send_necromancer(game.dead_players, message.chat.id)
+                end
+
+                check_round_finished(game, @@round)
               else
                 send(message, 'WUT?')
               end
@@ -269,11 +282,14 @@ class LycantululBot
       log('game starts')
       opening = 'MULAI! MWA HA HA HA'
       opening += "\n\nJumlah pemain: #{game.players.count}\n"
-      opening += "Jumlah peran:\n"
+      opening += "Jumlah peran penting:\n"
       opening += "TTS (Tulul-Tulul Serigala): #{game.role_count(Lycantulul::Game::WEREWOLF)}\n"
       opening += "Tukang ngintip: #{game.role_count(Lycantulul::Game::SEER)}\n"
       opening += "Penjual jimat: #{game.role_count(Lycantulul::Game::PROTECTOR)}\n"
-      opening += "Sisanya villager kampungan"
+      opening += "Mujahid: #{game.role_count(Lycantulul::Game::NECROMANCER)}\n"
+      opening += "Pengidap ebola: #{game.role_count(Lycantulul::Game::SILVER_BULLET)}\n"
+      opening += "\n"
+      opening += "Sisanya villager kampungan ndak penting"
       send_to_player(game.group_id, opening)
       game.players.each do |pl|
         send_to_player(pl[:user_id], "Peran kamu kali ini adalah......#{game.get_role(pl[:role])}!!!\n\nTugasmu: #{game.get_task(pl[:role])}")
@@ -300,6 +316,11 @@ class LycantululBot
       game.living_protectors.each do |se|
         send_protector(lp, se[:full_name], se[:user_id])
       end
+
+      dp = game.dead_players
+      game.living_necromancers.each do |se|
+        send_necromancer(dp, se[:user_id])
+      end
     when WEREWOLF_KILL_BROADCAST
       lw = game.living_werewolves
       killer = aux[0]
@@ -314,18 +335,23 @@ class LycantululBot
       victim_chat_id = aux[0]
       victim_full_name = aux[1]
       victim_role = aux[2]
+      dead_werewolf = aux[3]
 
       log("#{victim_full_name} is killed by werewolves")
       send_to_player(victim_chat_id, 'MPOZ LO MATEK')
       send_to_player(group_chat_id, "GILS GILS GILS\nserigala berhasil memakan si #{victim_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{victim_role}")
-      list_players(game)
+
+      if dead_werewolf
+        send_to_player(dead_werewolf.user_id, 'MPOZ. Sial kan bunuh pengidap ebola, lu ikutan terjangkit. Mati deh')
+        send_to_player(group_chat_id, "#{victim_full_name} yang ternyata mengidap ebola ikut menjangkiti seekor serigala #{dead_werewolf.full_name} yang pada akhirnya meninggal dunia. Mari berantas ebola dari muka bumi ini secepatnya!")
+      end
+
       return if check_win(game)
       message_action(game, VOTING_START)
     when WEREWOLF_KILL_FAILED
       group_chat_id = game.group_id
       log('no victim')
       send_to_player(group_chat_id, 'PFFFTTT CUPU BANGET SERIGALA PADA, ga ada yang mati')
-      list_players(game)
       message_action(game, VOTING_START)
     when VOTING_START
       group_chat_id = game.group_id
@@ -356,14 +382,12 @@ class LycantululBot
       log("voting succeeded, resulting in #{votee_full_name}'s death")
       send_to_player(votee_chat_id, 'MPOZ LO DIEKSEKUSI')
       send_to_player(group_chat_id, "Hasil bertulul berbuah eksekusi si #{votee_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{votee_role}")
-      list_players(game)
       return if check_win(game)
       message_action(game, ROUND_START)
     when VOTING_FAILED
       group_chat_id = game.group_id
       log('voting failed')
       send_to_player(group_chat_id, 'Nulul tidak membuahkan mufakat')
-      list_players(game)
       message_action(game, ROUND_START)
     when ENLIGHTEN_SEER
       aux.each do |seen|
@@ -382,6 +406,19 @@ class LycantululBot
         log("sending #{protector_name} failed protection notification")
         send_to_player(protector_id, "Jangan jualan ke sembarang orang! Lu jualan ke serigala, mati aja.")
         send_to_player(game.group_id, "Bego nih penjual jimat #{protector_name} malah jualan ke serigala :'))")
+      end
+    when ZOMBIE_REVIVED
+      aux.each do |nc|
+        necromancee_name = nc[0]
+        necromancee_role = nc[1]
+        necromancer_name = nc[2]
+        necromancee_id = nc[3]
+        necromancer_id = nc[4]
+
+        log("sending necromancing messages to necromancer #{necromancer_name} and the raised #{necromancee_name}")
+        send_to_player(necromancee_id, "Kamu telah dihidupkan kembali oleh sang mujahid #{necromancer_name}! Selamat datang kembali!")
+        send_to_player(necromancer_id, "Kamu berhasil menghidupkan kembali #{necromancee_name}. Terima kasih, terima kasih, terima kasih. Kamu memang makhluk paling keren di muka bumi ini :*")
+        send_to_player(game.group_id, "#{necromancer_name} sang mujahid berhasil mengorbankan dirinya untuk menghidupkan #{necromancee_name}, seorang #{necromancee_role}. Ayo manfaatkan kesempatan ini sebaik mungkin!")
       end
     end
   end
@@ -434,6 +471,14 @@ class LycantululBot
     send_to_player(protector_chat_id, 'Mau jual jimat ke siapa?', reply_markup: vote_keyboard)
   end
 
+  def self.send_necromancer(dead_players, necromancer_chat_id)
+    log("sending necromancer instruction to #{necromancer_full_name}")
+    options = [Lycantulul::Game::NECROMANCER_SKIP]
+    options << dead_players.map{ |lv| lv[:full_name] }
+    vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: options, resize_keyboard: true, one_time_keyboard: true)
+    send_to_player(necromancer_chat_id, 'Mau menghidupkan siapa?', reply_markup: vote_keyboard)
+  end
+
   def self.wrong_room(message)
     if in_private?(message)
       send(message, 'Di grup doang tjoy ini bisanya')
@@ -475,7 +520,7 @@ class LycantululBot
   def self.check_werewolf_in_game(message)
     log('checking werewolf votes')
     Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
-      if wwg.valid_werewolf_with_victim?(message.from.id, message.text)
+      if wwg.valid_action?(message.from.id, message.text, 'werewolf')
         return wwg
       end
     end
@@ -516,6 +561,17 @@ class LycantululBot
     nil
   end
 
+  def self.check_necromancer(message)
+    log('checking necromancer')
+    Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
+      if wwg.valid_action?(message.from.id, message.text, 'necromancer')
+        return wwg
+      end
+    end
+    log('not found')
+    nil
+  end
+
   def self.check_round_finished(game, round, force = false)
     log("checking round finished #{round}")
     game.reload
@@ -524,11 +580,16 @@ class LycantululBot
     werewolves_done = game.victim.count == game.living_werewolves.count
     seers_done = game.seen.count == game.living_seers.count
     protectors_done = game.protectee.count == game.living_protectors.count
-    if force || (werewolves_done && seers_done && protectors_done)
+    necromancers_done = game.necromancee.count == game.living_necromancers.count
+    if force || (werewolves_done && seers_done && protectors_done && necromancers_done)
       killed = game.kill_victim
 
       if (failed_protection = game.protect_players) && !failed_protection.empty?
         message_action(game, DEAD_PROTECTORS, failed_protection)
+      end
+
+      if (necromancee = game.raise_the dead) && !necromancee.empty?
+        message_action(game, ZOMBIE_REVIVED, necromancee)
       end
 
       if (seen = game.enlighten_seer) && !seen.empty?
