@@ -405,7 +405,7 @@ module Lycantulul
     end
 
     def pending_voters
-      self.living_players.map(&:user_id) - self.votee.map{ |a| self.players.with_id(a[:voter_id]) }
+      self.living_players - self.votee.map{ |a| self.players.with_id(a[:voter_id]) }
     end
 
     def dead_players
