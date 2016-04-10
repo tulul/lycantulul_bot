@@ -1,27 +1,32 @@
 class LycantululBot
   @@bot = nil
 
-  MINIMUM_PLAYER = -> { (res = $redis.get('lycantulul::minimum_player')) ? res.to_i : 5 }
-  NIGHT_TIME = -> { (res = $redis.get('lycantulul::night_time')) ? res.to_i : 90 }
-  # multiply of 8 please
-  VOTING_TIME = -> { (res = $redis.get('lycantulul::voting_time')) ? res.to_i : 160 }
+  [
+    ['minimum_player', 5],
+    ['night_time', 90],
+    ['voting_time', 240], # multiply of 8 please
+    ['allowed_delay', 20],
+    ['maintenance', 0]
+  ].each_with_index do |game_rule, value|
+    const_set(game_rule[0].upcase, -> { (res = $redis.get("lycantulul::#{game_rule}")) ? res.to_i : game_rule[1] })
+  end
 
-  ALLOWED_DELAY = -> { (res = $redis.get('lycantulul::allowed_delay')) ? res.to_i : 20 }
-
-  MAINTENANCE = -> { $redis.get('lycantulul::maintenance').to_i == 1 rescue nil }
-
-  BROADCAST_ROLE = 0
-  ROUND_START = 1
-  WEREWOLF_KILL_BROADCAST = 2
-  WEREWOLF_KILL_SUCCEEDED = 3
-  WEREWOLF_KILL_FAILED= 4
-  VOTING_START = 5
-  VOTING_BROADCAST = 6
-  VOTING_SUCCEEDED = 7
-  VOTING_FAILED = 8
-  ENLIGHTEN_SEER = 9
-  DEAD_PROTECTORS = 10
-  ZOMBIE_REVIVED = 11
+  [
+    'broadcast_role',
+    'round_start',
+    'werewolf_kill_broadcast',
+    'werewolf_kill_succeeded',
+    'werewolf_kill_faile',
+    'voting_start',
+    'voting_broadcast',
+    'voting_succeeded',
+    'voting_failed',
+    'enlighten_seer',
+    'dead_protectors',
+    'zombie_revived'
+  ].each_with_index do |state, value|
+    const_set(state.upcase, value)
+  end
 
   def self.start(message)
         log("incoming message from #{message.from.first_name}: #{message.text}")
