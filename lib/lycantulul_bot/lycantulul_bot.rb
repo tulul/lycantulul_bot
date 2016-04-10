@@ -306,6 +306,10 @@ class LycantululBot
         end
       end
     end
+  rescue Exception => e
+    puts e.message
+    puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
+    retry
   end
 
   def self.message_action(game, action, aux = nil)
