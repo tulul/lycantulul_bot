@@ -144,7 +144,7 @@ module Lycantulul
     def start
       self.update_attribute(:waiting, false)
       IMPORTANT_ROLES.each do |role|
-        assign(eval(role.upcase))
+        assign(role.upcase.constantize)
       end
     end
 
@@ -272,7 +272,7 @@ module Lycantulul
     end
 
     def valid_action?(actor_id, actee_name, action)
-      actor = eval("self.living_#{action}".pluralize).with_id(actor_id)
+      actor = eval("self.living_#{action.pluralize}").with_id(actor_id)
 
       actee =
         if action == 'werewolf'
@@ -294,7 +294,7 @@ module Lycantulul
       res = "Masi idup: #{liv_count} makhluk\n"
       IMPORTANT_ROLES.each do |role|
         count = eval("living_#{role.pluralize}.count")
-        count > 0 && res += "#{count} #{self.get_role(eval(role.upcase))}\n"
+        count > 0 && res += "#{count} #{self.get_role(role.upcase.constantize)}\n"
       end
 
       if self.finished
@@ -380,8 +380,8 @@ module Lycantulul
       res = ''
 
       IMPORTANT_ROLES.each do |role|
-        cur_count = role_count(eval(role.upcase), count)
-        cur_count > 0 && res += "#{cur_count} #{self.get_role(eval(role.upcase))}\n"
+        cur_count = role_count(role.upcase.constantize, count)
+        cur_count > 0 && res += "#{cur_count} #{self.get_role(role.upcase.constantize)}\n"
       end
       res
     end
@@ -401,7 +401,7 @@ module Lycantulul
 
     ROLES.each do |role|
       define_method("living_#{role.pluralize}") do
-        self.living_players.with_role(eval(role.upcase))
+        self.living_players.with_role(role.upcase.constantize)
       end
     end
 

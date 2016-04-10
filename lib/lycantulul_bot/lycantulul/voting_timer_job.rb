@@ -20,14 +20,11 @@ module Lycantulul
           nil
         end
 
-      if next_reminder
-        LycantululBot.log('reminding')
-        LycantululBot.remind(game, round, time)
-        Lycantulul::VotingTimerJob.perform_in(next_reminder, round, next_state(state), next_reminder)
-      end
+      LycantululBot.log('reminding')
+      LycantululBot.remind(game, round, time, next_reminder, state)
     end
 
-    def next_state(state)
+    def self.next_state(state)
       case state
       when START
         REMIND
