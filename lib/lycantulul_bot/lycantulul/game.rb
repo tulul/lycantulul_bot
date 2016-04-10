@@ -4,12 +4,10 @@ module Lycantulul
 
     ROLES = ['villager', 'werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
     IMPORTANT_ROLES = ROLES - ['villager']
-    VILLAGER = 0
-    WEREWOLF = 1
-    SEER = 2
-    PROTECTOR = 3
-    NECROMANCER = 4
-    SILVER_BULLET = 5
+
+    ROLES.each_with_index do |role, value|
+      const_set(role.upcase, value)
+    end
 
     RESPONSE_OK = 0
     RESPONSE_INVALID = 1
@@ -144,7 +142,7 @@ module Lycantulul
     def start
       self.update_attribute(:waiting, false)
       IMPORTANT_ROLES.each do |role|
-        assign(eval(role.upcase))
+        assign(const_get(role.upcase))
       end
     end
 
@@ -271,13 +269,13 @@ module Lycantulul
       self.protectee.any?{ |pr| pr[:full_name] == victim_name }
     end
 
-    def valid_action?(actor_id, actee_name, action)
-      actor = eval("self.living_#{action}".pluralize).with_id(actor_id)
+    def valid_action?(actor_id, actee_name, role)
+      actor = self.send("living_#{role.pluralize}").with_id(actor_id)
 
       actee =
-        if action == 'werewolf'
+        if role == 'werewolf'
           self.killables.with_name(actee_name)
-        elsif action == 'necromancer'
+        elsif role == 'necromancer'
           return true if actee_name == NECROMANCER_SKIP
           self.dead_players.with_name(actee_name)
         else
@@ -293,8 +291,8 @@ module Lycantulul
 
       res = "Masi idup: <b>#{liv_count} makhluk</b>\n"
       IMPORTANT_ROLES.each do |role|
-        count = eval("living_#{role.pluralize}.count")
-        count > 0 && res += "<i>#{count} #{self.get_role(eval(role.upcase))}</i>\n"
+        count = self.send("living_#{role.pluralize}.count")
+        count > 0 && res += "<i>#{count} #{self.get_role(const_get(role.upcase))}</i>\n"
       end
 
       if self.finished
@@ -381,8 +379,8 @@ module Lycantulul
       res = ''
 
       IMPORTANT_ROLES.each do |role|
-        cur_count = role_count(eval(role.upcase), count)
-        cur_count > 0 && res += "<b>#{cur_count}</b> #{self.get_role(eval(role.upcase))}\n"
+        cur_count = role_count(const_get(role.upcase), count)
+        cur_count > 0 && res += "<b>#{cur_count}</b> #{self.get_role(const_get(role.upcase))}\n"
       end
       res
     end
@@ -402,7 +400,7 @@ module Lycantulul
 
     ROLES.each do |role|
       define_method("living_#{role.pluralize}") do
-        self.living_players.with_role(eval(role.upcase))
+        self.living_players.with_role(const.get(role.upcase))
       end
     end
 
