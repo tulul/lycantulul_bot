@@ -1,15 +1,14 @@
 class LycantululBot
   @@bot = nil
 
-  [
-    ['minimum_player', 5],
-    ['night_time', 90],
-    ['voting_time', 240], # multiply of 8 please
-    ['allowed_delay', 20],
-    ['maintenance', 0]
-  ].each_with_index do |game_rule, value|
-    const_set(game_rule[0].upcase, -> { (res = $redis.get("lycantulul::#{game_rule}")) ? res.to_i : game_rule[1] })
-  end
+  MINIMUM_PLAYER = -> { (res = $redis.get('lycantulul::minimum_player')) ? res.to_i : 5 }
+  NIGHT_TIME = -> { (res = $redis.get('lycantulul::night_time')) ? res.to_i : 90 }
+  # multiply of 8 please
+  VOTING_TIME = -> { (res = $redis.get('lycantulul::voting_time')) ? res.to_i : 160 }
+
+  ALLOWED_DELAY = -> { (res = $redis.get('lycantulul::allowed_delay')) ? res.to_i : 20 }
+
+  MAINTENANCE = -> { $redis.get('lycantulul::maintenance').to_i == 1 rescue nil }
 
   [
     'broadcast_role',
