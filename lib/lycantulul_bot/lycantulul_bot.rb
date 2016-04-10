@@ -1,10 +1,10 @@
 class LycantululBot
   @@bot = nil
-  @@round = 0
 
   MINIMUM_PLAYER = -> { (res = $redis.get('lycantulul::minimum_player')) ? res.to_i : 5 }
   NIGHT_TIME = -> { (res = $redis.get('lycantulul::night_time')) ? res.to_i : 90 }
-  VOTING_TIME = -> { (res = $redis.get('lycantulul::voting_time')) ? res.to_i : 180 }
+  # multiply of 8 please
+  VOTING_TIME = -> { (res = $redis.get('lycantulul::voting_time')) ? res.to_i : 160 }
 
   ALLOWED_DELAY = -> { (res = $redis.get('lycantulul::allowed_delay')) ? res.to_i : 20 }
 
@@ -245,7 +245,7 @@ class LycantululBot
                   send_kill_voting(game, message.chat.id)
                 end
 
-                check_round_finished(game, @@round)
+                check_round_finished(game)
               elsif game = check_voting(message)
                 log('voter confirmed')
                 case game.add_votee(message.from.id, message.text)
@@ -257,7 +257,7 @@ class LycantululBot
                   send_voting(game.living_players, full_name, message.chat.id)
                 end
 
-                check_voting_finished(game, @@round)
+                check_voting_finished(game)
               elsif game = check_seer(message)
                 log('seer confirmed')
                 case game.add_seen(message.from.id, message.text)
@@ -268,7 +268,7 @@ class LycantululBot
                   send_seer(game.living_players, full_name, message.chat.id)
                 end
 
-                check_round_finished(game, @@round)
+                check_round_finished(game)
               elsif game = check_protector(message)
                 log('protector confirmed')
                 case game.add_protectee(message.from.id, message.text)
@@ -279,7 +279,7 @@ class LycantululBot
                   send_protector(game.living_players, full_name, message.chat.id)
                 end
 
-                check_round_finished(game, @@round)
+                check_round_finished(game)
               elsif game = check_necromancer(message)
                 log('necromancer confirmed')
                 case game.add_necromancee(message.from.id, message.text)
@@ -291,7 +291,7 @@ class LycantululBot
                   send_necromancer(game.dead_players, message.chat.id)
                 end
 
-                check_round_finished(game, @@round)
+                check_round_finished(game)
               else
                 send(message, 'WUT?')
               end
@@ -324,12 +324,12 @@ class LycantululBot
       end
     when ROUND_START
       group_chat_id = game.group_id
-      @@round += 1
+      game.next_round
       log('new round')
 
       send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik! Kecuali warga kampung, diam aja menunggu kematian ya")
       log('enqueuing night job')
-      Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, @@round)
+      Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, game.round)
 
       game.living_werewolves.each do |ww|
         log("sending killing instruction to #{ww[:full_name]}")
@@ -385,7 +385,7 @@ class LycantululBot
       group_chat_id = game.group_id
       send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma #{VOTING_TIME.call} detik. kalo ga ada suara mayoritas, ga ada yang mati")
       log('enqueuing voting job')
-      Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call, game, @@round)
+      Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call / 2, game, game.round, Lycantulul::VotingTimerJob::START, VOTING_TIME.call / 2)
 
       livp = game.living_players
       livp.each do |lp|
@@ -535,6 +535,14 @@ class LycantululBot
     send(message, 'Lau belom terdaftar cuy. PM gua @lycantulul_bot terus /daftar, baru balik sini dan lakukan lagi apa yang mau lu lakukan tadi', true)
   end
 
+  def self.remind(game, round, time)
+    log('reminding voting')
+    game.reload
+    return unless round == game.round && !game.night? && !game.waiting? && !game.finished?
+    log('continuing')
+    send_to_player(game.group_id, "Waktu nulul tinggal #{time} detik.\n/panggil_yang_belom_voting atau liat /hasil_voting")
+  end
+
   def self.list_players(game)
     send_to_player(game.group_id, game.list_players)
   end
@@ -609,7 +617,7 @@ class LycantululBot
   def self.check_round_finished(game, round, force = false)
     log("checking round finished #{round}")
     game.reload
-    return unless round == @@round && game.night? && !game.waiting? && !game.finished?
+    return unless round == game.round && game.night? && !game.waiting? && !game.finished?
     log('continuing')
     werewolves_done = game.victim.count == game.living_werewolves.count
     seers_done = game.seen.count == game.living_seers.count
@@ -641,7 +649,7 @@ class LycantululBot
   def self.check_voting_finished(game, round, force = false)
     log("checking voting finished: #{round}")
     game.reload
-    return unless round == @@round && !game.night? && !game.waiting? && !game.finished?
+    return unless round == game.round && !game.night? && !game.waiting? && !game.finished?
     log('continuing')
     if force || game.votee.count == game.living_players.count
       if killed = game.kill_votee
@@ -682,6 +690,6 @@ class LycantululBot
   end
 
   def self.log(message)
-    puts "#{Time.now.utc} -- #{@@round} -- #{message}"
+    puts "#{Time.now.utc} -- #{message}"
   end
 end
