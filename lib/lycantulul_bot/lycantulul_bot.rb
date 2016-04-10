@@ -177,10 +177,14 @@ class LycantululBot
           when /\/hasil_voting/
             if in_group?(message)
               if game = check_game(message)
-                unless game.night?
-                  list_voting(game)
+                unless game.waiting?
+                  unless game.night?
+                    list_voting(game)
+                  else
+                    send(message, 'Masih malem, belom mulai voting', true)
+                  end
                 else
-                  send(message, 'Masih malem, belom mulai voting', true)
+                  send(message, 'Belom /mulai_main', true)
                 end
               else
                 send(message, 'No game coy. /bikin_baru dulu', true)
@@ -211,10 +215,14 @@ class LycantululBot
           when /\/panggil_yang_belom_voting/
             if in_group?(message)
               if game = check_game(message)
-                unless game.night?
-                  summon(game, :voting)
+                unless game.waiting?
+                  unless game.night?
+                    summon(game, :voting)
+                  else
+                    send(message, 'Masih malem, belom mulai voting', true)
+                  end
                 else
-                  send(message, 'Masih malem, belom mulai voting', true)
+                  send(message, 'Belom /mulai_main', true)
                 end
               else
                 send(message, 'No game coy. /bikin_baru dulu', true)
