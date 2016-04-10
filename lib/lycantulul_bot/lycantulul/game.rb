@@ -142,7 +142,7 @@ module Lycantulul
     def start
       self.update_attribute(:waiting, false)
       IMPORTANT_ROLES.each do |role|
-        assign(const_get(role.upcase))
+        assign(self.class.const_get(role.upcase))
       end
     end
 
@@ -292,7 +292,7 @@ module Lycantulul
       res = "Masi idup: <b>#{liv_count} makhluk</b>\n"
       IMPORTANT_ROLES.each do |role|
         count = self.send("living_#{role.pluralize}.count")
-        count > 0 && res += "<i>#{count} #{self.get_role(const_get(role.upcase))}</i>\n"
+        count > 0 && res += "<i>#{count} #{self.get_role(self.class.const_get(role.upcase))}</i>\n"
       end
 
       if self.finished
@@ -379,8 +379,8 @@ module Lycantulul
       res = ''
 
       IMPORTANT_ROLES.each do |role|
-        cur_count = role_count(const_get(role.upcase), count)
-        cur_count > 0 && res += "<b>#{cur_count}</b> #{self.get_role(const_get(role.upcase))}\n"
+        cur_count = role_count(self.class.const_get(role.upcase), count)
+        cur_count > 0 && res += "<b>#{cur_count}</b> #{self.get_role(self.class.const_get(role.upcase))}\n"
       end
       res
     end
@@ -400,7 +400,7 @@ module Lycantulul
 
     ROLES.each do |role|
       define_method("living_#{role.pluralize}") do
-        self.living_players.with_role(const_get(role.upcase))
+        self.living_players.with_role(self.class.const_get(role.upcase))
       end
     end
 
