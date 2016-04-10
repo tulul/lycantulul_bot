@@ -400,7 +400,7 @@ module Lycantulul
 
     ROLES.each do |role|
       define_method("living_#{role.pluralize}") do
-        self.living_players.with_role(const.get(role.upcase))
+        self.living_players.with_role(const_get(role.upcase))
       end
     end
 
