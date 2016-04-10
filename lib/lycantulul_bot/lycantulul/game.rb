@@ -291,7 +291,7 @@ module Lycantulul
 
       res = "Masi idup: <b>#{liv_count} makhluk</b>\n"
       IMPORTANT_ROLES.each do |role|
-        count = self.send("living_#{role.pluralize}.count")
+        count = self.send("living_#{role.pluralize}").count
         count > 0 && res += "<i>#{count} #{self.get_role(self.class.const_get(role.upcase))}</i>\n"
       end
 
