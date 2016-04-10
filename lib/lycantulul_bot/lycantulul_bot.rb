@@ -308,8 +308,6 @@ class LycantululBot
             log('stale message. purged')
           end
         end
-      end
-    end
   rescue StandardError => e
     puts e.message
     puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
