@@ -522,8 +522,13 @@ class LycantululBot
         game.pending_voters
       end
 
-    message = 'Hoy @'
-    message += to_call.map{ |tc| tc[:username] }.compact.join(' @')
+    to_call = to_call.map(&:username).compact
+    message =
+      if to_call.empty?
+        'Tidak ada'
+      else
+        'Hoy ' + to_call.map{ |tc| "@#{tc}" }.join(' ')
+      end
     send_to_player(game.group_id, message)
   end
 
