@@ -47,6 +47,8 @@ class LycantululBot
             else
               wrong_room(message)
             end
+          when /\/help/
+            send(message, bot_help)
           when /\/bikin_baru/
             if in_group?(message)
               if check_game(message)
@@ -527,6 +529,10 @@ class LycantululBot
 
   def self.unregistered(message)
     send(message, 'Lau belom terdaftar cuy. PM gua @lycantulul_bot terus /start, baru balik sini dan lakukan lagi apa yang mau lu lakukan tadi', true)
+  end
+
+  def self.bot_help
+    'Lihat penjelasan permainan di https://github.com/tulul/lycantulul_bot/blob/master/README.md'
   end
 
   def self.remind(game, round, time)
