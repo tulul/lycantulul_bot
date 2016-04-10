@@ -31,13 +31,13 @@ class LycantululBot
 
         if MAINTENANCE.call
           reply = in_group?(message)
-          send(message, 'Lagi bermain bersama Ecchi-men Ryoman dan Nopak Jokowi', reply)
+          send(message, 'Lagi bermain bersama Ecchi-men Ryoman dan Nopak Jokowi', reply: reply)
         else
           if Time.now.to_i - message.date < ALLOWED_DELAY.call
             if new_member = message.new_chat_participant
               unless Lycantulul::RegisteredPlayer.find_by(user_id: new_member.id)
                 name = new_member.username ? "@#{new_member.username}" : new_member.first_name
-                send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /start yaa~", true)
+                send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /start yaa~", reply: true)
               end
             end
 
@@ -58,7 +58,7 @@ class LycantululBot
             when /\/bikin_baru/
               if in_group?(message)
                 if check_game(message)
-                  send(message, 'Udah ada yang ngemulai gan tadi. /ikutan ae', true)
+                  send(message, 'Udah ada yang ngemulai gan tadi. /ikutan ae', reply: true)
                 else
                   if check_player(message)
                     Lycantulul::Game.create_from_message(message)
@@ -75,12 +75,12 @@ class LycantululBot
                 if game = check_game(message)
                   if game.waiting?
                     game.finish
-                    send(message, "Sip batal maen :'(", true)
+                    send(message, "Sip batal maen :'(", reply: true)
                   else
-                    send(message, 'Udah mulai tjoy ga bisa batal enak aje', true)
+                    send(message, 'Udah mulai tjoy ga bisa batal enak aje', reply: true)
                   end
                 else
-                  send(message, 'Batal apaan gan orang ga ada yang maen dah. Mending /bikin_baru', true)
+                  send(message, 'Batal apaan gan orang ga ada yang maen dah. Mending /bikin_baru', reply: true)
                 end
               else
                 wrong_room(message)
@@ -94,23 +94,23 @@ class LycantululBot
                       if game.add_player(user)
                         additional_text =
                           if game.players.count >= MINIMUM_PLAYER.call
-                            "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n\nTambah #{game.next_new_role} orang lagi ada peran baru"
+                            "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\nTambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan"
                           else
                             "#{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
                           end
 
-                        send(message, "Welcome to the game, #{user.first_name}!\n\nUdah #{game.players.count} orang nich~ #{additional_text}")
+                        send(message, "Welcome to the game, #{user.first_name}!\n\nUdah <b>#{game.players.count} orang</b> nich~ #{additional_text}", html: true)
                       else
-                        send(message, 'Duh udah masuk lu', true)
+                        send(message, 'Duh udah masuk lu', reply: true)
                       end
                     else
-                      send(message, 'Telat woy udah mulai!', true)
+                      send(message, 'Telat woy udah mulai!', reply: true)
                     end
                   else
                     unregistered(message)
                   end
                 else
-                  send(message, 'Ikutan apaan gan orang ga ada yang maen dah, kalo mau /bikin_baru', true)
+                  send(message, 'Ikutan apaan gan orang ga ada yang maen dah, kalo mau /bikin_baru', reply: true)
                 end
               else
                 wrong_room(message)
@@ -136,16 +136,16 @@ class LycantululBot
                           send(message, "Jangan /gajadi main dong #{user.first_name} :( /ikutan lagi plis :(\n#{additional_text}")
                         end
                       else
-                        send(message, 'Jangan bohong kamu ya. Kamu kan ndak /ikutan', true)
+                        send(message, 'Jangan bohong kamu ya. Kamu kan ndak /ikutan', reply: true)
                       end
                     else
-                      send(message, 'Udah mulai sih, ga boleh kabur', true)
+                      send(message, 'Udah mulai sih, ga boleh kabur', reply: true)
                     end
                   else
                     unregistered(message)
                   end
                 else
-                  send(message, 'Ga jadi what? /bikin_baru dulu', true)
+                  send(message, 'Ga jadi what? /bikin_baru dulu', reply: true)
                 end
               else
                 wrong_room(message)
@@ -159,13 +159,13 @@ class LycantululBot
                       message_action(game, BROADCAST_ROLE)
                       message_action(game, ROUND_START)
                     else
-                      send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", true)
+                      send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", reply: true)
                     end
                   else
-                    send(message, 'Udah mulai tjoy dari tadi', true)
+                    send(message, 'Udah mulai tjoy dari tadi', reply: true)
                   end
                 else
-                  send(message, 'Apa yang mau dimulai heh? /bikin_baru dulu!', true)
+                  send(message, 'Apa yang mau dimulai heh? /bikin_baru dulu!', reply: true)
                 end
               else
                 wrong_room(message)
@@ -175,7 +175,7 @@ class LycantululBot
                 if game = check_game(message)
                   list_players(game)
                 else
-                  send(message, 'Ga ada, orang ga ada yang maen. /bikin_baru gih', true)
+                  send(message, 'Ga ada, orang ga ada yang maen. /bikin_baru gih', reply: true)
                 end
               else
                 wrong_room(message)
@@ -187,13 +187,13 @@ class LycantululBot
                     unless game.night?
                       list_voting(game)
                     else
-                      send(message, 'Masih malem, belom mulai voting', true)
+                      send(message, 'Masih malem, belom mulai voting', reply: true)
                     end
                   else
-                    send(message, 'Belom /mulai_main', true)
+                    send(message, 'Belom /mulai_main', reply: true)
                   end
                 else
-                  send(message, 'No game coy. /bikin_baru dulu', true)
+                  send(message, 'No game coy. /bikin_baru dulu', reply: true)
                 end
               else
                 wrong_room(message)
@@ -203,7 +203,7 @@ class LycantululBot
                 if game = check_game(message)
                   summon(game, :all)
                 else
-                  send(message, 'Ga ada yang lagi main, /bikin_baru dulu', true)
+                  send(message, 'Ga ada yang lagi main, /bikin_baru dulu', reply: true)
                 end
               else
                 wrong_room(message)
@@ -213,7 +213,7 @@ class LycantululBot
                 if game = check_game(message)
                   summon(game, :alive)
                 else
-                  send(message, 'Ga ada yang lagi main, /bikin_baru dulu', true)
+                  send(message, 'Ga ada yang lagi main, /bikin_baru dulu', reply: true)
                 end
               else
                 wrong_room(message)
@@ -225,13 +225,13 @@ class LycantululBot
                     unless game.night?
                       summon(game, :voting)
                     else
-                      send(message, 'Masih malem, belom mulai voting', true)
+                      send(message, 'Masih malem, belom mulai voting', reply: true)
                     end
                   else
-                    send(message, 'Belom /mulai_main', true)
+                    send(message, 'Belom /mulai_main', reply: true)
                   end
                 else
-                  send(message, 'No game coy. /bikin_baru dulu', true)
+                  send(message, 'No game coy. /bikin_baru dulu', reply: true)
                 end
               else
                 wrong_room(message)
@@ -324,11 +324,11 @@ class LycantululBot
     when BROADCAST_ROLE
       log('game starts')
       opening = 'MULAI! MWA HA HA HA'
-      opening += "\n\nJumlah pemain: #{game.players.count}\n"
+      opening += "\n\nJumlah pemain: <b>#{game.players.count} makhluk</b>\n"
       opening += "Jumlah peran penting:\n"
       opening += game.role_composition
-      opening += "\n\nSisanya villager kampungan ndak penting"
-      send_to_player(game.group_id, opening)
+      opening += "\nSisanya villager kampungan ndak penting"
+      send_to_player(game.group_id, opening, parse_mode: 'HTML')
       game.players.each do |pl|
         send_to_player(pl[:user_id], "Peran kamu kali ini adalah......#{game.get_role(pl[:role])}!!!\n\nTugasmu: #{game.get_task(pl[:role])}")
       end
@@ -337,7 +337,7 @@ class LycantululBot
       game.next_round
       log('new round')
 
-      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu #{NIGHT_TIME.call} detik! Kecuali warga kampung, diam aja menunggu kematian ya")
+      send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu <b>#{NIGHT_TIME.call} detik</b>! Kecuali warga kampung, diam aja menunggu kematian ya", parse_mode: 'HTML')
       log('enqueuing night job')
       Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, game.round)
 
@@ -393,7 +393,7 @@ class LycantululBot
       message_action(game, VOTING_START)
     when VOTING_START
       group_chat_id = game.group_id
-      send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma #{VOTING_TIME.call} detik. kalo ga ada suara mayoritas, ga ada yang mati")
+      send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma <b>#{VOTING_TIME.call} detik</b>. kalo ga ada suara mayoritas, ga ada yang mati", parse_mode: 'HTML')
       log('enqueuing voting job')
       Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call / 2, game, game.round, Lycantulul::VotingTimerJob::START, VOTING_TIME.call / 2)
 
@@ -461,12 +461,13 @@ class LycantululBot
     end
   end
 
-  def self.send(message, text, reply = nil)
+  def self.send(message, text, reply: nil, html: nil)
     options = {
       chat_id: message.chat.id,
       text: text,
     }
     options.merge!({ reply_to_message_id: message.message_id }) if reply
+    options.merge!({ parse_mode: 'HTML' }) if html
     log("sending to #{message.chat.id}: #{text}")
     begin
       @@bot.api.send_message(options)
@@ -479,7 +480,7 @@ class LycantululBot
   def self.send_to_player(chat_id, text, options = {})
     options.merge!({
       chat_id: chat_id,
-      text: text
+      text: text,
     })
     log("sending to #{chat_id}: #{text}")
     begin
@@ -531,7 +532,7 @@ class LycantululBot
     if in_private?(message)
       send(message, 'Di grup doang tjoy ini bisanya')
     elsif in_group?(message)
-      send(message, 'PM mz mb! @lycantulul_bot', true)
+      send(message, 'PM mz mb! @lycantulul_bot', reply: true)
     end
   end
 
@@ -557,7 +558,7 @@ class LycantululBot
   end
 
   def self.unregistered(message)
-    send(message, 'Lau belom terdaftar cuy. PM gua @lycantulul_bot terus /start, baru balik sini dan lakukan lagi apa yang mau lu lakukan tadi', true)
+    send(message, 'Lau belom terdaftar cuy. PM gua @lycantulul_bot terus /start, baru balik sini dan lakukan lagi apa yang mau lu lakukan tadi', reply: true)
   end
 
   def self.bot_help
@@ -574,11 +575,11 @@ class LycantululBot
   end
 
   def self.list_players(game)
-    send_to_player(game.group_id, game.list_players)
+    send_to_player(game.group_id, game.list_players, parse_mode: 'HTML')
   end
 
   def self.list_voting(game)
-    send_to_player(game.group_id, game.list_voting)
+    send_to_player(game.group_id, game.list_voting, parse_mode: 'HTML')
   end
 
   def self.check_game(message)

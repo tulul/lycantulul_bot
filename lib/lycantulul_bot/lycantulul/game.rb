@@ -291,14 +291,14 @@ module Lycantulul
       liv_count = self.living_players.count
       ded_count = self.dead_players.count
 
-      res = "Masi idup: #{liv_count} makhluk\n"
+      res = "Masi idup: <b>#{liv_count} makhluk</b>\n"
       IMPORTANT_ROLES.each do |role|
         count = eval("living_#{role.pluralize}.count")
-        count > 0 && res += "#{count} #{self.get_role(eval(role.upcase))}\n"
+        count > 0 && res += "<i>#{count} #{self.get_role(eval(role.upcase))}</i>\n"
       end
 
       if self.finished
-        res += self.living_players.map{ |lp| "#{lp.full_name} - #{self.get_role(lp.role)}" }.sort.join("\n")
+        res += self.living_players.map{ |lp| "#{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
       else
         res += self.living_players.map(&:full_name).sort.join("\n")
       end
@@ -306,12 +306,12 @@ module Lycantulul
       if ded_count > 0
         res += "\n\n"
         res += "Udah mati: #{ded_count} makhluk\n"
-        res += (self.dead_players).map{ |lp| "#{lp.full_name} - #{self.get_role(lp.role)}" }.sort.join("\n")
+        res += (self.dead_players).map{ |lp| "#{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
       end
 
       if self.waiting?
         res += "\n\n#{self.role_composition}" unless self.role_composition.empty?
-        res += "\n\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
+        res += "\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
       end
 
       res
@@ -320,7 +320,7 @@ module Lycantulul
     def list_voting
       res = ''
       self.sort(votee).each do |votee|
-        res += "#{votee[0]} - #{votee[1]} suara\n"
+        res += "#{votee[0]} - <b>#{votee[1]} suara</b>\n"
       end
       return 'Belum ada yang mulai voting. Mulai woy!' if res.empty?
       res
@@ -382,7 +382,7 @@ module Lycantulul
 
       IMPORTANT_ROLES.each do |role|
         cur_count = role_count(eval(role.upcase), count)
-        cur_count > 0 && res += "#{cur_count} #{self.get_role(eval(role.upcase))}\n"
+        cur_count > 0 && res += "<b>#{cur_count}</b> #{self.get_role(eval(role.upcase))}\n"
       end
       res
     end
