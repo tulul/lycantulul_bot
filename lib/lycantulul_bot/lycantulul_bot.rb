@@ -708,9 +708,9 @@ class LycantululBot
       ending += ",          ____ _____  _____ \n"
       ending += "     /\\   |  _ \\_   _|/ ____|\n"
       ending += "    /  \\  | |_) || | | (___  \n"
-      ending += "   / /\\ \\ |  _ &lt; | |  \\___ \ \n"
+      ending += "   / /\\ \\ |  _ &lt; | |  \\___ \\ \n"
       ending += "  / ____ \\| |_) || |_ ____) |\n"
-      ending += " /_/    \\_\\____/_____|_____/ \n"
+      ending += " /_/    \\_\\____/_____|_____/ "
       ending += '</p>'
       send_to_player(game.group_id, ending, parse_mode: 'HTML')
     end
