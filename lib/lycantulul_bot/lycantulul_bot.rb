@@ -697,16 +697,27 @@ class LycantululBot
     win = false
     if game.living_werewolves.count == 0
       log('wereworlves ded')
-      game.finish
       send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh TTS telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
-      list_players(game)
       win = true
     elsif game.living_werewolves.count == game.killables.count || game.killables.count == 0
       log('villagers ded')
-      game.finish
       send_to_player(game.group_id, 'Dan permainan pun berakhir karena TTS telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
-      list_players(game)
       win = true
+    end
+
+    if win
+      game.finish
+      list_players(game)
+
+      ending = '<pre>'
+      ending += ",          ____ _____  _____ \n"
+      ending += "     /\\   |  _ \\_   _|/ ____|\n"
+      ending += "    /  \\  | |_) || | | (___  \n"
+      ending += "   / /\\ \\ |  _ &lt; | |  \\___ \ \n"
+      ending += "  / ____ \\| |_) || |_ ____) |\n"
+      ending += " /_/    \\_\\____/_____|_____/ \n"
+      ending += '</p>'
+      send_to_player(game.group_id, ending, parse_mode: 'HTML')
     end
 
     win
