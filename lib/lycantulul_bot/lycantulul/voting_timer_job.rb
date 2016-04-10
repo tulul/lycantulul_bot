@@ -8,22 +8,33 @@ module Lycantulul
     FINAL = 3
 
     def perform(game, round, state, time)
+      next_reminder =
+        case state
+        when START, REMIND
+          time / 2
+        when REMIND_AGAIN
+          time
+        when FINAL
+          LycantululBot.log('invoking check voting from job')
+          LycantululBot.check_voting_finished(game, round, true)
+          nil
+        end
+
+      if next_reminder
+        LycantululBot.log('reminding')
+        LycantululBot.remind(game, round, time)
+        Lycantulul::VotingTimerJob.perform_in(next_reminder, round, next_state(state), next_reminder)
+      end
+    end
+
+    def next_state(state)
       case state
       when START
-        LycantululBot.log('first reminder')
-        LycantululBot.remind(game, round, time)
-        Lycantulul::VotingTimerJob.perform_in(time / 2, round, REMIND, time / 2)
+        REMIND
       when REMIND
-        LycantululBot.log('second reminder')
-        LycantululBot.remind(game, round, time)
-        Lycantulul::VotingTimerJob.perform_in(time / 2, round, REMIND_AGAIN, time / 2)
+        REMIND_AGAIN
       when REMIND_AGAIN
-        LycantululBot.log('third reminder')
-        LycantululBot.remind(game, round, time)
-        Lycantulul::VotingTimerJob.perform_in(time, round, FINAL, time)
-      when FINAL
-        LycantululBot.log('invoking check voting from job')
-        LycantululBot.check_voting_finished(game, round, true)
+        FINAL
       end
     end
   end
