@@ -242,7 +242,7 @@ class LycantululBot
                   send_kill_voting(game, message.chat.id)
                 end
 
-                check_round_finished(game)
+                check_round_finished(game, game.round)
               elsif game = check_voting(message)
                 log('voter confirmed')
                 case game.add_votee(message.from.id, message.text)
@@ -254,7 +254,7 @@ class LycantululBot
                   send_voting(game.living_players, full_name, message.chat.id)
                 end
 
-                check_voting_finished(game)
+                check_voting_finished(game, game.round)
               elsif game = check_seer(message)
                 log('seer confirmed')
                 case game.add_seen(message.from.id, message.text)
@@ -265,7 +265,7 @@ class LycantululBot
                   send_seer(game.living_players, full_name, message.chat.id)
                 end
 
-                check_round_finished(game)
+                check_round_finished(game,game.round)
               elsif game = check_protector(message)
                 log('protector confirmed')
                 case game.add_protectee(message.from.id, message.text)
@@ -276,7 +276,7 @@ class LycantululBot
                   send_protector(game.living_players, full_name, message.chat.id)
                 end
 
-                check_round_finished(game)
+                check_round_finished(game, game.round)
               elsif game = check_necromancer(message)
                 log('necromancer confirmed')
                 case game.add_necromancee(message.from.id, message.text)
@@ -288,7 +288,7 @@ class LycantululBot
                   send_necromancer(game.dead_players, message.chat.id)
                 end
 
-                check_round_finished(game)
+                check_round_finished(game, game.round)
               else
                 send(message, 'WUT?')
               end
