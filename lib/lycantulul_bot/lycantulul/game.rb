@@ -9,10 +9,9 @@ module Lycantulul
       const_set(role.upcase, value)
     end
 
-    RESPONSE_OK = 0
-    RESPONSE_INVALID = 1
-    RESPONSE_DOUBLE = 2
-    RESPONSE_SKIP = 3
+    ['ok', 'invalid', 'double', 'skip'].each_with_index do |response, value|
+      const_set("RESPONSE_#{response.upcase}", value)
+    end
 
     NECROMANCER_SKIP = 'AKU BELUM MAU MATI MAS!'
 
