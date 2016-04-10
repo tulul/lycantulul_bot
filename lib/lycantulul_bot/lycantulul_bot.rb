@@ -454,7 +454,12 @@ class LycantululBot
     }
     options.merge!({ reply_to_message_id: message.message_id }) if reply
     log("sending to #{message.chat.id}: #{text}")
-    @@bot.api.send_message(options)
+    begin
+      @@bot.api.send_message(options)
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
+    end
   end
 
   def self.send_to_player(chat_id, text, options = {})
@@ -463,7 +468,12 @@ class LycantululBot
       text: text
     })
     log("sending to #{chat_id}: #{text}")
-    @@bot.api.send_message(options)
+    begin
+      @@bot.api.send_message(options)
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
+    end
   end
 
   def self.send_kill_voting(game, chat_id)
