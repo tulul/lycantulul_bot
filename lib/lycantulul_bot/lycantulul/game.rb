@@ -144,7 +144,7 @@ module Lycantulul
     def start
       self.update_attribute(:waiting, false)
       IMPORTANT_ROLES.each do |role|
-        assign(role.upcase.constantize)
+        assign(eval(role.upcase))
       end
     end
 
@@ -402,7 +402,7 @@ module Lycantulul
 
     ROLES.each do |role|
       define_method("living_#{role.pluralize}") do
-        self.living_players.with_role(role.upcase.constantize)
+        self.living_players.with_role(eval(role.upcase))
       end
     end
 
