@@ -14,6 +14,8 @@ module Lycantulul
 
     belongs_to :game, class_name: 'Lycantulul::Game', index: true
 
+    default_scope -> { order_by(full_name: :asc) }
+
     def self.with_id(user_id)
       self.find_by(user_id: user_id)
     end
