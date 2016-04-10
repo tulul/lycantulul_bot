@@ -28,18 +28,12 @@ class LycantululBot
           if new_member = message.new_chat_participant
             unless Lycantulul::RegisteredPlayer.find_by(user_id: new_member.id)
               name = new_member.username ? "@#{new_member.username}" : new_member.first_name
-              send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /daftar yaa~", true)
+              send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /start yaa~", true)
             end
           end
 
           case message.text
           when '/start'
-            if in_private?(message)
-              send(message, 'Selamat datang! Ciee mau ikutan main werewolf. Sebelom bisa mulai main, pencet /daftar dulu yak!')
-            else
-              wrong_room(message)
-            end
-          when /\/daftar/
             if in_private?(message)
               if check_player(message)
                 send(message, 'Udah kedaftar wey!')
@@ -529,7 +523,15 @@ class LycantululBot
   end
 
   def self.unregistered(message)
-    send(message, 'Lau belom terdaftar cuy. PM gua @lycantulul_bot terus /daftar, baru balik sini dan lakukan lagi apa yang mau lu lakukan tadi', true)
+    send(message, 'Lau belom terdaftar cuy. PM gua @lycantulul_bot terus /start, baru balik sini dan lakukan lagi apa yang mau lu lakukan tadi', true)
+  end
+
+  def self.remind(game, round, time)
+    log('reminding voting')
+    game.reload
+    return unless round == game.round && !game.night? && !game.waiting? && !game.finished?
+    log('continuing')
+    send_to_player(game.group_id, "Waktu nulul tinggal #{time} detik.\n/panggil_yang_belom_voting atau liat /hasil_voting")
   end
 
   def self.remind(game, round, time)
