@@ -310,6 +310,7 @@ module Lycantulul
       end
 
       if self.waiting?
+        res += "\n\n#{self.role_composition}" unless self.role_composition.empty?
         res += "\n\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
       end
 
@@ -328,17 +329,17 @@ module Lycantulul
     def get_role(role)
       case role
       when VILLAGER
-        'Warga kampung'
+        'Warga Kampung'
       when WEREWOLF
-        'TTS'
+        'Tulul-Tulul Serigala'
       when SEER
-        'Tukang intip'
+        'Tukang Intip'
       when PROTECTOR
-        'Penjual jimat'
+        'Penjual Jimat'
       when NECROMANCER
         'Mujahid'
       when SILVER_BULLET
-        'Pengidap ebola'
+        'Pengidap Ebola'
       end
     end
 

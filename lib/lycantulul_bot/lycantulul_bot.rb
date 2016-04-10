@@ -326,13 +326,8 @@ class LycantululBot
       opening = 'MULAI! MWA HA HA HA'
       opening += "\n\nJumlah pemain: #{game.players.count}\n"
       opening += "Jumlah peran penting:\n"
-      opening += "TTS (Tulul-Tulul Serigala): #{game.role_count(Lycantulul::Game::WEREWOLF)}\n"
-      opening += "Tukang ngintip: #{game.role_count(Lycantulul::Game::SEER)}\n"
-      opening += "Penjual jimat: #{game.role_count(Lycantulul::Game::PROTECTOR)}\n"
-      opening += "Mujahid: #{game.role_count(Lycantulul::Game::NECROMANCER)}\n"
-      opening += "Pengidap ebola: #{game.role_count(Lycantulul::Game::SILVER_BULLET)}\n"
-      opening += "\n"
-      opening += "Sisanya villager kampungan ndak penting"
+      opening += game.role_composition
+      opening += "\n\nSisanya villager kampungan ndak penting"
       send_to_player(game.group_id, opening)
       game.players.each do |pl|
         send_to_player(pl[:user_id], "Peran kamu kali ini adalah......#{game.get_role(pl[:role])}!!!\n\nTugasmu: #{game.get_task(pl[:role])}")
