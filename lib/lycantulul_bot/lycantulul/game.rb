@@ -21,6 +21,7 @@ module Lycantulul
     field :group_id, type: Integer
     field :night, type: Boolean, default: true
     field :waiting, type: Boolean, default: true
+    field :round, type: Integer, default: 0
     field :finished, type: Boolean, default: false
     field :victim, type: Array, default: []
     field :votee, type: Array, default: []
@@ -145,6 +146,10 @@ module Lycantulul
       IMPORTANT_ROLES.each do |role|
         assign(eval(role.upcase))
       end
+    end
+
+    def next_round
+      self.update_attribute(:round, self.round + 1)
     end
 
     def assign(role)
