@@ -2,10 +2,10 @@ module Lycantulul
   class VotingTimerJob
     include SuckerPunch::Job
 
-    START = 0
-    REMIND = 1
-    REMIND_AGAIN = 2
-    FINAL = 3
+    # list the states with sequence order
+    ['start', 'remind', 'remind_again', 'final'].each_with_index do |state, value|
+      const_set(state.upcase, value)
+    end
 
     def perform(game, round, state, time)
       next_reminder =
@@ -25,14 +25,7 @@ module Lycantulul
     end
 
     def self.next_state(state)
-      case state
-      when START
-        REMIND
-      when REMIND
-        REMIND_AGAIN
-      when REMIND_AGAIN
-        FINAL
-      end
+      state + 1
     end
   end
 end
