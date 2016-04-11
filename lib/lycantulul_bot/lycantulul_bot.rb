@@ -511,7 +511,7 @@ class LycantululBot
     while chosen.user_id == seer.user_id
       chosen = game.living_players.sample
     end
-    send_to_player(seer_chat_id, "Hum bala hum bala hum naga cinta membuka mata acha septriasa: peran #{chosen.full_name} adalah #{game.get_role(chosen.role)}")
+    send_to_player(seer.user_id, "Hum bala hum bala hum naga cinta membuka mata acha septriasa: peran #{chosen.full_name} adalah #{game.get_role(chosen.role)}")
   end
 
   def self.send_protector(living_players, protector_full_name, protector_chat_id)
