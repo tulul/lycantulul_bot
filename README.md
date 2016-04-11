@@ -28,7 +28,8 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. TTS (Tulul-Tulul Serigala): selalu ada, bertambah setiap 5 pemain (5 pemain: 1 TTS, 10 pemain: 2 TTS, dst.).
 1. Tukang Ngintip: muncul saat jumlah pemain 6 orang, bertambah setiap 12 pemain (6 pemain: 1 Tukang Ngintip, 18 pemain: 2 Tukang Ngintip, dst.).
 1. Penjual Jimat: muncul saat jumlah pemain 8 orang, bertambah setiap 14 pemain (8 pemain: 1 Penjual Jimat, 22 pemain: 2 Penjual Jimat, dst.).
-1. Mujahid: muncul saat jumlah pemain 12 orang, hanya ada 1 Mujahid
+1. Mujahid: muncul saat jumlah pemain 12 orang
+1. Super Mujahid: muncul saat jumlah pemain 16 orang dengan kemungkinan 25%
 1. Pengidap Ebola: muncul saat jumlah pemain 14 orang, bertambah setiap 10 pemain (14 pemain: 1 Pengidap Ebola, 24 pemain: 2 Pengidap Ebola, dst.).
 
 #### Penjelasan Tugas Peran
@@ -53,6 +54,9 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. Mujahid
    - Menghidupkan salah satu pemain yang sudah mati.
    - Sebagai gantinya, si Mujahid akan mati.
+1. Super Mujahid
+   - Menghidupkan salah satu pemain yang sudah mati.
+   - Setelah menghidupkan, si Super Mujahid masih tetap hidup (dan tidak diberitahu ke publik).
 1. Pengidap Ebola
    - Sama seperti Warga Kampung.
    - Jika dibunuh TTS, maka salah satu dari TTS akan ikut mati (dipilih secara acak).
