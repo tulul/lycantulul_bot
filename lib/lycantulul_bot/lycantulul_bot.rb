@@ -357,7 +357,7 @@ class LycantululBot
         send_necromancer(dp, se[:user_id])
       end
 
-      game.living_super_necromancers.each do |se|
+      !game.super_necromancer_done && game.living_super_necromancers.each do |se|
         send_necromancer(dp, se[:user_id])
       end
     when WEREWOLF_KILL_BROADCAST
