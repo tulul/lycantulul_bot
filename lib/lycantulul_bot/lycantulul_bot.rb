@@ -539,13 +539,21 @@ class LycantululBot
         game.pending_voters
       end
 
-    to_call = to_call.map(&:username).compact
+    to_call_username = to_call.map(&:username).compact
     message =
       if to_call.empty?
         'Tidak ada'
+      elsif who == :voting
+        'Sudah dipanggil via PM ya'
       else
-        'Hoy ' + to_call.map{ |tc| "@#{tc}" }.join(' ')
+        'Hoy ' + to_call_username.map{ |tc| "@#{tc}" }.join(' ')
       end
+
+    if who == :voting
+      to_call.each do |tc|
+        send_to_player(tc.user_id, 'Hai hai kamu belum voting udah ditungguin tuh sama yang lain')
+      end
+    end
     send_to_player(game.group_id, message)
   end
 
