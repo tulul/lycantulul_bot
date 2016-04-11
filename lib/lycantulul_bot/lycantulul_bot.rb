@@ -506,7 +506,7 @@ class LycantululBot
   end
 
   def self.send_faux_seer(game, seer)
-    log("sending seer instruction to #{seer_chat_id}")
+    log("sending seer instruction to #{seer.full_name}")
     chosen = seer
     while chosen.user_id == seer.user_id
       chosen = game.living_players.sample
