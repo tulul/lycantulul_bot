@@ -296,7 +296,7 @@ class LycantululBot
                   log('necromancer confirmed')
                   case game.add_necromancee(message.from.id, message.text)
                   when Lycantulul::Game::RESPONSE_OK
-                    send(message, 'Seeep. Kamu sungguh berjasa :\') Semoga kamu tenang bersama-Nya. Tapi kalo kamu dibunuh serigala, gajadi deh :\'(')
+                    send(message, 'Seeep. Kamu sungguh berjasa :\') Tapi kalo kamu dibunuh serigala, gajadi deh :\'(')
                   when Lycantulul::Game::RESPONSE_SKIP
                     send(message, 'Okay, sungguh bijaksana')
                   when Lycantulul::Game::RESPONSE_INVALID
@@ -359,6 +359,10 @@ class LycantululBot
 
       dp = game.dead_players
       game.living_necromancers.each do |se|
+        send_necromancer(dp, se[:user_id])
+      end
+
+      game.living_super_necromancers.each do |se|
         send_necromancer(dp, se[:user_id])
       end
     when WEREWOLF_KILL_BROADCAST
@@ -439,16 +443,20 @@ class LycantululBot
       end
     when ZOMBIE_REVIVED
       aux.each do |nc|
-        necromancee_name = nc[0]
-        necromancee_role = nc[1]
-        necromancer_name = nc[2]
-        necromancee_id = nc[3]
-        necromancer_id = nc[4]
+        necromancer = nc[0]
+        necromancee = nc[1]
 
-        log("sending necromancing messages to necromancer #{necromancer_name} and the raised #{necromancee_name}")
-        send_to_player(necromancee_id, "Kamu telah dihidupkan kembali oleh sang mujahid #{necromancer_name}! Selamat datang kembali!")
-        send_to_player(necromancer_id, "Kamu berhasil menghidupkan kembali #{necromancee_name}. Terima kasih, terima kasih, terima kasih. Kamu memang makhluk paling keren di muka bumi ini :*")
-        send_to_player(game.group_id, "#{necromancer_name} sang mujahid berhasil mengorbankan dirinya untuk menghidupkan #{necromancee_name}, seorang #{necromancee_role}. Ayo manfaatkan kesempatan ini sebaik mungkin!")
+        log("sending necromancing messages to necromancer #{necromancer.full_name} and the raised #{necromancee.full_name}")
+        send_to_player(necromancee.user_id, "Kamu telah dihidupkan kembali oleh seorang mujahid! Selamat datang kembali!")
+        send_to_player(necromancer.user_id, "Kamu berhasil menghidupkan kembali #{necromancee.full_name}. Terima kasih, terima kasih, terima kasih. Kamu memang makhluk paling keren di muka bumi ini :*")
+
+        end_message = " menghidupkan #{necromancee.full_name}, seorang #{game.get_role(necromancee.role)}. Ayo manfaatkan kesempatan ini sebaik mungkin!"
+        case necromancer.role
+        when Lycantulul::Game::NECROMANCER
+          send_to_player(game.group_id, "#{necromancer.full_name} sang #{game.get_role(necromancer.role)} berhasil mengorbankan dirinya untuk" + end_message)
+        when Lycantulul::Game::SUPER_NECROMANCER
+          send_to_player(game.group_id, "Seorang #{game.get_role(necromancer.role)} yang tidak mau disebutkan namanya berhasil" + end_message)
+        end
       end
     end
   end
@@ -637,7 +645,7 @@ class LycantululBot
   def self.check_necromancer(message)
     log('checking necromancer')
     Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
-      if wwg.valid_action?(message.from.id, message.text, 'necromancer')
+      if wwg.valid_action?(message.from.id, message.text, 'necromancer') || wwg.valid_action?(message.from.id, message.text, 'super_necromancer')
         return wwg
       end
     end
@@ -650,11 +658,7 @@ class LycantululBot
     game.reload
     return unless round == game.round && game.night? && !game.waiting? && !game.finished?
     log('continuing')
-    werewolves_done = game.victim.count == game.living_werewolves.count
-    seers_done = game.seen.count == game.living_seers.count
-    protectors_done = game.protectee.count == game.living_protectors.count
-    necromancers_done = game.necromancee.count == game.living_necromancers.count
-    if force || (werewolves_done && seers_done && protectors_done && necromancers_done)
+    if force || game.round_finished?
       killed = game.kill_victim
 
       if (failed_protection = game.protect_players) && !failed_protection.empty?
