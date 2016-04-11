@@ -331,6 +331,40 @@ a6.pm('9')
 a8.pm('11')
 print_game
 
+
+event('execute innocent')
+a0.pm('11')
+a1.pm('11')
+a2.pm('11')
+a3.pm('11')
+a4.pm('11')
+a5.pm('11')
+a6.pm('11')
+a7.pm('11')
+a8.pm('11')
+a9.pm('11')
+a10.pm('11')
+a11.pm('10')
+a12.pm('11')
+a13.pm('11')
+a14.pm('11')
+a15.pm('11')
+
+event('super necromancer tries to revive someone again')
+@g.players.with_id(0).revive
+@g.players.with_id(1).revive
+@g.players.with_id(2).revive
+@g.players.with_id(3).kill
+@g.players.with_id(4).kill
+@g.players.with_id(5).kill
+@g.players.with_id(6).revive
+a0.pm('6')
+a1.pm('6')
+a2.pm('6')
+a8.pm('11')
+a6.pm('9')
+print_game
+
 event('reset db')
 Lycantulul::Game.all.map(&:destroy)
 Lycantulul::Player.all.map(&:destroy)
