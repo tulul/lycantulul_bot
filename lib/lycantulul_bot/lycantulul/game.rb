@@ -4,7 +4,8 @@ module Lycantulul
 
     HIDDEN_ROLES = ['greedy_villager', 'useless_villager']
     IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
-    ROLES = HIDDEN_ROLES + IMPORTANT_ROLES + ['villager',
+    DEFAULT_ROLES = ['villager']
+    ROLES = HIDDEN_ROLES + IMPORTANT_ROLES + DEFAULT_ROLES
 
     ROLES.each_with_index do |role, value|
       const_set(role.upcase, value)
