@@ -17,7 +17,6 @@ class LycantululBot
     'werewolf_kill_succeeded',
     'werewolf_kill_faile',
     'voting_start',
-    'voting_broadcast',
     'voting_succeeded',
     'voting_failed',
     'enlighten_seer',
@@ -265,7 +264,6 @@ class LycantululBot
                   case game.add_votee(message.from.id, message.text)
                   when Lycantulul::Game::RESPONSE_OK
                     send(message, 'Seeep')
-                    message_action(game, VOTING_BROADCAST, [message.from.first_name, message.from.username, message.text])
                   when Lycantulul::Game::RESPONSE_INVALID
                     full_name = Lycantulul::Player.get_full_name(message.from)
                     send_voting(game.living_players, full_name, message.chat.id)
@@ -405,16 +403,6 @@ class LycantululBot
       livp.each do |lp|
         send_voting(livp, lp[:full_name], lp[:user_id])
       end
-    when VOTING_BROADCAST
-      group_chat_id = game.group_id
-      voter_name = aux[0]
-      voter_username = aux[1]
-      votee_name = aux[2]
-
-      voter = voter_username ? "@#{voter_username}" : voter_name
-
-      log("#{voter} votes for #{votee_name}")
-      send_to_player(group_chat_id, "#{voter} pengen mengeksekusi #{votee_name} mati aja woy lu ah")
     when VOTING_SUCCEEDED
       group_chat_id = game.group_id
       votee_chat_id = aux[0]
