@@ -716,7 +716,7 @@ class LycantululBot
       ending += "   / /\\ \\ |  _ &lt; | |  \\___ \\ \n"
       ending += "  / ____ \\| |_) || |_ ____) |\n"
       ending += " /_/    \\_\\____/_____|_____/ "
-      ending += '</p>'
+      ending += '</pre>'
       send_to_player(game.group_id, ending, parse_mode: 'HTML')
     end
 
