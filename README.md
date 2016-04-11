@@ -27,6 +27,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. Pak Ogah: muncul saat jumlah pemain 11 orang dengan kemungkinan 70%
 1. TTS (Tulul-Tulul Serigala): selalu ada, bertambah setiap 5 pemain (5 pemain: 1 TTS, 10 pemain: 2 TTS, dst.).
 1. Tukang Ngintip: muncul saat jumlah pemain 6 orang, bertambah setiap 12 pemain (6 pemain: 1 Tukang Ngintip, 18 pemain: 2 Tukang Ngintip, dst.).
+1. Dukun: muncul saat jumlah pemain 12 orang dengan kemungkinan 75%
 1. Penjual Jimat: muncul saat jumlah pemain 8 orang, bertambah setiap 14 pemain (8 pemain: 1 Penjual Jimat, 22 pemain: 2 Penjual Jimat, dst.).
 1. Mujahid: muncul saat jumlah pemain 12 orang
 1. Super Mujahid: muncul saat jumlah pemain 16 orang dengan kemungkinan 25%
@@ -48,6 +49,9 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
    - Jika membunuh Pengidap Ebola, salah satu serigala yang masih hidup akan ikut mati (dipilih secara acak).
 1. Tukang Ngintip
    - Mengintip peran pemain lain.
+1. Dukun
+   - Diberitahu peran salah satu pemain yang masih hidup (seperti tukang ngintip, tapi ga bisa milih).
+   - Karena random, tidak ada jaminan pemain yang sudah diberitahu tidak diberitahu lagi.
 1. Penjual Jimat
    - Melindungi salah satu pemain dari dibunuh TTS.
    - Jika yang dilindungi adalah TTS, ada 25% kemungkinan si Penjual Jimat akan mati.

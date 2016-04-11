@@ -1,6 +1,8 @@
 load 'Rakefile'
 
-updates = 'insert updates here'
+updates = "latest updates:\n"
+updates += "- role baru: dukun"
+updates += "- dukun: tiap malem dikasih tau secara random role seseorang yang masih hidup (tidak dijamin besoknya dikasih tau orang yang berbeda). muncul saat jumlah pemain >11 dengan kemungkinan 75%"
 groups = Lycantulul::Game.all.map(&:group_id).uniq
 Telegram::Bot::Client.run($token) do |bot|
   groups.each do |g|
