@@ -17,7 +17,6 @@ class LycantululBot
     'werewolf_kill_succeeded',
     'werewolf_kill_faile',
     'voting_start',
-    'voting_broadcast',
     'voting_succeeded',
     'voting_failed',
     'enlighten_seer',
@@ -262,7 +261,6 @@ class LycantululBot
                   case game.add_votee(message.from.id, message.text)
                   when Lycantulul::Game::RESPONSE_OK
                     send(message, 'Seeep')
-                    message_action(game, VOTING_BROADCAST, [message.from.first_name, message.from.username, message.text])
                   when Lycantulul::Game::RESPONSE_INVALID
                     full_name = Lycantulul::Player.get_full_name(message.from)
                     send_voting(game.living_players, full_name, message.chat.id)
@@ -400,16 +398,6 @@ class LycantululBot
       livp.each do |lp|
         send_voting(livp, lp[:full_name], lp[:user_id])
       end
-    when VOTING_BROADCAST
-      group_chat_id = game.group_id
-      voter_name = aux[0]
-      voter_username = aux[1]
-      votee_name = aux[2]
-
-      voter = voter_username ? "@#{voter_username}" : voter_name
-
-      log("#{voter} votes for #{votee_name}")
-      send_to_player(group_chat_id, "#{voter} pengen mengeksekusi #{votee_name} mati aja woy lu ah")
     when VOTING_SUCCEEDED
       group_chat_id = game.group_id
       votee_chat_id = aux[0]
@@ -538,13 +526,21 @@ class LycantululBot
         game.pending_voters
       end
 
-    to_call = to_call.map(&:username).compact
+    to_call_username = to_call.map(&:username).compact
     message =
       if to_call.empty?
         'Tidak ada'
+      elsif who == :voting
+        'Sudah dipanggil via PM ya'
       else
-        'Hoy ' + to_call.map{ |tc| "@#{tc}" }.join(' ')
+        'Hoy ' + to_call_username.map{ |tc| "@#{tc}" }.join(' ')
       end
+
+    if who == :voting
+      to_call.each do |tc|
+        send_to_player(tc.user_id, 'Hai hai kamu belum voting udah ditungguin tuh sama yang lain')
+      end
+    end
     send_to_player(game.group_id, message)
   end
 

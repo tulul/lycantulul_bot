@@ -2,8 +2,9 @@ module Lycantulul
   class Game
     include Mongoid::Document
 
-    ROLES = ['villager', 'werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
-    IMPORTANT_ROLES = ROLES - ['villager']
+    HIDDEN_ROLES = ['greedy_villager', 'useless_villager']
+    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
+    ROLES = HIDDEN_ROLES + IMPORTANT_ROLES + ['villager',
 
     ROLES.each_with_index do |role, value|
       const_set(role.upcase, value)
@@ -81,13 +82,27 @@ module Lycantulul
       return RESPONSE_DOUBLE if self.votee.any?{ |vo| vo[:voter_id] == voter_id }
       return RESPONSE_INVALID unless valid_action?(voter_id, votee, 'player')
 
+      voter = self.living_players.with_id(voter_id)
       votee = self.living_players.with_name(votee).full_name
 
-      new_votee = {
-        voter_id: voter_id,
-        full_name: votee
-      }
-      self.votee << new_votee
+      vote_count =
+        case voter.role
+        when VILLAGER
+          1
+        when GREEDY_VILLAGER
+          3
+        when USELESS_VILLAGER
+          0
+        end
+
+      vote_count.times do
+        new_votee = {
+          voter_id: voter_id,
+          full_name: votee
+        }
+        self.votee << new_votee
+      end
+
       self.save
       RESPONSE_OK
     end
@@ -140,7 +155,7 @@ module Lycantulul
 
     def start
       self.update_attribute(:waiting, false)
-      IMPORTANT_ROLES.each do |role|
+      ROLES.each do |role|
         assign(self.class.const_get(role.upcase))
       end
     end
@@ -154,6 +169,7 @@ module Lycantulul
         self.living_villagers.sample.assign(role)
         LycantululBot.log("assigning #{get_role(role)}")
       end
+    rescue
     end
 
     def finish
@@ -327,6 +343,10 @@ module Lycantulul
       case role
       when VILLAGER
         'Warga Kampung'
+      when GREEDY_VILLAGER
+        'Pak Raden'
+      when USELESS_VILLAGER
+        'Pak Ogah'
       when WEREWOLF
         'Tulul-Tulul Serigala'
       when SEER
@@ -344,6 +364,10 @@ module Lycantulul
       case role
       when VILLAGER
         'Diam menunggu kematian. Seriously. Tapi bisa bantu-bantu yang lain lah sumbang suara buat bunuh para serigala, sekalian berdoa biar dilindungi sama penjual jimat kalo ada'
+      when GREEDY_VILLAGER
+        'Diam menunggu kematian. Tapi saat bertulul dan bermufakat untuk mengeksekusi, bobot suara lu adalah 3'
+      when USELESS_VILLAGER
+        'Diam menunggu kematian. Seriously kenapa lu harus ada sih? Bahkan saat voting eksekusi suara lu ga dianggep. Cian. Tiaja'
       when WEREWOLF
         "Tulul-Tulul Serigala -- BUNUH, BUNUH, BUNUH\n\nSetiap malam, bakal ditanya mau bunuh siapa (oiya, kalo misalnya ada serigala yang lain, kalian harus berunding soalnya ntar voting, kalo ga ada suara mayoritas siapa yang mau dibunuh, ga ada yang mati, ntar gua kasih tau kok pas gua tanyain)\n\nHati-hati, bisa jadi ada pengidap ebola di antara para warga kampung, kalo bunuh dia, 1 ekor serigala akan ikut mati"
       when SEER
@@ -361,6 +385,10 @@ module Lycantulul
       count ||= self.players.count
       count -= LycantululBot::MINIMUM_PLAYER.call
       case role
+      when GREEDY_VILLAGER
+        count > 3 && rand(100) < 35 ? 1 : 0 # [9-..., 1] 35% chance
+      when USELESS_VILLAGER
+        count > 5 && rand(100) < 70 ? 1 : 0 # [11-..., 1] 70% chance
       when WEREWOLF
         (count / 5) + 1 # [5-9, 1], [10-14, 2], ...
       when SEER
@@ -368,7 +396,7 @@ module Lycantulul
       when PROTECTOR
         ((count - 3) / 14) + 1 # [8-21, 1], [22-35, 2], ...
       when NECROMANCER
-        count > 6 ? 1 : 0
+        count > 6 ? 1 : 0 # [12-..., 1]
       when SILVER_BULLET
         ((count - 9) / 10) + 1 # [14-23, 1], [24-33, 2], ...
       end
