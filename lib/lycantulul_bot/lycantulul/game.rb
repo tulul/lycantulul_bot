@@ -2,7 +2,7 @@ module Lycantulul
   class Game
     include Mongoid::Document
 
-    HIDDEN_ROLES = ['greedy_villager', 'useless_villager']
+    HIDDEN_ROLES = ['greedy_villager', 'useless_villager', 'super_necromancer']
     IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
     DEFAULT_ROLES = ['villager']
     ROLES = HIDDEN_ROLES + IMPORTANT_ROLES + DEFAULT_ROLES
@@ -15,7 +15,7 @@ module Lycantulul
       const_set("RESPONSE_#{response.upcase}", value)
     end
 
-    NECROMANCER_SKIP = 'AKU BELUM MAU MATI MAS!'
+    NECROMANCER_SKIP = 'NDAK DULU DEH'
 
     field :group_id, type: Integer
     field :night, type: Boolean, default: true
@@ -27,6 +27,7 @@ module Lycantulul
     field :seen, type: Array, default: []
     field :protectee, type: Array, default: []
     field :necromancee, type: Array, default: []
+    field :super_necromancer_done, type: Boolean, default: false
 
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
@@ -140,7 +141,7 @@ module Lycantulul
 
     def add_necromancee(necromancer_id, necromancee)
       return RESPONSE_DOUBLE if self.necromancee.any?{ |se| se[:necromancer_id] == necromancer_id }
-      return RESPONSE_INVALID unless valid_action?(necromancer_id, necromancee, 'necromancer')
+      return RESPONSE_INVALID unless valid_action?(necromancer_id, necromancee, 'necromancer') || valid_action?(necromancer_id, necromancee, 'super_necromancer')
 
       necromancee = self.dead_players.with_name(necromancee).full_name unless necromancee == NECROMANCER_SKIP
 
@@ -270,15 +271,32 @@ module Lycantulul
       ss && ss.each do |vc|
         next if vc[:full_name] == NECROMANCER_SKIP
         necromancee = self.dead_players.with_name(vc[:full_name])
-        if necromancee && (necromancer = self.living_necromancers.with_id(vc[:necromancer_id]))
+        necromancer = self.living_necromancers.with_id(vc[:necromancer_id]) || (!self.super_necromancer_done && self.living_super_necromancers.with_id(vc[:necromancer_id]))
+        if necromancee && necromancer
           LycantululBot.log("#{necromancee.full_name} is raised from the dead by #{necromancer.full_name} (from GAME)")
           necromancee.revive
-          necromancer.kill
-          res << [necromancee.full_name, self.get_role(necromancee.role), necromancer.full_name, necromancee.user_id, vc[:necromancer_id]]
+          if necromancer.role == SUPER_NECROMANCER
+            self.update_attribute(:super_necromancer_done, true)
+          else
+            necromancer.kill
+          end
+
+          res << [necromancer, necromancee]
         end
       end
 
       res
+    end
+
+    def round_finished?
+      res =
+        self.victim.count == self.living_werewolves.count &&
+        self.seen.count == self.living_seers.count &&
+        self.protectee.count == self.living_protectors.count
+
+      necromancer_count = self.living_necromancers.count
+      necromancer_count += self.living_super_necromancers_count unless self.super_necromancer_done
+      res &&  self.necromancee.count == necromancer_count
     end
 
     def under_protection?(victim_name)
@@ -291,7 +309,7 @@ module Lycantulul
       actee =
         if role == 'werewolf'
           self.killables.with_name(actee_name)
-        elsif role == 'necromancer'
+        elsif role == 'necromancer' || role == 'super_necromancer'
           return true if actee_name == NECROMANCER_SKIP
           self.dead_players.with_name(actee_name)
         else
@@ -356,6 +374,8 @@ module Lycantulul
         'Penjual Jimat'
       when NECROMANCER
         'Mujahid'
+      when SUPER_NECROMANCER
+        'Super Mujahid'
       when SILVER_BULLET
         'Pengidap Ebola'
       end
@@ -377,6 +397,8 @@ module Lycantulul
         'Jualin jimat ke orang-orang. Orang yang dapet jimat akan terlindungi dari serangan para serigala. Ntar tiap malem ditanyain mau jual ke siapa (sebenernya ga jualan juga sih, ga dapet duit, maap yak). Hati-hati loh tapi, kalo lu jual jimat ke serigala bisa-bisa lu dibunuh dengan 25% kemungkinan, kecil lah, peluang lu buat dapet pasangan hidup masih lebih gede :)'
       when NECROMANCER
         'Menghidupkan kembali 1 orang mayat. Sebagai gantinya, lu yang bakal mati. Ingat, cuma ada 1 kesempatan! Dan jangan sampe lu malah dibunuh duluan sama serigala. Allaaaaahuakbar!'
+      when SUPER_NECROMANCER
+        'Menghidupkan kembali 1 orang mayat. Karena lu mujahid versi super, setelah menghidupkan seseorang, lu akan tetap hidup. Tenang, peran lu ga bakal dikasih tau ke siapa-siapa, hanya lu dan Allah yang tahu. Allaaaaahuakbar!'
       when SILVER_BULLET
         'Diam menunggu kematian. Tapi, kalu lu dibunuh serigala, 1 ekor serigalanya ikutan mati. Aduh itu kenapa kena ebola lu ga dikarantina aja sih'
       end
@@ -398,6 +420,8 @@ module Lycantulul
         ((count - 3) / 14) + 1 # [8-21, 1], [22-35, 2], ...
       when NECROMANCER
         count > 6 ? 1 : 0 # [12-..., 1]
+      when SUPER_NECROMANCER
+        count > 10 && rand(100) < 25 ? 1 : 0 # [16-..., 1] 25% chance
       when SILVER_BULLET
         ((count - 9) / 10) + 1 # [14-23, 1], [24-33, 2], ...
       end
