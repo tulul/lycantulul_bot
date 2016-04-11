@@ -88,12 +88,12 @@ module Lycantulul
 
       vote_count =
         case voter.role
-        when VILLAGER
-          1
         when GREEDY_VILLAGER
           3
         when USELESS_VILLAGER
           0
+        else
+          1
         end
 
       vote_count.times do
