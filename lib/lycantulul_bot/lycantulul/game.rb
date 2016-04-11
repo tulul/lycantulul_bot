@@ -304,6 +304,8 @@ module Lycantulul
     end
 
     def valid_action?(actor_id, actee_name, role)
+      return false if role == 'super_necromancer' && self.super_necromancer_done
+
       actor = self.send("living_#{role.pluralize}").with_id(actor_id)
 
       actee =
