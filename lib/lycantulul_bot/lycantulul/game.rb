@@ -295,7 +295,7 @@ module Lycantulul
         self.protectee.count == self.living_protectors.count
 
       necromancer_count = self.living_necromancers.count
-      necromancer_count += self.living_super_necromancers_count unless self.super_necromancer_done
+      necromancer_count += self.living_super_necromancers.count unless self.super_necromancer_done
       res &&  self.necromancee.count == necromancer_count
     end
 
