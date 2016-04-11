@@ -15,7 +15,7 @@ class LycantululBot
     'round_start',
     'werewolf_kill_broadcast',
     'werewolf_kill_succeeded',
-    'werewolf_kill_faile',
+    'werewolf_kill_failed',
     'voting_start',
     'voting_succeeded',
     'voting_failed',
