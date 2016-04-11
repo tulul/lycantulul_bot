@@ -2,7 +2,7 @@ module Lycantulul
   class Game
     include Mongoid::Document
 
-    HIDDEN_ROLES = ['greedy_villager', 'useless_villager', 'super_necromancer']
+    HIDDEN_ROLES = ['greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer']
     IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
     DEFAULT_ROLES = ['villager']
     ROLES = HIDDEN_ROLES + IMPORTANT_ROLES + DEFAULT_ROLES
@@ -372,6 +372,8 @@ module Lycantulul
         'Tulul-Tulul Serigala'
       when SEER
         'Tukang Intip'
+      when FAUX_SEER
+        'Dukun'
       when PROTECTOR
         'Penjual Jimat'
       when NECROMANCER
@@ -395,6 +397,8 @@ module Lycantulul
         "Tulul-Tulul Serigala -- BUNUH, BUNUH, BUNUH\n\nSetiap malam, bakal ditanya mau bunuh siapa (oiya, kalo misalnya ada serigala yang lain, kalian harus berunding soalnya ntar voting, kalo ga ada suara mayoritas siapa yang mau dibunuh, ga ada yang mati, ntar gua kasih tau kok pas gua tanyain)\n\nHati-hati, bisa jadi ada pengidap ebola di antara para warga kampung, kalo bunuh dia, 1 ekor serigala akan ikut mati"
       when SEER
         'Bantuin kemenangan para rakyat jelata dengan ngintipin ke rumah orang-orang. Pas ngintip ntar bisa tau mereka siapa sebenarnya. Tapi kalo misalnya yang mau diintip (atau elunya sendiri) mati dibunuh serigala, jadi gatau dia siapa sebenarnya :\'( hidup memang keras'
+      when FAUX_SEER
+        'Bantuin kemenangan para rakyat jelata, di mana setiap malam lu bakal dikasih tau role salah seorang pemain yang masih hidup secara random (ga jamin sih besoknya dikasih tau orang yang berbeda apa engga hahaha)'
       when PROTECTOR
         'Jualin jimat ke orang-orang. Orang yang dapet jimat akan terlindungi dari serangan para serigala. Ntar tiap malem ditanyain mau jual ke siapa (sebenernya ga jualan juga sih, ga dapet duit, maap yak). Hati-hati loh tapi, kalo lu jual jimat ke serigala bisa-bisa lu dibunuh dengan 25% kemungkinan, kecil lah, peluang lu buat dapet pasangan hidup masih lebih gede :)'
       when NECROMANCER
@@ -418,6 +422,8 @@ module Lycantulul
         (count / 5) + 1 # [5-9, 1], [10-14, 2], ...
       when SEER
         ((count - 1) / 12) + 1 # [6-17, 1], [18-29, 2], ...
+      when FAUX_SEER
+        count > 6 && rand(100) < 75 ? 1 : 0 # [12-..., 1] 75% chance
       when PROTECTOR
         ((count - 3) / 14) + 1 # [8-21, 1], [22-35, 2], ...
       when NECROMANCER

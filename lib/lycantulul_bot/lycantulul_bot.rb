@@ -353,6 +353,10 @@ class LycantululBot
         send_seer(lp, se[:full_name], se[:user_id])
       end
 
+      game.living_faux_seers.each do |se|
+        send_faux_seer(game, se)
+      end
+
       game.living_protectors.each do |se|
         send_protector(lp, se[:full_name], se[:user_id])
       end
@@ -512,6 +516,15 @@ class LycantululBot
     log("sending seer instruction to #{seer_full_name}")
     vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [seer_full_name], resize_keyboard: true, one_time_keyboard: true)
     send_to_player(seer_chat_id, 'Mau ngintip perannya siapa kak? :3', reply_markup: vote_keyboard)
+  end
+
+  def self.send_faux_seer(game, seer)
+    log("sending seer instruction to #{seer.full_name}")
+    chosen = seer
+    while chosen.user_id == seer.user_id
+      chosen = game.living_players.sample
+    end
+    send_to_player(seer_chat_id, "Hum bala hum bala hum naga cinta membuka mata acha septriasa: peran #{chosen.full_name} adalah #{game.get_role(chosen.role)}")
   end
 
   def self.send_protector(living_players, protector_full_name, protector_chat_id)
