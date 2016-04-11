@@ -155,6 +155,7 @@ event('modify game contents')
 @g.players.with_id(5).assign(Lycantulul::Game::PROTECTOR)
 @g.players.with_id(6).assign(Lycantulul::Game::NECROMANCER)
 @g.players.with_id(7).assign(Lycantulul::Game::SILVER_BULLET)
+@g.players.with_id(8).assign(Lycantulul::Game::SUPER_NECROMANCER)
 print_game
 
 # event('werewolves no majority vote')
@@ -261,41 +262,12 @@ a3.pm('15')
 a4.pm('15')
 a5.pm('15')
 a6.pm(Lycantulul::Game::NECROMANCER_SKIP)
+a8.pm(Lycantulul::Game::NECROMANCER_SKIP)
 print_game
 
 event('execute innocent')
 a0.gr('/siapa_aja')
 a0.gr('/hasil_voting')
-a0.pm('8')
-a1.pm('8')
-a2.pm('8')
-a3.pm('8')
-a4.pm('8')
-a5.pm('8')
-a6.pm('8')
-a7.pm('8')
-a8.pm('9')
-a9.pm('8')
-a10.pm('8')
-a10.gr('/panggil_yang_belom_voting')
-a10.gr('/hasil_voting')
-a11.pm('8')
-a12.pm('8')
-a13.pm('8')
-a14.pm('8')
-a15.pm('8')
-
-event('necromancer raises someone')
-@g.players.with_id(0).kill
-@g.players.with_id(1).kill
-@g.players.with_id(2).kill
-@g.players.with_id(3).kill
-@g.players.with_id(4).kill
-@g.players.with_id(5).kill
-a6.pm('1')
-print_game
-
-event('execute innocent')
 a0.pm('9')
 a1.pm('9')
 a2.pm('9')
@@ -305,15 +277,46 @@ a5.pm('9')
 a6.pm('9')
 a7.pm('9')
 a8.pm('9')
-a9.pm('10')
+a9.pm('8')
 a10.pm('9')
+a10.gr('/panggil_yang_belom_voting')
+a10.gr('/hasil_voting')
 a11.pm('9')
 a12.pm('9')
 a13.pm('9')
 a14.pm('9')
 a15.pm('9')
 
-event('necromancer killed before raising')
+event('necromancer raises someone')
+@g.players.with_id(0).kill
+@g.players.with_id(1).kill
+@g.players.with_id(2).kill
+@g.players.with_id(3).kill
+@g.players.with_id(4).kill
+@g.players.with_id(5).kill
+a6.pm('1')
+a8.pm(Lycantulul::Game::NECROMANCER_SKIP)
+print_game
+
+event('execute innocent')
+a0.pm('11')
+a1.pm('11')
+a2.pm('11')
+a3.pm('11')
+a4.pm('11')
+a5.pm('11')
+a6.pm('11')
+a7.pm('11')
+a8.pm('11')
+a9.pm('11')
+a10.pm('11')
+a11.pm('10')
+a12.pm('11')
+a13.pm('11')
+a14.pm('11')
+a15.pm('11')
+
+event('necromancer killed before raising & super necromancer raises someone')
 @g.players.with_id(0).revive
 @g.players.with_id(1).revive
 @g.players.with_id(2).revive
@@ -325,6 +328,7 @@ a0.pm('6')
 a1.pm('6')
 a2.pm('6')
 a6.pm('9')
+a8.pm('11')
 print_game
 
 event('reset db')
