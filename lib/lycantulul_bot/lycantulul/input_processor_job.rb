@@ -100,7 +100,9 @@ module Lycantulul
                     if game.add_player(user)
                       additional_text =
                         if game.players.count >= MINIMUM_PLAYER.call
-                          "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\nTambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan"
+                          res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
+                          !game.custom_roles && res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan"
+                          res
                         else
                           "#{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
                         end
@@ -156,14 +158,76 @@ module Lycantulul
             else
               wrong_room(message)
             end
+          when /\/ganti_settingan_peran/
+            if in_group?(message)
+              if game = check_game(message)
+                if game.waiting?
+                  if !game.pending_custom_id
+                    force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
+                    pending = send(message, "Ubah jumlah peran siapa?\n\np.s.:daftar peran liat /help dan cuma bisa yang [peran pasti ada] kecuali warga kampung", reply: true, keyboard: force)
+                    game.pending_reply(pending['result']['message_id'])
+                  else
+                    send(message, 'Udah ada yang mulai nyetting tadi, selesaiin dulu atau /batal_nyetting_peran', reply: true)
+                  end
+                else
+                  send(message, 'Udah mulai', reply: true)
+                end
+              else
+                send(message, '/bikin_baru dulu', reply: true)
+              end
+            else
+              wrong_room(message)
+            end
+          when /\/batal_nyetting_peran/
+            if in_group?(message)
+              if game = check_game(message)
+                if game.waiting?
+                  if game.pending_custom_id
+                    game.cancel_pending_custom
+                    send(message, 'Yosh. Udah boleh /ganti_settingan_peran lagi', reply: true)
+                  else
+                    send(message, 'Ga ada yang lagi nyetting, /ganti_settingan_peran dulu', reply: true)
+                  end
+                else
+                  send(message, 'Udah mulai', reply: true)
+                end
+              else
+                send(message, '/bikin_baru dulu', reply: true)
+              end
+            else
+              wrong_room(message)
+            end
+          when /\/apus_settingan_peran/
+            if in_group?(message)
+              if game = check_game(message)
+                if game.waiting?
+                  if game.custom_roles
+                    game.remove_custom_roles
+                    send(message, 'Ok ;)', reply: true)
+                  else
+                    send(message, 'Belom ada yang nyetting2 peran, /ganti_settingan_peran dulu', reply: true)
+                  end
+                else
+                  send(message, 'Udah mulai', reply: true)
+                end
+              else
+                send(message, '/bikin_baru dulu', reply: true)
+              end
+            else
+              wrong_room(message)
+            end
           when /\/mulai_main/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
                   if game.players.count >= MINIMUM_PLAYER.call
-                    game.start
-                    message_action(game, BROADCAST_ROLE)
-                    message_action(game, ROUND_START)
+                    if game.role_valid?
+                      game.start
+                      message_action(game, BROADCAST_ROLE)
+                      message_action(game, ROUND_START)
+                    else
+                      send(message, 'Pembagian peran yang dikasih kebanyakan jumlahnya, /apus_settingan_peran atau /ganti_settingan_peran!', reply: true)
+                    end
                   else
                     send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", reply: true)
                   end
@@ -244,7 +308,6 @@ module Lycantulul
             end
           when /\/ilangin_keyboard/
             if in_private?(message)
-              keyboard = Telegram
               keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
               send_to_player(message.chat.id, 'OK', reply_markup: keyboard)
             else
@@ -320,12 +383,29 @@ module Lycantulul
               else
                 send(message, 'WUT?')
               end
+            else
+              if (game = check_game(message)) && (game.pending_custom_id == message.reply_to_message.message_id rescue false)
+                if message.text =~ /^\d$/
+                  res = game.set_custom_role(message.text.to_i)
+                  send(message, "Sip. Jumlah #{res[0]} ntar jadi #{res[1]}")
+                elsif (role = game.check_custom_role(message.text))
+                  force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
+                  pending = send(message, "Mau berapa #{game.get_role(role)}?", reply: true, keyboard: force)
+                  game.pending_reply(pending['result']['message_id'])
+                else
+                  send(message, 'WUT?', reply: true)
+                end
+              end
             end
           end
         else
           log('stale message. purged')
         end
       end
+    rescue StandardError => e
+      puts e.message
+      puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
+      retry
     end
 
     def message_action(game, action, aux = nil)
@@ -478,13 +558,14 @@ module Lycantulul
       end
     end
 
-    def send(message, text, reply: nil, html: nil)
+    def send(message, text, reply: nil, html: nil, keyboard: nil)
       options = {
         chat_id: message.chat.id,
         text: text,
       }
       options.merge!({ reply_to_message_id: message.message_id }) if reply
       options.merge!({ parse_mode: 'HTML' }) if html
+      options.merge!({ reply_markup: keyboard }) if keyboard
       log("sending to #{message.chat.id}: #{text}")
       begin
         @bot.api.send_message(options)
