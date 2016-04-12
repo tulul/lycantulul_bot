@@ -348,7 +348,7 @@ module Lycantulul
 
         send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu <b>#{NIGHT_TIME.call} detik</b>! Kecuali warga kampung, diam aja menunggu kematian ya", parse_mode: 'HTML')
         log('enqueuing night job')
-        Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, game.round)
+        Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, game.round, self)
 
         game.living_werewolves.each do |ww|
           log("sending killing instruction to #{ww[:full_name]}")
@@ -412,7 +412,7 @@ module Lycantulul
         group_chat_id = game.group_id
         send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma <b>#{VOTING_TIME.call} detik</b>. kalo ga ada suara mayoritas, ga ada yang mati", parse_mode: 'HTML')
         log('enqueuing voting job')
-        Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call / 2, game, game.round, Lycantulul::VotingTimerJob::START, VOTING_TIME.call / 2)
+        Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call / 2, game, game.round, Lycantulul::VotingTimerJob::START, VOTING_TIME.call / 2, self)
 
         livp = game.living_players
         livp.each do |lp|
@@ -609,7 +609,7 @@ module Lycantulul
       return unless next_reminder && round == game.round && !game.night? && !game.waiting? && !game.finished?
       log('continuing')
       send_to_player(game.group_id, "Waktu nulul tinggal #{time} detik.\n/panggil_yang_belom_voting atau liat /hasil_voting")
-      Lycantulul::VotingTimerJob.perform_in(next_reminder, game, round, Lycantulul::VotingTimerJob.next_state(state), next_reminder)
+      Lycantulul::VotingTimerJob.perform_in(next_reminder, game, round, Lycantulul::VotingTimerJob.next_state(state), next_reminder, self)
     end
 
     def list_players(game)
