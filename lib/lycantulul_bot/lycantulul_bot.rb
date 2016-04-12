@@ -31,7 +31,9 @@ class LycantululBot
 
         if MAINTENANCE.call
           reply = in_group?(message)
-          send(message, 'Lagi bermain bersama Ecchi-men Ryoman dan Nopak Jokowi', reply: reply)
+          if !reply || message.text =~ /@lycantulul_bot/
+            send(message, 'Lagi bermain bersama Ecchi-men Ryoman dan Nopak Jokowi', reply: reply)
+          end
         else
           if Time.now.to_i - message.date < ALLOWED_DELAY.call
             if new_member = message.new_chat_participant
