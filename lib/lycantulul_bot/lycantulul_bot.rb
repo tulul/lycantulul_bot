@@ -496,6 +496,8 @@ class LycantululBot
     rescue StandardError => e
       puts e.message
       puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
+      sleep(1)
+      retry
     end
   end
 
@@ -510,6 +512,8 @@ class LycantululBot
     rescue StandardError => e
       puts e.message
       puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
+      sleep(1)
+      retry
     end
   end
 
