@@ -43,6 +43,12 @@ GEM
       mongo (~> 2.1)
       origin (~> 2.2)
       tzinfo (>= 0.3.37)
+    mongoid-compatibility (0.3.1)
+      activesupport
+      mongoid (>= 2.0)
+    mongoid-locker (0.3.4)
+      mongoid (>= 2.8, < 6.0)
+      mongoid-compatibility
     multi_xml (0.5.5)
     multipart-post (2.0.0)
     origin (2.2.0)
@@ -73,6 +79,7 @@ PLATFORMS
 
 DEPENDENCIES
   mongoid
+  mongoid-locker
   rake
   redis
   sucker_punch (~> 2.0)

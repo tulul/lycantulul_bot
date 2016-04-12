@@ -1,6 +1,7 @@
 require 'rake'
 require 'redis'
 require 'mongoid'
+require 'mongoid-locker'
 require 'telegram/bot'
 require 'sucker_punch'
 require 'active_support/inflector'
