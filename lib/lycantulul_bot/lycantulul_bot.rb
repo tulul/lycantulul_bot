@@ -413,13 +413,19 @@ class LycantululBot
       end
     when VOTING_SUCCEEDED
       group_chat_id = game.group_id
-      votee_chat_id = aux[0]
-      votee_full_name = aux[1]
-      votee_role = aux[2]
+      votee = aux
 
-      log("voting succeeded, resulting in #{votee_full_name}'s death")
-      send_to_player(votee_chat_id, 'MPOZ LO DIEKSEKUSI')
-      send_to_player(group_chat_id, "Hasil bertulul berbuah eksekusi si #{votee_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{votee_role}")
+      amnestied = votee.role == Lycantulul::Game::AMNESTY && votee.alive
+
+      if amnestied
+        log("voting amnestied, resulting in #{votee.full_name}'s survival")
+        send_to_player(votee.user_id, 'CIYEEE ANAK PRESIDEN SELAMET YEE GA JADI MATI')
+        send_to_player(group_chat_id, "Hasil bertulul berbuah eksekusi si #{votee.full_name}\nNamun ternyata dia itu #{game.get_role(votee.role)}, selamatlah dia dari eksekusi kali ini")
+      else
+        log("voting succeeded, resulting in #{votee.full_name}'s death")
+        send_to_player(votee.user_id, 'MPOZ LO DIEKSEKUSI')
+        send_to_player(group_chat_id, "Hasil bertulul berbuah eksekusi si #{votee.full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{game.get_role(votee.role)}")
+      end
       return if check_win(game)
       message_action(game, ROUND_START)
     when VOTING_FAILED
