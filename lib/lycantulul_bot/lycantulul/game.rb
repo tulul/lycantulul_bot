@@ -1,6 +1,7 @@
 module Lycantulul
   class Game
     include Mongoid::Document
+    include Mongoid::Locker
 
     HIDDEN_ROLES = ['greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty']
     IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
@@ -60,116 +61,132 @@ module Lycantulul
 
     # never call unless really needed (will ruin statistics)
     def restart
-      self.players.map(&:reset_state)
-      self.night = true
-      self.waiting = true
-      self.finished = false
-      self.victim = []
-      self.votee = []
-      self.seen = []
-      self.protectee = []
-      self.save
+      self.with_lock(wait: true) do
+        self.players.map(&:reset_state)
+        self.night = true
+        self.waiting = true
+        self.finished = false
+        self.victim = []
+        self.votee = []
+        self.seen = []
+        self.protectee = []
+        self.save
+      end
     end
 
     def add_victim(killer_id, victim)
-      return RESPONSE_DOUBLE if self.victim.any?{ |vi| vi[:killer_id] == killer_id }
-      return RESPONSE_INVALID unless valid_action?(killer_id, victim, 'werewolf')
+      self.with_lock(wait: true) do
+        return RESPONSE_DOUBLE if self.victim.any?{ |vi| vi[:killer_id] == killer_id }
+        return RESPONSE_INVALID unless valid_action?(killer_id, victim, 'werewolf')
 
-      victim = self.killables.with_name(victim).full_name
+        victim = self.killables.with_name(victim).full_name
 
-      new_victim = {
-        killer_id: killer_id,
-        full_name: victim
-      }
-      self.victim << new_victim
-      self.save
-      RESPONSE_OK
+        new_victim = {
+          killer_id: killer_id,
+          full_name: victim
+        }
+        self.victim << new_victim
+        self.save
+        RESPONSE_OK
+      end
     end
 
     def add_votee(voter_id, votee)
-      return RESPONSE_DOUBLE if self.votee.any?{ |vo| vo[:voter_id] == voter_id }
-      return RESPONSE_INVALID unless valid_action?(voter_id, votee, 'player')
+      self.with_lock(wait: true) do
+        return RESPONSE_DOUBLE if self.votee.any?{ |vo| vo[:voter_id] == voter_id }
+        return RESPONSE_INVALID unless valid_action?(voter_id, votee, 'player')
 
-      voter = self.living_players.with_id(voter_id)
-      votee = self.living_players.with_name(votee).full_name
+        voter = self.living_players.with_id(voter_id)
+        votee = self.living_players.with_name(votee).full_name
 
-      vote_count =
-        case voter.role
-        when GREEDY_VILLAGER
-          3
-        when USELESS_VILLAGER
-          0
-        else
-          1
+        vote_count =
+          case voter.role
+          when GREEDY_VILLAGER
+            3
+          when USELESS_VILLAGER
+            0
+          else
+            1
+          end
+
+        vote_count.times do
+          new_votee = {
+            voter_id: voter_id,
+            full_name: votee
+          }
+          self.votee << new_votee
         end
 
-      vote_count.times do
-        new_votee = {
-          voter_id: voter_id,
-          full_name: votee
-        }
-        self.votee << new_votee
+        self.save
+        RESPONSE_OK
       end
-
-      self.save
-      RESPONSE_OK
     end
 
     def add_seen(seer_id, seen)
-      return RESPONSE_DOUBLE if self.seen.any?{ |se| se[:seer_id] == seer_id }
-      return RESPONSE_INVALID unless valid_action?(seer_id, seen, 'seer')
+      self.with_lock(wait: true) do
+        return RESPONSE_DOUBLE if self.seen.any?{ |se| se[:seer_id] == seer_id }
+        return RESPONSE_INVALID unless valid_action?(seer_id, seen, 'seer')
 
-      seen = self.living_players.with_name(seen).full_name
+        seen = self.living_players.with_name(seen).full_name
 
-      new_seen = {
-        seer_id: seer_id,
-        full_name: seen
-      }
-      self.seen << new_seen
-      self.save
-      RESPONSE_OK
+        new_seen = {
+          seer_id: seer_id,
+          full_name: seen
+        }
+        self.seen << new_seen
+        self.save
+        RESPONSE_OK
+      end
     end
 
     def add_protectee(protector_id, protectee)
-      return RESPONSE_DOUBLE if self.protectee.any?{ |se| se[:protector_id] == protector_id }
-      return RESPONSE_INVALID unless valid_action?(protector_id, protectee, 'protector')
+      self.with_lock(wait: true) do
+        return RESPONSE_DOUBLE if self.protectee.any?{ |se| se[:protector_id] == protector_id }
+        return RESPONSE_INVALID unless valid_action?(protector_id, protectee, 'protector')
 
-      protectee = self.living_players.with_name(protectee).full_name
+        protectee = self.living_players.with_name(protectee).full_name
 
-      new_protectee = {
-        protector_id: protector_id,
-        full_name: protectee
-      }
-      self.protectee << new_protectee
-      self.save
-      RESPONSE_OK
+        new_protectee = {
+          protector_id: protector_id,
+          full_name: protectee
+        }
+        self.protectee << new_protectee
+        self.save
+        RESPONSE_OK
+      end
     end
 
     def add_necromancee(necromancer_id, necromancee)
-      return RESPONSE_DOUBLE if self.necromancee.any?{ |se| se[:necromancer_id] == necromancer_id }
-      return RESPONSE_INVALID unless valid_action?(necromancer_id, necromancee, 'necromancer') || valid_action?(necromancer_id, necromancee, 'super_necromancer')
+      self.with_lock(wait: true) do
+        return RESPONSE_DOUBLE if self.necromancee.any?{ |se| se[:necromancer_id] == necromancer_id }
+        return RESPONSE_INVALID unless valid_action?(necromancer_id, necromancee, 'necromancer') || valid_action?(necromancer_id, necromancee, 'super_necromancer')
 
-      necromancee = self.dead_players.with_name(necromancee).full_name unless necromancee == NECROMANCER_SKIP
+        necromancee = self.dead_players.with_name(necromancee).full_name unless necromancee == NECROMANCER_SKIP
 
-      new_necromancee = {
-        necromancer_id: necromancer_id,
-        full_name: necromancee
-      }
-      self.necromancee << new_necromancee
-      self.save
-      return RESPONSE_SKIP if necromancee == NECROMANCER_SKIP
-      RESPONSE_OK
+        new_necromancee = {
+          necromancer_id: necromancer_id,
+          full_name: necromancee
+        }
+        self.necromancee << new_necromancee
+        self.save
+        return RESPONSE_SKIP if necromancee == NECROMANCER_SKIP
+        RESPONSE_OK
+      end
     end
 
     def start
-      self.update_attribute(:waiting, false)
-      ROLES.each do |role|
-        assign(self.class.const_get(role.upcase))
+      self.with_lock(wait: true) do
+        self.update_attribute(:waiting, false)
+        ROLES.each do |role|
+          assign(self.class.const_get(role.upcase))
+        end
       end
     end
 
     def next_round
-      self.update_attribute(:round, self.round + 1)
+      self.with_lock(wait: true) do
+        self.update_attribute(:round, self.round + 1)
+      end
     end
 
     def assign(role)
@@ -181,15 +198,17 @@ module Lycantulul
     end
 
     def finish
-      self.update_attribute(:finished, true)
-      self.players.each do |pl|
-        player = self.get_player(pl.user_id)
-        player.inc_game
-        player.send("inc_#{ROLES[pl.role]}")
-        if pl.alive
-          player.inc_survived
-        else
-          player.inc_died
+      self.with_lock(wait: true) do
+        self.update_attribute(:finished, true)
+        self.players.each do |pl|
+          player = self.get_player(pl.user_id)
+          player.inc_game
+          player.send("inc_#{ROLES[pl.role]}")
+          if pl.alive
+            player.inc_survived
+          else
+            player.inc_died
+          end
         end
       end
     end
@@ -199,133 +218,145 @@ module Lycantulul
     end
 
     def kill_victim
-      vc = self.sort(victim)
-      LycantululBot.log(vc.to_s)
-      self.update_attribute(:victim, [])
-      self.update_attribute(:night, false)
+      self.with_lock(wait: true) do
+        vc = self.sort(victim)
+        LycantululBot.log(vc.to_s)
+        self.update_attribute(:victim, [])
+        self.update_attribute(:night, false)
 
-      if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
-        victim = self.living_players.with_name(vc[0][0])
-        if !under_protection?(victim.full_name)
-          victim.kill
-          self.get_player(victim.user_id).inc_mauled
-          self.get_player(victim.user_id).inc_mauled_first_day if self.round == 1
-          LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
-          dead_werewolf =
-            if victim.role == SILVER_BULLET
-              ded = self.living_werewolves.sample
-              ded.kill
-              LycantululBot.log("#{ded.full_name} is killed because werewolves killed a silver bullet (from GAME)")
-              ded
-            end
+        if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
+          victim = self.living_players.with_name(vc[0][0])
+          if !under_protection?(victim.full_name)
+            victim.kill
+            self.get_player(victim.user_id).inc_mauled
+            self.get_player(victim.user_id).inc_mauled_first_day if self.round == 1
+            LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
+            dead_werewolf =
+              if victim.role == SILVER_BULLET
+                ded = self.living_werewolves.sample
+                ded.kill
+                LycantululBot.log("#{ded.full_name} is killed because werewolves killed a silver bullet (from GAME)")
+                ded
+              end
 
-          return [victim.user_id, victim.full_name, self.get_role(victim.role), dead_werewolf]
-        else
-          self.get_player(victim.user_id).inc_mauled_under_protection
-          return nil
+            return [victim.user_id, victim.full_name, self.get_role(victim.role), dead_werewolf]
+          else
+            self.get_player(victim.user_id).inc_mauled_under_protection
+            return nil
+          end
         end
-      end
 
-      nil
+        nil
+      end
     end
 
     def kill_votee
-      vc = self.sort(votee)
-      LycantululBot.log(vc.to_s)
-      self.update_attribute(:votee, [])
-      self.update_attribute(:night, true)
+      self.with_lock(wait: true) do
+        vc = self.sort(votee)
+        LycantululBot.log(vc.to_s)
+        self.update_attribute(:votee, [])
+        self.update_attribute(:night, true)
 
-      if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
-        votee = self.living_players.with_name(vc[0][0])
-        if votee.role == AMNESTY && !self.amnesty_done
-          self.update_attribute(:amnesty_done, true)
-          self.get_player(votee.user_id).inc_executed_under_protection
-        else
-          votee.kill
-          self.get_player(votee.user_id).inc_executed
-          self.get_player(votee.user_id).inc_executed_first_day if self.round == 1
+        if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
+          votee = self.living_players.with_name(vc[0][0])
+          if votee.role == AMNESTY && !self.amnesty_done
+            self.update_attribute(:amnesty_done, true)
+            self.get_player(votee.user_id).inc_executed_under_protection
+          else
+            votee.kill
+            self.get_player(votee.user_id).inc_executed
+            self.get_player(votee.user_id).inc_executed_first_day if self.round == 1
+          end
+          LycantululBot.log("#{votee.full_name} is executed (from GAME)")
+          return votee
         end
-        LycantululBot.log("#{votee.full_name} is executed (from GAME)")
-        return votee
-      end
 
-      nil
+        nil
+      end
     end
 
     def enlighten_seer
-      ss = self.seen
-      LycantululBot.log(ss.to_s)
-      self.update_attribute(:seen, [])
+      self.with_lock(wait: true) do
+        ss = self.seen
+        LycantululBot.log(ss.to_s)
+        self.update_attribute(:seen, [])
 
-      res = []
-      ss && ss.each do |vc|
-        seen = self.living_players.with_name(vc[:full_name])
-        if seen && self.living_seers.with_id(vc[:seer_id])
-          LycantululBot.log("#{seen.full_name} is seen (from GAME)")
-          res << [seen.full_name, self.get_role(seen.role), vc[:seer_id]]
+        res = []
+        ss && ss.each do |vc|
+          seen = self.living_players.with_name(vc[:full_name])
+          if seen && self.living_seers.with_id(vc[:seer_id])
+            LycantululBot.log("#{seen.full_name} is seen (from GAME)")
+            res << [seen.full_name, self.get_role(seen.role), vc[:seer_id]]
+          end
         end
-      end
 
-      res
+        res
+      end
     end
 
     def protect_players
-      ss = self.protectee
-      LycantululBot.log(ss.to_s)
-      self.update_attribute(:protectee, [])
+      self.with_lock(wait: true) do
+        ss = self.protectee
+        LycantululBot.log(ss.to_s)
+        self.update_attribute(:protectee, [])
 
-      return nil unless self.living_protectors.count > 0
+        return nil unless self.living_protectors.count > 0
 
-      res = []
-      ss && ss.each do |vc|
-        protectee = self.living_players.with_name(vc[:full_name])
-        if protectee.role == WEREWOLF && rand.round + rand.round == 0 # 25% ded if protecting werewolf
-          ded = self.living_players.with_id(vc[:protector_id])
-          ded.kill
-          LycantululBot.log("#{ded.full_name} is killed because they protected werewolf (from GAME)")
-          res << [ded.full_name, ded.user_id]
+        res = []
+        ss && ss.each do |vc|
+          protectee = self.living_players.with_name(vc[:full_name])
+          if protectee.role == WEREWOLF && rand.round + rand.round == 0 # 25% ded if protecting werewolf
+            ded = self.living_players.with_id(vc[:protector_id])
+            ded.kill
+            LycantululBot.log("#{ded.full_name} is killed because they protected werewolf (from GAME)")
+            res << [ded.full_name, ded.user_id]
+          end
         end
-      end
 
-      res
+        res
+      end
     end
 
     def raise_the_dead
-      ss = self.necromancee
-      LycantululBot.log(ss.to_s)
-      self.update_attribute(:necromancee, [])
+      self.with_lock(wait: true) do
+        ss = self.necromancee
+        LycantululBot.log(ss.to_s)
+        self.update_attribute(:necromancee, [])
 
-      res = []
-      ss && ss.each do |vc|
-        next if vc[:full_name] == NECROMANCER_SKIP
-        necromancee = self.dead_players.with_name(vc[:full_name])
-        necromancer = self.living_necromancers.with_id(vc[:necromancer_id]) || (!self.super_necromancer_done && self.living_super_necromancers.with_id(vc[:necromancer_id]))
-        if necromancee && necromancer
-          LycantululBot.log("#{necromancee.full_name} is raised from the dead by #{necromancer.full_name} (from GAME)")
-          necromancee.revive
-          self.get_player(necromancee.user_id).inc_revived
-          if necromancer.role == SUPER_NECROMANCER
-            self.update_attribute(:super_necromancer_done, true)
-          else
-            necromancer.kill
+        res = []
+        ss && ss.each do |vc|
+          next if vc[:full_name] == NECROMANCER_SKIP
+          necromancee = self.dead_players.with_name(vc[:full_name])
+          necromancer = self.living_necromancers.with_id(vc[:necromancer_id]) || (!self.super_necromancer_done && self.living_super_necromancers.with_id(vc[:necromancer_id]))
+          if necromancee && necromancer
+            LycantululBot.log("#{necromancee.full_name} is raised from the dead by #{necromancer.full_name} (from GAME)")
+            necromancee.revive
+            self.get_player(necromancee.user_id).inc_revived
+            if necromancer.role == SUPER_NECROMANCER
+              self.update_attribute(:super_necromancer_done, true)
+            else
+              necromancer.kill
+            end
+
+            res << [necromancer, necromancee]
           end
-
-          res << [necromancer, necromancee]
         end
-      end
 
-      res
+        res
+      end
     end
 
     def round_finished?
-      res =
-        self.victim.count == self.living_werewolves.count &&
-        self.seen.count == self.living_seers.count &&
-        self.protectee.count == self.living_protectors.count
+      self.with_lock(wait: true) do
+        res =
+          self.victim.count == self.living_werewolves.count &&
+          self.seen.count == self.living_seers.count &&
+          self.protectee.count == self.living_protectors.count
 
-      necromancer_count = self.living_necromancers.count
-      necromancer_count += self.living_super_necromancers.count unless self.super_necromancer_done
-      res &&  self.necromancee.count == necromancer_count
+        necromancer_count = self.living_necromancers.count
+        necromancer_count += self.living_super_necromancers.count unless self.super_necromancer_done
+        res &&  self.necromancee.count == necromancer_count
+      end
     end
 
     def under_protection?(victim_name)
@@ -333,21 +364,23 @@ module Lycantulul
     end
 
     def valid_action?(actor_id, actee_name, role)
-      return false if role == 'super_necromancer' && self.super_necromancer_done
+      self.with_lock(wait: true) do
+        return false if role == 'super_necromancer' && self.super_necromancer_done
 
-      actor = self.send("living_#{role.pluralize}").with_id(actor_id)
+        actor = self.send("living_#{role.pluralize}").with_id(actor_id)
 
-      actee =
-        if role == 'werewolf'
-          self.killables.with_name(actee_name)
-        elsif role == 'necromancer' || role == 'super_necromancer'
-          return true if actee_name == NECROMANCER_SKIP
-          self.dead_players.with_name(actee_name)
-        else
-          self.living_players.with_name(actee_name)
-        end
+        actee =
+          if role == 'werewolf'
+            self.killables.with_name(actee_name)
+          elsif role == 'necromancer' || role == 'super_necromancer'
+            return true if actee_name == NECROMANCER_SKIP
+            self.dead_players.with_name(actee_name)
+          else
+            self.living_players.with_name(actee_name)
+          end
 
-      actor && actee && actor.user_id != actee.user_id
+        actor && actee && actor.user_id != actee.user_id
+      end
     end
 
     def list_players
