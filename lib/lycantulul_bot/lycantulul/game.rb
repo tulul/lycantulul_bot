@@ -2,7 +2,7 @@ module Lycantulul
   class Game
     include Mongoid::Document
 
-    HIDDEN_ROLES = ['greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer']
+    HIDDEN_ROLES = ['greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty']
     IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
     DEFAULT_ROLES = ['villager']
     ROLES = HIDDEN_ROLES + IMPORTANT_ROLES + DEFAULT_ROLES
@@ -28,6 +28,7 @@ module Lycantulul
     field :protectee, type: Array, default: []
     field :necromancee, type: Array, default: []
     field :super_necromancer_done, type: Boolean, default: false
+    field :amnesty_done, type: Boolean, default: false
 
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
@@ -216,9 +217,13 @@ module Lycantulul
 
       if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
         votee = self.living_players.with_name(vc[0][0])
-        votee.kill
+        if votee.role == AMNESTY && !self.amnesty_done
+          self.update_attribute(:amnesty_done, true)
+        else
+          votee.kill
+        end
         LycantululBot.log("#{votee.full_name} is executed (from GAME)")
-        return [votee.user_id, votee.full_name, self.get_role(votee.role)]
+        return votee
       end
 
       nil
@@ -382,6 +387,8 @@ module Lycantulul
         'Super Mujahid'
       when SILVER_BULLET
         'Pengidap Ebola'
+      when AMNESTY
+        'Anak Presiden'
       end
     end
 
@@ -406,7 +413,9 @@ module Lycantulul
       when SUPER_NECROMANCER
         'Menghidupkan kembali 1 orang mayat. Karena lu mujahid versi super, setelah menghidupkan seseorang, lu akan tetap hidup. Tenang, peran lu ga bakal dikasih tau ke siapa-siapa, hanya lu dan Allah yang tahu. Allaaaaahuakbar!'
       when SILVER_BULLET
-        'Diam menunggu kematian. Tapi, kalu lu dibunuh serigala, 1 ekor serigalanya ikutan mati. Aduh itu kenapa kena ebola lu ga dikarantina aja sih'
+        'Diam menunggu kematian. Tapi, kalo lu dibunuh serigala, 1 ekor serigalanya ikutan mati. Aduh itu kenapa kena ebola lu ga dikarantina aja sih'
+      when AMNESTY
+        'Diam menunggu kematian. Tapi, kalo lu dieksekusi oleh warga, lu bakal selamat (tapi cuma bisa sekali itu aja). Tiati aja sih malam berikutnya dibunuh serigala'
       end
     end
 
@@ -432,6 +441,8 @@ module Lycantulul
         count > 10 && rand(100) < 25 ? 1 : 0 # [16-..., 1] 25% chance
       when SILVER_BULLET
         ((count - 9) / 10) + 1 # [14-23, 1], [24-33, 2], ...
+      when AMNESTY
+        count > 4 && rand(100) < 50 ? 1 : 0 # [10-..., 1] 50% chance
       end
     end
 
