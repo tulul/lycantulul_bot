@@ -8,11 +8,13 @@ class Telegram::Bot::Types::User
   def pm(text)
     message = Telegram::Bot::Types::Message.new(chat: Telegram::Bot::Types::Chat.new(type: 'private', id: self.id), text: text, from: self, date: Time.now.to_i, message_id: 1)
     LycantululBot.start(message)
+    sleep(1.0/8.0)
   end
 
   def gr(text)
     message = Telegram::Bot::Types::Message.new(chat: Telegram::Bot::Types::Chat.new(type: 'group', id: 21), text: text, from: self, date: Time.now.to_i, message_id: 1)
     LycantululBot.start(message)
+    sleep(1.0/20.0)
   end
 end
 
@@ -31,6 +33,7 @@ def print_game
 end
 
 def event(message)
+  sleep(1)
   puts
   puts ("   #{message}   ".center(159, '#'))
 end
@@ -143,7 +146,6 @@ a0.gr('/mulai_main')
 # a14.pm('14')
 # a15.pm('15')
 
-sleep(5)
 event('modify game contents')
 @g = Lycantulul::Game.find_by(group_id: 21, finished: false, night: true, waiting: false)
 @g.restart
