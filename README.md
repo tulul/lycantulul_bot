@@ -17,6 +17,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/panggil_semua` - Panggil semua pemain
 - `/panggil_yang_idup` - cukup jelas
 - `/panggil_yang_belom_voting` - cukup jelas
+- `/statistik` - Liat statistik diri sendiri
 - `/ilangin_keyboard` - Reply keyboard muncul terus? Cobain nih
 
 ### Jumlah & Penjelasan Peran
