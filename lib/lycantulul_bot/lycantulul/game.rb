@@ -445,7 +445,7 @@ module Lycantulul
 
     def role_count(role, count = nil)
       count ||= self.players.count
-      count -= LycantululBot::MINIMUM_PLAYER.call
+      count -= Lycantulul::InputProcessorJob::MINIMUM_PLAYER.call
       case role
       when VILLAGER
         0
