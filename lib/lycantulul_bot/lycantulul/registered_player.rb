@@ -1,6 +1,7 @@
 module Lycantulul
   class RegisteredPlayer
     include Mongoid::Document
+    include Mongoid::Locker
 
     field :user_id,                       type: Integer
     field :first_name,                    type: String
@@ -42,10 +43,12 @@ module Lycantulul
       player = self.find_by(user_id: user.id)
 
       if player
-        player.first_name = user.first_name
-        player.last_name = user.last_name
-        player.username = user.username
-        player.save if player.changed?
+        player.with_lock(wait: true) do
+          player.first_name = user.first_name
+          player.last_name = user.last_name
+          player.username = user.username
+          player.save if player.changed?
+        end
       end
 
       player

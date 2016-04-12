@@ -1,6 +1,7 @@
 module Lycantulul
   class Player
     include Mongoid::Document
+    include Mongoid::Locker
 
     field :user_id, type: Integer
     field :first_name, type: String
@@ -57,21 +58,29 @@ module Lycantulul
     end
 
     def reset_state
-      self.role = Lycantulul::Game::VILLAGER
-      self.alive = true
-      self.save
+      self.with_lock(wait: true) do
+        self.role = Lycantulul::Game::VILLAGER
+        self.alive = true
+        self.save
+      end
     end
 
     def kill
-      self.update_attribute(:alive, false)
+      self.with_lock(wait: true) do
+        self.update_attribute(:alive, false)
+      end
     end
 
     def revive
-      self.update_attribute(:alive, true)
+      self.with_lock(wait: true) do
+        self.update_attribute(:alive, true)
+      end
     end
 
     def assign(role)
-      self.update_attribute(:role, role)
+      self.with_lock(wait: true) do
+        self.update_attribute(:role, role)
+      end
     end
   end
 end
