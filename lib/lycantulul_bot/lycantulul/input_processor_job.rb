@@ -33,14 +33,6 @@ module Lycantulul
       @bot = bot
       log("incoming message from #{message.from.first_name}: #{message.text}")
 
-      if message.text == '/sleep'
-        sleep(5)
-        send(message, 'sleep')
-      else
-        send(message, 'wake')
-      end
-      return
-
       if MAINTENANCE.call
         reply = in_group?(message)
         if !reply || message.text =~ /@lycantulul_bot/

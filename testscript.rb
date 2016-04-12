@@ -143,6 +143,7 @@ a0.gr('/mulai_main')
 # a14.pm('14')
 # a15.pm('15')
 
+sleep(5)
 event('modify game contents')
 @g = Lycantulul::Game.find_by(group_id: 21, finished: false, night: true, waiting: false)
 @g.restart
