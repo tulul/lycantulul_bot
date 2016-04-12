@@ -8,7 +8,7 @@ class Telegram::Bot::Types::User
   def pm(text)
     message = Telegram::Bot::Types::Message.new(chat: Telegram::Bot::Types::Chat.new(type: 'private', id: self.id), text: text, from: self, date: Time.now.to_i, message_id: 1)
     LycantululBot.start(message)
-    sleep(1.0/8.0)
+    sleep(1.0/20.0)
   end
 
   def gr(text)
@@ -333,9 +333,8 @@ a0.pm('6')
 a1.pm('6')
 a2.pm('6')
 a6.pm('9')
-a8.pm('11')
+a8.pm('3')
 print_game
-
 
 event('execute innocent')
 a0.pm('11')
