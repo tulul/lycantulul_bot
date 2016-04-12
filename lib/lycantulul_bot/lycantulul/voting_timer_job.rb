@@ -7,7 +7,7 @@ module Lycantulul
       const_set(state.upcase, value)
     end
 
-    def perform(game, round, state, time)
+    def perform(game, round, state, time, ip)
       next_reminder =
         case state
         when START, REMIND
@@ -15,13 +15,13 @@ module Lycantulul
         when REMIND_AGAIN
           time
         when FINAL
-          LycantululBot.log('invoking check voting from job')
-          LycantululBot.check_voting_finished(game, round, true)
+          ip.log('invoking check voting from job')
+          ip.check_voting_finished(game, round, true)
           nil
         end
 
-      LycantululBot.log('reminding')
-      LycantululBot.remind(game, round, time, next_reminder, state)
+      ip.log('reminding')
+      ip.remind(game, round, time, next_reminder, state)
     end
 
     def self.next_state(state)

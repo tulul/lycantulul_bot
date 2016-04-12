@@ -6,7 +6,7 @@ module Lycantulul
     HIDDEN_ROLES = ['greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty']
     IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
     DEFAULT_ROLES = ['villager']
-    ROLES = HIDDEN_ROLES + IMPORTANT_ROLES + DEFAULT_ROLES
+    ROLES = DEFAULT_ROLES + IMPORTANT_ROLES + HIDDEN_ROLES
 
     ROLES.each_with_index do |role, value|
       const_set(role.upcase, value)
@@ -30,6 +30,10 @@ module Lycantulul
     field :necromancee, type: Array, default: []
     field :super_necromancer_done, type: Boolean, default: false
     field :amnesty_done, type: Boolean, default: false
+
+    field :custom_roles, type: Array, default: nil
+    field :pending_custom_id, type: Integer, default: nil
+    field :pending_custom_role, type: Integer, default: nil
 
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
@@ -57,6 +61,66 @@ module Lycantulul
     def remove_player(user)
       return false unless self.players.with_id(user.id)
       return self.players.with_id(user.id).destroy
+    end
+
+    def check_custom_role(role_string)
+      self.with_lock(wait: true) do
+        custom = nil
+        role_string = role_string.gsub(/[^A-Za-z]/, '').downcase
+
+        if role_string =~ /tts/
+          custom = WEREWOLF
+        end
+
+        IMPORTANT_ROLES.each do |role|
+          role = self.class.const_get(role.upcase)
+          if self.get_role(role).gsub(/[^A-Za-z]/, '').downcase.include?(role_string)
+            custom = role
+            break
+          end
+        end
+
+        self.pending_custom_role = custom
+        self.save
+        custom
+      end
+    end
+
+    def set_custom_role(amount)
+      self.with_lock(wait: true) do
+        self.custom_roles ||= []
+        self.custom_roles[self.pending_custom_role] = amount
+        res = [self.get_role(self.pending_custom_role), amount]
+        self.cancel_pending_custom
+        self.save
+        res
+      end
+    end
+
+    def remove_custom_roles
+      self.with_lock(wait: true) do
+        self.custom_roles = nil
+        self.cancel_pending_custom
+        self.save
+      end
+    end
+
+    def cancel_pending_custom
+      self.with_lock(wait: true) do
+        self.pending_custom_id = nil
+        self.pending_custom_role = nil
+        self.save
+      end
+    end
+
+    def pending_reply(id)
+      self.with_lock(wait: true) do
+        self.update_attribute(:pending_custom_id, id)
+      end
+    end
+
+    def role_valid?
+      !self.custom_roles || IMPORTANT_ROLES.inject(0){ |sum, role| sum + self.role_count(self.class.const_get(role.upcase)) } <= self.players.count
     end
 
     # never call unless really needed (will ruin statistics)
@@ -479,6 +543,10 @@ module Lycantulul
     def role_count(role, count = nil)
       count ||= self.players.count
       count -= Lycantulul::InputProcessorJob::MINIMUM_PLAYER.call
+
+      custom = self.custom_roles[role] rescue nil
+      return custom if custom
+
       case role
       when VILLAGER
         0
@@ -516,9 +584,9 @@ module Lycantulul
     end
 
     def next_new_role
-      res = 1
+      res = 0
       current_comp = self.role_composition
-      while current_comp == self.role_composition(self.players.count + res)
+      while !self.custom_roles && current_comp == self.role_composition(self.players.count + res)
         res += 1
       end
       res

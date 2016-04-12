@@ -11,6 +11,9 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/batalin` - Batalin game
 - `/ikutan` - Ikutan main
 - `/gajadi` - Ga jadi ikutan main
+- `/ganti_settingan_peran` - Ngubah jumlah [Peran Pasti Ada][]
+- `/batal_nyetting_peran` - Batalin settingan peran yang lagi di-setting sekarang
+- `/apus_settingan_peran` - Apus semua settingan peran yang udah dibikin
 - `/mulai_main` - Mulai main
 - `/siapa_aja` - Liat siapa aja yang lagi main
 - `/hasil_voting` - Liat hasil voting sementara
