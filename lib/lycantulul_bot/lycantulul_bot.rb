@@ -38,7 +38,7 @@ class LycantululBot
         else
           if Time.now.to_i - message.date < ALLOWED_DELAY.call
             if new_member = message.new_chat_participant
-              unless Lycantulul::RegisteredPlayer.find_by(user_id: new_member.id)
+              unless Lycantulul::RegisteredPlayer.get(new_member.id)
                 name = new_member.username ? "@#{new_member.username}" : new_member.first_name
                 send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /start yaa~", reply: true)
               end
@@ -50,7 +50,7 @@ class LycantululBot
                 if check_player(message)
                   send(message, 'Udah kedaftar wey!')
                 else
-                  Lycantulul::RegisteredPlayer.create_from_message(message)
+                  Lycantulul::RegisteredPlayer.create_from_message(message.from)
                   send(message, 'Terdaftar! Lood Guck and Fave hun! Kalo mau ikutan main, balik ke grup, terus pencet /ikutan')
                 end
               else
@@ -244,6 +244,16 @@ class LycantululBot
                 keyboard = Telegram
                 keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
                 send_to_player(message.chat.id, 'OK', reply_markup: keyboard)
+              else
+                wrong_room(message)
+              end
+            when /\/statistik/
+              if in_private?(message)
+                if check_player(message)
+                  send_to_player(message.chat.id, Lycantulul::RegisteredPlayer.get(message.from.id).statistics, parse_mode: 'HTML')
+                else
+                  send(message, 'Maaf belum kedaftar, /start dulu yak')
+                end
               else
                 wrong_room(message)
               end
@@ -614,7 +624,7 @@ class LycantululBot
   end
 
   def self.check_player(message)
-    Lycantulul::RegisteredPlayer.find_by(user_id: message.from.id)
+    Lycantulul::RegisteredPlayer.get_and_update(message.from)
   end
 
   def self.check_werewolf_in_game(message)

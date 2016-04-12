@@ -44,6 +44,10 @@ module Lycantulul
       self.find_by(group_id: group.id, finished: false)
     end
 
+    def get_player(user_id)
+      Lycantulul::RegisteredPlayer.get(user_id)
+    end
+
     def add_player(user)
       return false if self.players.with_id(user.id)
       return self.players.create_player(user, self.id)
@@ -54,6 +58,7 @@ module Lycantulul
       return self.players.with_id(user.id).destroy
     end
 
+    # never call unless really needed (will ruin statistics)
     def restart
       self.players.map(&:reset_state)
       self.night = true
@@ -177,6 +182,16 @@ module Lycantulul
 
     def finish
       self.update_attribute(:finished, true)
+      self.players.each do |pl|
+        player = self.get_player(pl.user_id)
+        player.inc_game
+        player.send("inc_#{ROLES[pl.role]}")
+        if pl.alive
+          player.inc_survived
+        else
+          player.inc_died
+        end
+      end
     end
 
     def sort(array)
@@ -193,6 +208,8 @@ module Lycantulul
         victim = self.living_players.with_name(vc[0][0])
         if !under_protection?(victim.full_name)
           victim.kill
+          self.get_player(victim.user_id).inc_mauled
+          self.get_player(victim.user_id).inc_mauled_first_day if self.round == 1
           LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
           dead_werewolf =
             if victim.role == SILVER_BULLET
@@ -203,6 +220,9 @@ module Lycantulul
             end
 
           return [victim.user_id, victim.full_name, self.get_role(victim.role), dead_werewolf]
+        else
+          self.get_player(victim.user_id).inc_mauled_under_protection
+          return nil
         end
       end
 
@@ -219,8 +239,11 @@ module Lycantulul
         votee = self.living_players.with_name(vc[0][0])
         if votee.role == AMNESTY && !self.amnesty_done
           self.update_attribute(:amnesty_done, true)
+          self.get_player(votee.user_id).inc_executed_under_protection
         else
           votee.kill
+          self.get_player(votee.user_id).inc_executed
+          self.get_player(votee.user_id).inc_executed_first_day if self.round == 1
         end
         LycantululBot.log("#{votee.full_name} is executed (from GAME)")
         return votee
@@ -280,6 +303,7 @@ module Lycantulul
         if necromancee && necromancer
           LycantululBot.log("#{necromancee.full_name} is raised from the dead by #{necromancer.full_name} (from GAME)")
           necromancee.revive
+          self.get_player(necromancee.user_id).inc_revived
           if necromancer.role == SUPER_NECROMANCER
             self.update_attribute(:super_necromancer_done, true)
           else
@@ -423,6 +447,8 @@ module Lycantulul
       count ||= self.players.count
       count -= LycantululBot::MINIMUM_PLAYER.call
       case role
+      when VILLAGER
+        0
       when GREEDY_VILLAGER
         count > 3 && rand(100) < 35 ? 1 : 0 # [9-..., 1] 35% chance
       when USELESS_VILLAGER
