@@ -29,7 +29,7 @@ module Lycantulul
     index({ user_id: 1 }, { unique: true })
 
     EXCEPTION = ['_id', 'user_id', 'first_name', 'last_name', 'username']
-    self.fields.except(EXCEPTION).keys.each do |field|
+    self.fields.keys.reject{ |field| EXCEPTION.include?(field) }.each do |field|
       define_method("inc_#{field}") do
         self.inc("#{field}" => 1)
       end
