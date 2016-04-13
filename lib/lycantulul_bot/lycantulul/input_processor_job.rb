@@ -340,6 +340,7 @@ module Lycantulul
                 case game.add_votee(message.from.id, message.text)
                 when Lycantulul::Game::RESPONSE_OK
                   send(message, 'Seeep')
+                  send_to_player(game.group_id, '<i>Seseorang udah voting</i>', parse_mode: 'HTML')
                 when Lycantulul::Game::RESPONSE_INVALID
                   full_name = Lycantulul::Player.get_full_name(message.from)
                   send_voting(game.living_players, full_name, message.chat.id)
@@ -825,12 +826,26 @@ module Lycantulul
         list_players(game)
 
         ending = '<pre>'
-        ending += ",          ____ _____  _____ \n"
-        ending += "     /\\   |  _ \\_   _|/ ____|\n"
-        ending += "    /  \\  | |_) || | | (___  \n"
-        ending += "   / /\\ \\ |  _ &lt; | |  \\___ \\ \n"
-        ending += "  / ____ \\| |_) || |_ ____) |\n"
-        ending += " /_/    \\_\\____/_____|_____/ "
+        ending += ".    /\\    \n"
+        ending += "    /  \\   \n"
+        ending += "   / /\\ \\  \n"
+        ending += "  / ____ \\ \n"
+        ending += " /_/__  \\_\\\n"
+        ending += " |  _ \\    \n"
+        ending += " | |_) |   \n"
+        ending += " |  _ &lt;    \n"
+        ending += " | |_) |   \n"
+        ending += " |____/    \n"
+        ending += " |_   _|   \n"
+        ending += "   | |     \n"
+        ending += "   | |     \n"
+        ending += "  _| |_    \n"
+        ending += " |_____|   \n"
+        ending += "  / ____|  \n"
+        ending += " | (___    \n"
+        ending += "  \\___ \\   \n"
+        ending += "  ____) |  \n"
+        ending += " |_____/   "
         ending += '</pre>'
         send_to_player(game.group_id, ending, parse_mode: 'HTML')
       end
