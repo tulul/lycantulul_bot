@@ -40,7 +40,7 @@ module Lycantulul
         end
       else
         if Time.now.to_i - message.date < ALLOWED_DELAY.call
-          if new_member = message.new_chat_participant
+          if new_member = message.new_chat_member
             unless Lycantulul::RegisteredPlayer.get(new_member.id) || new_member.username == 'lycantulul_bot'
               name = new_member.username ? "@#{new_member.username}" : new_member.first_name
               send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /start yaa~", reply: true)
