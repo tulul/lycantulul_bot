@@ -41,14 +41,14 @@ module Lycantulul
       else
         if Time.now.to_i - message.date < ALLOWED_DELAY.call
           if new_member = message.new_chat_participant
-            unless Lycantulul::RegisteredPlayer.get(new_member.id)
+            unless Lycantulul::RegisteredPlayer.get(new_member.id) || new_member.username == 'lycantulul_bot'
               name = new_member.username ? "@#{new_member.username}" : new_member.first_name
               send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /start yaa~", reply: true)
             end
           end
 
           case message.text
-          when '/start'
+          when /^\/start(@lycantulul_bot)?/
             if in_private?(message)
               if check_player(message)
                 send(message, 'Udah kedaftar wey!')
@@ -59,9 +59,9 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/help/
+          when /^\/help(@lycantulul_bot)?/
             send(message, bot_help)
-          when /\/bikin_baru/
+          when /^\/bikin_baru(@lycantulul_bot)?/
             if in_group?(message)
               if check_game(message)
                 send(message, 'Udah ada yang ngemulai gan tadi. /ikutan ae', reply: true)
@@ -76,7 +76,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/batalin/
+          when /^\/batalin(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
@@ -91,7 +91,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/ikutan/
+          when /^\/ikutan(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if check_player(message)
@@ -123,7 +123,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/gajadi/
+          when /^\/gajadi(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if check_player(message)
@@ -158,7 +158,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/ganti_settingan_peran/
+          when /^\/ganti_settingan_peran(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
@@ -178,7 +178,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/batal_nyetting_peran/
+          when /^\/batal_nyetting_peran(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
@@ -197,7 +197,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/apus_settingan_peran/
+          when /^\/apus_settingan_peran(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
@@ -216,7 +216,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/mulai_main/
+          when /^\/mulai_main(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
@@ -240,7 +240,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/siapa_aja/
+          when /^\/siapa_aja(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 list_players(game)
@@ -250,7 +250,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/hasil_voting/
+          when /^\/hasil_voting(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 unless game.waiting?
@@ -268,7 +268,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/panggil_semua/
+          when /^\/panggil_semua(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 summon(game, :all)
@@ -278,7 +278,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/panggil_yang_idup/
+          when /^\/panggil_yang_idup(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 summon(game, :alive)
@@ -288,7 +288,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/panggil_yang_belom_voting/
+          when /^\/panggil_yang_belom_voting(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 unless game.waiting?
@@ -306,14 +306,14 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/ilangin_keyboard/
+          when /^\/ilangin_keyboard(@lycantulul_bot)?/
             if in_private?(message)
               keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
               send_to_player(message.chat.id, 'OK', reply_markup: keyboard)
             else
               wrong_room(message)
             end
-          when /\/statistik/
+          when /^\/statistik(@lycantulul_bot)?/
             if in_private?(message)
               if check_player(message)
                 send_to_player(message.chat.id, Lycantulul::RegisteredPlayer.get(message.from.id).statistics, parse_mode: 'HTML')
