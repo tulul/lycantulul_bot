@@ -20,6 +20,8 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/panggil_semua` - Panggil semua pemain
 - `/panggil_yang_idup` - cukup jelas
 - `/panggil_yang_belom_voting` - cukup jelas
+- `/ganti_waktu_malam` - atur batas waktu malam buat action
+- `/ganti_waktu_voting` - atur batas waktu voting
 - `/statistik` - Liat statistik diri sendiri
 - `/ilangin_keyboard` - Reply keyboard muncul terus? Cobain nih
 

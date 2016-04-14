@@ -35,6 +35,9 @@ module Lycantulul
     field :pending_custom_id, type: Integer, default: nil
     field :pending_custom_role, type: Integer, default: nil
 
+    field :voting_time, type: Integer
+    field :night_time, type: Integer
+
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
 
@@ -121,6 +124,18 @@ module Lycantulul
 
     def role_valid?
       !self.custom_roles || IMPORTANT_ROLES.inject(0){ |sum, role| sum + self.role_count(self.class.const_get(role.upcase)) } <= self.players.count
+    end
+
+    def set_voting_time(time)
+      self.with_lock(wait: true) do
+        self.update_attribute(:voting_time, time)
+      end
+    end
+
+    def set_night_time(time)
+      self.with_lock(wait: true) do
+        self.update_attribute(:night_time, time)
+      end
     end
 
     # never call unless really needed (will ruin statistics)
@@ -240,10 +255,13 @@ module Lycantulul
 
     def start
       self.with_lock(wait: true) do
-        self.update_attribute(:waiting, false)
+        self.waiting = false
+        self.voting_time ||= Lycantulul::InputProcessorJob::VOTING_TIME.call
+        self.night_time ||= Lycantulul::InputProcessorJob::NIGHT_TIME.call
         ROLES.each do |role|
           assign(self.class.const_get(role.upcase))
         end
+        self.save
       end
     end
 
@@ -473,6 +491,7 @@ module Lycantulul
         res += "\n\n#{self.role_composition}" unless self.role_composition.empty?
         res += "\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
         res += "\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran"
+        res += "\n\n#{self.list_time_settings}"
       end
 
       res
@@ -485,6 +504,12 @@ module Lycantulul
       end
       return 'Belum ada yang mulai voting. Mulai woy!' if res.empty?
       res
+    end
+
+    def list_time_settings
+      res = "Waktu voting: #{self.voting_time || Lycantulul::InputProcessorJob::VOTING_TIME.call} detik\n"
+      res += "Waktu action malam: #{self.night_time || Lycantulul::InputProcessorJob::NIGHT_TIME.call} detik\n"
+      res += 'Ubah pake /ganti_waktu_voting atau /ganti_waktu_malam'
     end
 
     def get_role(role)

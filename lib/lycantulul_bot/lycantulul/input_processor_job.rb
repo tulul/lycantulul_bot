@@ -101,7 +101,8 @@ module Lycantulul
                       additional_text =
                         if game.players.count >= MINIMUM_PLAYER.call
                           res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
-                          !game.custom_roles && res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran"
+                          !game.custom_roles && res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran\n"
+                          res += "#{game.list_time_settings}"
                           res
                         else
                           "#{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
@@ -306,6 +307,54 @@ module Lycantulul
             else
               wrong_room(message)
             end
+          when /^\/ganti_waktu_malam(.*)?/
+            if in_group?(message)
+              if game = check_game(message)
+                if game.waiting?
+                  time = $1
+                  if time =~ /^ ?(\d)+$/
+                    if time.to_i >= 10
+                      game.set_night_time(time.to_i)
+                      send(message, "Sip, waktu malam buat action jadi #{time.to_i} detik!", reply: true)
+                    else
+                      send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
+                    end
+                  else
+                    send(message, "Hah? Format yang bener /ganti_waktu_malam[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_malam 42", reply: true)
+                  end
+                else
+                  send(message, 'Udah mulai', reply: true)
+                end
+              else
+                send(message, '/bikin_baru dulu', reply: true)
+              end
+            else
+              wrong_room(message)
+            end
+          when /^\/ganti_waktu_voting(.*)?/
+            if in_group?(message)
+              if game = check_game(message)
+                if game.waiting?
+                  time = $1
+                  if time =~ /^ ?(\d)+$/
+                    if time.to_i >= 10
+                      game.set_voting_time(time.to_i)
+                      send(message, "Sip, waktu voting jadi #{time.to_i} detik!", reply: true)
+                    else
+                      send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
+                    end
+                  else
+                    send(message, "Hah? Format yang bener /ganti_waktu_voting[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_voting 42", reply: true)
+                  end
+                else
+                  send(message, 'Udah mulai', reply: true)
+                end
+              else
+                send(message, '/bikin_baru dulu', reply: true)
+              end
+            else
+              wrong_room(message)
+            end
           when /^\/ilangin_keyboard(@lycantulul_bot)?/
             if in_private?(message)
               keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
@@ -427,9 +476,9 @@ module Lycantulul
         game.next_round
         log('new round')
 
-        send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu <b>#{NIGHT_TIME.call} detik</b>! Kecuali warga kampung, diam aja menunggu kematian ya", parse_mode: 'HTML')
+        send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu <b>#{game.night_time} detik</b>! Kecuali warga kampung, diam aja menunggu kematian ya", parse_mode: 'HTML')
         log('enqueuing night job')
-        Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, game.round, self)
+        Lycantulul::NightTimerJob.perform_in(game.night_time, game, game.round, self)
 
         game.living_werewolves.each do |ww|
           log("sending killing instruction to #{ww[:full_name]}")
@@ -491,9 +540,9 @@ module Lycantulul
         message_action(game, VOTING_START)
       when VOTING_START
         group_chat_id = game.group_id
-        send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma <b>#{VOTING_TIME.call} detik</b>. kalo ga ada suara mayoritas, ga ada yang mati", parse_mode: 'HTML')
+        send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma <b>#{game.voting_time} detik</b>. kalo ga ada suara mayoritas, ga ada yang mati", parse_mode: 'HTML')
         log('enqueuing voting job')
-        Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call / 2, game, game.round, Lycantulul::VotingTimerJob::START, VOTING_TIME.call / 2, self)
+        Lycantulul::VotingTimerJob.perform_in(game.voting_time, game, game.round, Lycantulul::VotingTimerJob::START, game.voting_time / 2, self)
 
         livp = game.living_players
         livp.each do |lp|
