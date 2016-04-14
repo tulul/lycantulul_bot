@@ -472,6 +472,7 @@ module Lycantulul
       if self.waiting?
         res += "\n\n#{self.role_composition}" unless self.role_composition.empty?
         res += "\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
+        res += "\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran"
       end
 
       res
