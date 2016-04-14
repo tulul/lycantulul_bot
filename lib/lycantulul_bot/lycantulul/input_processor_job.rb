@@ -847,7 +847,7 @@ module Lycantulul
       game.reload
       return unless round == game.round && !game.night? && !game.waiting? && !game.finished?
       log('continuing')
-      if force || game.votee.count == game.living_players.count
+      if force || game.check_voting_finished
         if killed = game.kill_votee
           message_action(game, VOTING_SUCCEEDED, killed)
         else

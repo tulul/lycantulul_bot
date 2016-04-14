@@ -1,8 +1,8 @@
 load 'Rakefile'
 
 updates = "latest updates:\n"
-updates += "- /ganti_waktu_voting dan /ganti_waktu_malam buat ngatur waktu\n"
-updates += "- Formatnya /ganti_waktu_voting[spasi][angka dalam detik, minimal 10]"
+updates += "- perbaikin pas Pak Ogah voting dianggep belom voting\n"
+updates += "- perbaikin pas ada Pak Ogah atau Pak Raden, ronde voting ga langsung selesai pas semua udah voting"
 groups = Lycantulul::Game.all.map(&:group_id).uniq
 Telegram::Bot::Client.run($token) do |bot|
   groups.each do |g|

@@ -17,6 +17,7 @@ module Lycantulul
     end
 
     NECROMANCER_SKIP = 'NDAK DULU DEH'
+    USELESS_VILLAGER_SKIP = 'OGAH'
 
     field :group_id, type: Integer
     field :night, type: Boolean, default: true
@@ -178,15 +179,8 @@ module Lycantulul
         voter = self.living_players.with_id(voter_id)
         votee = self.living_players.with_name(votee).full_name
 
-        vote_count =
-          case voter.role
-          when GREEDY_VILLAGER
-            3
-          when USELESS_VILLAGER
-            0
-          else
-            1
-          end
+        vote_count = voter.role == GREEDY_VILLAGER ? 3 : 1
+        votee = USELESS_VILLAGER_SKIP if voter.role == USELESS_VILLAGER
 
         vote_count.times do
           new_votee = {
@@ -296,7 +290,7 @@ module Lycantulul
     end
 
     def sort(array)
-      array.group_by{ |vo| vo[:full_name] }.map{ |k, v| [k, v.count] }.sort_by{ |vo| vo[1] }.compact.reverse
+      array.reject{ |vo| vo[:full_name] == USELESS_VILLAGER_SKIP }.group_by{ |vo| vo[:full_name] }..map{ |k, v| [k, v.count] }.sort_by{ |vo| vo[1] }.compact.reverse
     end
 
     def kill_victim
@@ -618,6 +612,13 @@ module Lycantulul
       res
     end
 
+    def check_voting_finished
+      count = self.living_players.count
+      count += 2 * self.living_greedy_villagers.count
+
+      self.votee.count == count
+    end
+
     def living_players
       self.players.alive
     end
@@ -633,7 +634,7 @@ module Lycantulul
     end
 
     def pending_voters
-      self.living_players - self.votee.map{ |a| self.players.with_id(a[:voter_id]) }
+      self.living_players - self.votee.map{ |a| self.players.with_id(a[:voter_id]).uniq }
     end
 
     def dead_players
