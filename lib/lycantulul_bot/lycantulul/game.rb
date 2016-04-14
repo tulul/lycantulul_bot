@@ -17,7 +17,7 @@ module Lycantulul
     end
 
     NECROMANCER_SKIP = 'NDAK DULU DEH'
-    USELESS_VILLAGER_SKIP = 'OGAH'
+    USELESS_VILLAGER_SKIP = 'OGAH NDAK VOTING KAK'
 
     field :group_id, type: Integer
     field :night, type: Boolean, default: true
@@ -290,7 +290,7 @@ module Lycantulul
     end
 
     def sort(array)
-      array.reject{ |vo| vo[:full_name] == USELESS_VILLAGER_SKIP }.group_by{ |vo| vo[:full_name] }..map{ |k, v| [k, v.count] }.sort_by{ |vo| vo[1] }.compact.reverse
+      array.reject{ |vo| vo[:full_name] == USELESS_VILLAGER_SKIP }.group_by{ |vo| vo[:full_name] }.map{ |k, v| [k, v.count] }.sort_by{ |vo| vo[1] }.compact.reverse
     end
 
     def kill_victim
