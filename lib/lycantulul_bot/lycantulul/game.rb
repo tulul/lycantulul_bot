@@ -470,15 +470,15 @@ module Lycantulul
       end
 
       if self.finished
-        res += self.living_players.map{ |lp| "#{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
+        res += self.living_players.map{ |lp| "- #{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
       else
-        res += self.living_players.map(&:full_name).sort.join("\n")
+        res += self.living_players.map{ |lp| "- #{lp.full_name}" }.sort.join("\n")
       end
 
       if ded_count > 0
         res += "\n\n"
         res += "Udah mati: #{ded_count} makhluk\n"
-        res += (self.dead_players).map{ |lp| "#{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
+        res += (self.dead_players).map{ |lp| "- #{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
       end
 
       if self.waiting?
@@ -634,7 +634,7 @@ module Lycantulul
     end
 
     def pending_voters
-      self.living_players - self.votee.map{ |a| self.players.with_id(a[:voter_id]).uniq }
+      self.living_players - self.votee.map{ |a| self.players.with_id(a[:voter_id]) }
     end
 
     def dead_players
