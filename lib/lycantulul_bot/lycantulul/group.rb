@@ -5,97 +5,35 @@ module Lycantulul
 
     field :group_id,                      type: Integer
 
+    field :voting_time,                   type: Integer
+    field :night_time,                    type: Integer
+
     field :game,                          type: Integer, default: 0
 
     field :werewolf_victory,              type: Integer, default: 0
     field :village_victory,               type: Integer, default: 0
 
-    Lycantulul::Game::ROLES.each do |role|
-      field role, type: Integer, default: 0
-    end
-
     index({ group_id: 1 }, { unique: true })
 
-    EXCEPTION = ['_id', 'user_id', 'first_name', 'last_name', 'username']
-    self.fields.except(EXCEPTION).keys.each do |field|
+    EXCEPTION = ['_id', 'group_id', 'voting_time', 'night_time']
+    self.fields.keys.reject{ |field| EXCEPTION.include?(field) }.each do |field|
       define_method("inc_#{field}") do
         self.inc("#{field}" => 1)
       end
     end
 
-    def self.get(user_id)
-      self.find_by(user_id: user_id)
-    end
-
-    def self.get_and_update(user)
-      player = self.find_by(user_id: user.id)
-
-      if player
-        player.with_lock(wait: true) do
-          player.first_name = user.first_name
-          player.last_name = user.last_name
-          player.username = user.username
-          player.save if player.changed?
-        end
-      end
-
-      player
-    end
-
-    def self.create_from_message(user)
-      self.create(user_id: user.id, first_name: user.first_name, last_name: user.last_name, username: user.username)
-    end
-
-    def full_name
-      res = self.first_name
-      self.last_name && res += " #{self.last_name}"
-      res
-    end
-
     def statistics
-      res = "Statistik <b>#{self.full_name}</b>\n"
+      res = "Statistik Group\n"
       res += "\n"
       res += "Main <b>#{self.game}</b>\n"
-      res += "Bertahan hidup <b>#{self.percentage(self.survived)}</b>\n"
-      res += "Mati <b>#{self.percentage(self.died)}</b>\n"
-      res += "\n"
-      res += "Jumlah dibunuh serigala <b>#{self.mauled}</b>\n"
-      res += "Hari pertama <b>#{self.mauled_first_day}</b>\n"
-      res += "Dijimatin <b>#{self.mauled_under_protection}</b>\n"
-      res += "\n"
-      res += "Jumlah dieksekusi <b>#{self.executed}</b>\n"
-      res += "Hari pertama <b>#{self.executed_first_day}</b>\n"
-      res += "Dilindungi presiden <b>#{self.executed_under_protection}</b>\n"
-      res += "\n"
-      res += "Diidupin mujahid <b>#{self.revived}</b>\n"
-      res += "\n"
-
-      top_role_ = top_role
-      res += "Peran paling sering <b>#{top_role_[0]}</b> - <b>#{percentage(top_role_[1])}</b>\n"
-
+      res += "Kemenangan bagi Kejahatan <b>#{self.percentage(self.werewolf_victory)}</b>\n"
+      res += "Kemenangan bagi Rakyat <b>#{self.percentage(self.village_victory)}</b>"
       res
     end
 
     def percentage(count)
       prc = game > 0 ? count * 100.0 / game : 0
       ("%.2f" % prc) + '%'
-    end
-
-    def top_role
-      res = []
-      top = -1
-      Lycantulul::Game::ROLES.each do |role_|
-        role_count = self.send(role_)
-        role_name = Lycantulul::Game.new.get_role(Lycantulul::Game.const_get(role_.upcase))
-        if role_count > top
-          top = role_count
-          res = [role_name]
-        elsif role_count == top
-          res << role_name
-        end
-      end
-
-      [res.sort.join(', '), top]
     end
   end
 end
