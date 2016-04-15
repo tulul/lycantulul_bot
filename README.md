@@ -2,7 +2,8 @@
 
 inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 
-[play me!](https://telegram.me/lycantulul_bot)
+[play me in public group!](https://telegram.me/lycantulul)
+[or add the bot to your group!](https://telegram.me/lycantulul_bot)
 
 ### Daftar Perintah
 - `/start` - Mulai berhubungan dan mendaftarkan diri

@@ -80,7 +80,7 @@ module Lycantulul
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
-                  game.finish
+                  game.finish(stats: false)
                   send(message, "Sip batal maen :'(", reply: true)
                 else
                   send(message, 'Udah mulai tjoy ga bisa batal enak aje', reply: true)

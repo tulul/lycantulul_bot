@@ -283,25 +283,27 @@ module Lycantulul
     rescue
     end
 
-    def finish
+    def finish(stats: true)
       self.with_lock(wait: true) do
         self.update_attribute(:finished, true)
-        self.players.each do |pl|
-          player = self.get_player(pl.user_id)
-          player.inc_game
-          player.send("inc_#{ROLES[pl.role]}")
-          if pl.alive
-            player.inc_survived
-          else
-            player.inc_died
+        if stats
+          self.players.each do |pl|
+            player = self.get_player(pl.user_id)
+            player.inc_game
+            player.send("inc_#{ROLES[pl.role]}")
+            if pl.alive
+              player.inc_survived
+            else
+              player.inc_died
+            end
           end
-        end
-        self.group.with_lock(wait: true) do
-          self.group.inc_game
-          if self.living_werewolves.count == 0
-            self.group.inc_village_victory
-          else
-            self.group.inc_werewolf_victory
+          self.group.with_lock(wait: true) do
+            self.group.inc_game
+            if self.living_werewolves.count == 0
+              self.group.inc_village_victory
+            else
+              self.group.inc_werewolf_victory
+            end
           end
         end
       end
