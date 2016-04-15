@@ -497,13 +497,15 @@ module Lycantulul
           send_necromancer(dp, se[:user_id])
         end
       when WEREWOLF_KILL_BROADCAST
-        lw = game.living_werewolves
+        lw = (game.living_werewolves + game.living_spies)
         killer = aux[0]
         victim_name = aux[1]
 
         lw.each do |ww|
-          log("broadcasting killing from to #{killer}")
-          send_to_player(ww[:user_id], "#{killer} pengen si #{victim_name} modar")
+          log("broadcasting killing from #{killer}")
+          brd = "#{victim_name} pengen dibunuh"
+          ww.role == Lycantulul::Game::WEREWOLF && brd += " oleh #{killer}"
+          send_to_player(ww.user_id, brd)
         end
       when WEREWOLF_KILL_SUCCEEDED
         group_chat_id = game.group_id
