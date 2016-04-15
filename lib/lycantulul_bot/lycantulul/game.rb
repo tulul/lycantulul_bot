@@ -17,6 +17,7 @@ module Lycantulul
     end
 
     NECROMANCER_SKIP = 'NDAK DULU DEH'
+    USELESS_VILLAGER_SKIP = 'OGAH NDAK VOTING KAK'
 
     field :group_id, type: Integer
     field :night, type: Boolean, default: true
@@ -51,6 +52,18 @@ module Lycantulul
 
     def get_player(user_id)
       Lycantulul::RegisteredPlayer.get(user_id)
+    end
+
+    def group
+      Lycantulul::Group.find_or_create_by(group_id: group_id)
+    end
+
+    def voting_time
+      self.group.voting_time || Lycantulul::InputProcessorJob::VOTING_TIME.call
+    end
+
+    def night_time
+      self.group.night_time || Lycantulul::InputProcessorJob::NIGHT_TIME.call
     end
 
     def add_player(user)
@@ -123,6 +136,18 @@ module Lycantulul
       !self.custom_roles || IMPORTANT_ROLES.inject(0){ |sum, role| sum + self.role_count(self.class.const_get(role.upcase)) } <= self.players.count
     end
 
+    def set_voting_time(time)
+      self.group.with_lock(wait: true) do
+        self.group.update_attribute(:voting_time, time)
+      end
+    end
+
+    def set_night_time(time)
+      self.group.with_lock(wait: true) do
+        self.group.update_attribute(:voting_time, time)
+      end
+    end
+
     # never call unless really needed (will ruin statistics)
     def restart
       self.with_lock(wait: true) do
@@ -163,15 +188,8 @@ module Lycantulul
         voter = self.living_players.with_id(voter_id)
         votee = self.living_players.with_name(votee).full_name
 
-        vote_count =
-          case voter.role
-          when GREEDY_VILLAGER
-            3
-          when USELESS_VILLAGER
-            0
-          else
-            1
-          end
+        vote_count = voter.role == GREEDY_VILLAGER ? 3 : 1
+        votee = USELESS_VILLAGER_SKIP if voter.role == USELESS_VILLAGER
 
         vote_count.times do
           new_votee = {
@@ -240,10 +258,13 @@ module Lycantulul
 
     def start
       self.with_lock(wait: true) do
-        self.update_attribute(:waiting, false)
+        self.waiting = false
+        self.voting_time ||= Lycantulul::InputProcessorJob::VOTING_TIME.call
+        self.night_time ||= Lycantulul::InputProcessorJob::NIGHT_TIME.call
         ROLES.each do |role|
           assign(self.class.const_get(role.upcase))
         end
+        self.save
       end
     end
 
@@ -274,11 +295,19 @@ module Lycantulul
             player.inc_died
           end
         end
+        self.group.with_lock(wait: true) do
+          self.group.inc_game
+          if game.living_werewolves.count == 0
+            self.group.inc_village_victory
+          else
+            self.group.inc_werewolf_victory
+          end
+        end
       end
     end
 
     def sort(array)
-      array.group_by{ |vo| vo[:full_name] }.map{ |k, v| [k, v.count] }.sort_by{ |vo| vo[1] }.compact.reverse
+      array.reject{ |vo| vo[:full_name] == USELESS_VILLAGER_SKIP }.group_by{ |vo| vo[:full_name] }.map{ |k, v| [k, v.count] }.sort_by{ |vo| vo[1] }.compact.reverse
     end
 
     def kill_victim
@@ -458,20 +487,22 @@ module Lycantulul
       end
 
       if self.finished
-        res += self.living_players.map{ |lp| "#{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
+        res += self.living_players.map{ |lp| "- #{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
       else
-        res += self.living_players.map(&:full_name).sort.join("\n")
+        res += self.living_players.map{ |lp| "- #{lp.full_name}" }.sort.join("\n")
       end
 
       if ded_count > 0
         res += "\n\n"
         res += "Udah mati: #{ded_count} makhluk\n"
-        res += (self.dead_players).map{ |lp| "#{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
+        res += (self.dead_players).map{ |lp| "- #{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
       end
 
       if self.waiting?
         res += "\n\n#{self.role_composition}" unless self.role_composition.empty?
         res += "\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
+        res += "\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran"
+        res += "\n\n#{self.list_time_settings}"
       end
 
       res
@@ -484,6 +515,12 @@ module Lycantulul
       end
       return 'Belum ada yang mulai voting. Mulai woy!' if res.empty?
       res
+    end
+
+    def list_time_settings
+      res = "Waktu voting: #{self.voting_time} detik\n"
+      res += "Waktu action malam: #{self.night_time} detik\n"
+      res += 'Ubah pake /ganti_waktu_voting atau /ganti_waktu_malam'
     end
 
     def get_role(role)
@@ -590,6 +627,13 @@ module Lycantulul
         res += 1
       end
       res
+    end
+
+    def check_voting_finished
+      count = self.living_players.count
+      count += 2 * self.living_greedy_villagers.count
+
+      self.votee.count == count
     end
 
     def living_players

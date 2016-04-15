@@ -45,6 +45,7 @@ end
 event('reset db')
 Lycantulul::Game.all.map(&:destroy)
 Lycantulul::Player.all.map(&:destroy)
+Lycantulul::Group.all.map(&:destroy)
 Lycantulul::RegisteredPlayer.all.map(&:destroy)
 
 event('create users')
@@ -372,4 +373,5 @@ print_game
 event('reset db')
 Lycantulul::Game.all.map(&:destroy)
 Lycantulul::Player.all.map(&:destroy)
+Lycantulul::Group.all.map(&:destroy)
 Lycantulul::RegisteredPlayer.all.map(&:destroy)

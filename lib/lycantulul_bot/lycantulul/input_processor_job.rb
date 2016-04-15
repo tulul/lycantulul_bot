@@ -40,15 +40,15 @@ module Lycantulul
         end
       else
         if Time.now.to_i - message.date < ALLOWED_DELAY.call
-          if new_member = message.new_chat_participant
-            unless Lycantulul::RegisteredPlayer.get(new_member.id)
+          if new_member = message.new_chat_member
+            unless Lycantulul::RegisteredPlayer.get(new_member.id) || new_member.username == 'lycantulul_bot'
               name = new_member.username ? "@#{new_member.username}" : new_member.first_name
               send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /start yaa~", reply: true)
             end
           end
 
           case message.text
-          when '/start'
+          when /^\/start(@lycantulul_bot)?/
             if in_private?(message)
               if check_player(message)
                 send(message, 'Udah kedaftar wey!')
@@ -59,9 +59,9 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/help/
+          when /^\/help(@lycantulul_bot)?/
             send(message, bot_help)
-          when /\/bikin_baru/
+          when /^\/bikin_baru(@lycantulul_bot)?/
             if in_group?(message)
               if check_game(message)
                 send(message, 'Udah ada yang ngemulai gan tadi. /ikutan ae', reply: true)
@@ -76,7 +76,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/batalin/
+          when /^\/batalin(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
@@ -91,7 +91,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/ikutan/
+          when /^\/ikutan(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if check_player(message)
@@ -101,7 +101,8 @@ module Lycantulul
                       additional_text =
                         if game.players.count >= MINIMUM_PLAYER.call
                           res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
-                          !game.custom_roles && res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan"
+                          !game.custom_roles && res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran\n"
+                          res += "#{game.list_time_settings}"
                           res
                         else
                           "#{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
@@ -123,7 +124,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/gajadi/
+          when /^\/gajadi(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if check_player(message)
@@ -158,7 +159,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/ganti_settingan_peran/
+          when /^\/ganti_settingan_peran(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
@@ -178,7 +179,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/batal_nyetting_peran/
+          when /^\/batal_nyetting_peran(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
@@ -197,7 +198,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/apus_settingan_peran/
+          when /^\/apus_settingan_peran(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
@@ -216,7 +217,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/mulai_main/
+          when /^\/mulai_main(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
@@ -240,7 +241,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/siapa_aja/
+          when /^\/siapa_aja(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 list_players(game)
@@ -250,7 +251,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/hasil_voting/
+          when /^\/hasil_voting(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 unless game.waiting?
@@ -268,7 +269,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/panggil_semua/
+          when /^\/panggil_semua(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 summon(game, :all)
@@ -278,7 +279,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/panggil_yang_idup/
+          when /^\/panggil_yang_idup(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 summon(game, :alive)
@@ -288,7 +289,7 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/panggil_yang_belom_voting/
+          when /^\/panggil_yang_belom_voting(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 unless game.waiting?
@@ -306,14 +307,62 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /\/ilangin_keyboard/
+          when /^\/ganti_waktu_malam(.*)?/
+            if in_group?(message)
+              if game = check_game(message)
+                if game.waiting?
+                  time = $1
+                  if time =~ /^ ?(\d)+$/
+                    if time.to_i >= 10
+                      game.set_night_time(time.to_i)
+                      send(message, "Sip, waktu malam buat action jadi #{time.to_i} detik!", reply: true)
+                    else
+                      send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
+                    end
+                  else
+                    send(message, "Hah? Format yang bener /ganti_waktu_malam[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_malam 42", reply: true)
+                  end
+                else
+                  send(message, 'Udah mulai', reply: true)
+                end
+              else
+                send(message, '/bikin_baru dulu', reply: true)
+              end
+            else
+              wrong_room(message)
+            end
+          when /^\/ganti_waktu_voting(.*)?/
+            if in_group?(message)
+              if game = check_game(message)
+                if game.waiting?
+                  time = $1
+                  if time =~ /^ ?(\d)+$/
+                    if time.to_i >= 10
+                      game.set_voting_time(time.to_i)
+                      send(message, "Sip, waktu voting jadi #{time.to_i} detik!", reply: true)
+                    else
+                      send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
+                    end
+                  else
+                    send(message, "Hah? Format yang bener /ganti_waktu_voting[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_voting 42", reply: true)
+                  end
+                else
+                  send(message, 'Udah mulai', reply: true)
+                end
+              else
+                send(message, '/bikin_baru dulu', reply: true)
+              end
+            else
+              wrong_room(message)
+            end
+          when /^\/ilangin_keyboard(@lycantulul_bot)?/
             if in_private?(message)
               keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
               send_to_player(message.chat.id, 'OK', reply_markup: keyboard)
             else
               wrong_room(message)
             end
-          when /\/statistik/
+          when /^\/statistik(@lycantulul_bot)?/
             if in_private?(message)
               if check_player(message)
                 send_to_player(message.chat.id, Lycantulul::RegisteredPlayer.get(message.from.id).statistics, parse_mode: 'HTML')
@@ -340,6 +389,7 @@ module Lycantulul
                 case game.add_votee(message.from.id, message.text)
                 when Lycantulul::Game::RESPONSE_OK
                   send(message, 'Seeep')
+                  send_to_player(game.group_id, '<i>Seseorang udah voting</i>', parse_mode: 'HTML')
                 when Lycantulul::Game::RESPONSE_INVALID
                   full_name = Lycantulul::Player.get_full_name(message.from)
                   send_voting(game.living_players, full_name, message.chat.id)
@@ -426,9 +476,9 @@ module Lycantulul
         game.next_round
         log('new round')
 
-        send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu <b>#{NIGHT_TIME.call} detik</b>! Kecuali warga kampung, diam aja menunggu kematian ya", parse_mode: 'HTML')
+        send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu <b>#{game.night_time} detik</b>! Kecuali warga kampung, diam aja menunggu kematian ya", parse_mode: 'HTML')
         log('enqueuing night job')
-        Lycantulul::NightTimerJob.perform_in(NIGHT_TIME.call, game, game.round, self)
+        Lycantulul::NightTimerJob.perform_in(game.night_time, game, game.round, self)
 
         game.living_werewolves.each do |ww|
           log("sending killing instruction to #{ww[:full_name]}")
@@ -490,9 +540,9 @@ module Lycantulul
         message_action(game, VOTING_START)
       when VOTING_START
         group_chat_id = game.group_id
-        send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma <b>#{VOTING_TIME.call} detik</b>. kalo ga ada suara mayoritas, ga ada yang mati", parse_mode: 'HTML')
+        send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma <b>#{game.voting_time} detik</b>. kalo ga ada suara mayoritas, ga ada yang mati", parse_mode: 'HTML')
         log('enqueuing voting job')
-        Lycantulul::VotingTimerJob.perform_in(VOTING_TIME.call / 2, game, game.round, Lycantulul::VotingTimerJob::START, VOTING_TIME.call / 2, self)
+        Lycantulul::VotingTimerJob.perform_in(game.voting_time, game, game.round, Lycantulul::VotingTimerJob::START, game.voting_time / 2, self)
 
         livp = game.living_players
         livp.each do |lp|
@@ -797,7 +847,7 @@ module Lycantulul
       game.reload
       return unless round == game.round && !game.night? && !game.waiting? && !game.finished?
       log('continuing')
-      if force || game.votee.count == game.living_players.count
+      if force || game.check_voting_finished
         if killed = game.kill_votee
           message_action(game, VOTING_SUCCEEDED, killed)
         else
@@ -825,12 +875,26 @@ module Lycantulul
         list_players(game)
 
         ending = '<pre>'
-        ending += ",          ____ _____  _____ \n"
-        ending += "     /\\   |  _ \\_   _|/ ____|\n"
-        ending += "    /  \\  | |_) || | | (___  \n"
-        ending += "   / /\\ \\ |  _ &lt; | |  \\___ \\ \n"
-        ending += "  / ____ \\| |_) || |_ ____) |\n"
-        ending += " /_/    \\_\\____/_____|_____/ "
+        ending += ".    /\\    \n"
+        ending += "    /  \\   \n"
+        ending += "   / /\\ \\  \n"
+        ending += "  / ____ \\ \n"
+        ending += " /_/__  \\_\\\n"
+        ending += " |  _ \\    \n"
+        ending += " | |_) |   \n"
+        ending += " |  _ &lt;    \n"
+        ending += " | |_) |   \n"
+        ending += " |____/    \n"
+        ending += " |_   _|   \n"
+        ending += "   | |     \n"
+        ending += "   | |     \n"
+        ending += "  _| |_    \n"
+        ending += " |_____|   \n"
+        ending += "  / ____|  \n"
+        ending += " | (___    \n"
+        ending += "  \\___ \\   \n"
+        ending += "  ____) |  \n"
+        ending += " |_____/   "
         ending += '</pre>'
         send_to_player(game.group_id, ending, parse_mode: 'HTML')
       end

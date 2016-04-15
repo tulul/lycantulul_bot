@@ -11,7 +11,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/batalin` - Batalin game
 - `/ikutan` - Ikutan main
 - `/gajadi` - Ga jadi ikutan main
-- `/ganti_settingan_peran` - Ngubah jumlah [Peran Pasti Ada][]
+- `/ganti_settingan_peran` - Ngubah jumlah salah satu dari "Peran Pasti Ada"
 - `/batal_nyetting_peran` - Batalin settingan peran yang lagi di-setting sekarang
 - `/apus_settingan_peran` - Apus semua settingan peran yang udah dibikin
 - `/mulai_main` - Mulai main
@@ -20,6 +20,8 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/panggil_semua` - Panggil semua pemain
 - `/panggil_yang_idup` - cukup jelas
 - `/panggil_yang_belom_voting` - cukup jelas
+- `/ganti_waktu_malam` - atur batas waktu malam buat action
+- `/ganti_waktu_voting` - atur batas waktu voting
 - `/statistik` - Liat statistik diri sendiri
 - `/ilangin_keyboard` - Reply keyboard muncul terus? Cobain nih
 
