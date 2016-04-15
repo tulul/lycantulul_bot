@@ -22,8 +22,12 @@ module Lycantulul
       end
     end
 
+    def self.get(group_id)
+      self.find_or_create_by(group_id: group_id)
+    end
+
     def statistics
-      res = "Statistik Group\n"
+      res = "Statistik Grup\n"
       res += "\n"
       res += "Main <b>#{self.game}</b>\n"
       res += "Kemenangan bagi Kejahatan <b>#{self.percentage(self.werewolf_victory)}</b>\n"

@@ -4,7 +4,7 @@ module Lycantulul
     include Mongoid::Locker
 
     HIDDEN_ROLES = ['greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty']
-    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'necromancer', 'silver_bullet']
+    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet']
     DEFAULT_ROLES = ['villager']
     ROLES = DEFAULT_ROLES + IMPORTANT_ROLES + HIDDEN_ROLES
 
@@ -29,6 +29,7 @@ module Lycantulul
     field :seen, type: Array, default: []
     field :protectee, type: Array, default: []
     field :necromancee, type: Array, default: []
+
     field :super_necromancer_done, type: Boolean, default: false
     field :amnesty_done, type: Boolean, default: false
 
@@ -144,7 +145,7 @@ module Lycantulul
 
     def set_night_time(time)
       self.group.with_lock(wait: true) do
-        self.group.update_attribute(:voting_time, time)
+        self.group.update_attribute(:night_time, time)
       end
     end
 
@@ -297,7 +298,7 @@ module Lycantulul
         end
         self.group.with_lock(wait: true) do
           self.group.inc_game
-          if game.living_werewolves.count == 0
+          if self.living_werewolves.count == 0
             self.group.inc_village_victory
           else
             self.group.inc_werewolf_victory
@@ -500,7 +501,7 @@ module Lycantulul
 
       if self.waiting?
         res += "\n\n#{self.role_composition}" unless self.role_composition.empty?
-        res += "\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
+        res += "\n\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
         res += "\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran"
         res += "\n\n#{self.list_time_settings}"
       end
@@ -539,6 +540,8 @@ module Lycantulul
         'Dukun'
       when PROTECTOR
         'Penjual Jimat'
+      when SPY
+        'Tamaki Shinichi'
       when NECROMANCER
         'Mujahid'
       when SUPER_NECROMANCER
@@ -566,6 +569,8 @@ module Lycantulul
         'Bantuin kemenangan para rakyat jelata, di mana setiap malam lu bakal dikasih tau role salah seorang pemain yang masih hidup secara random (ga jamin sih besoknya dikasih tau orang yang berbeda apa engga hahaha)'
       when PROTECTOR
         'Jualin jimat ke orang-orang. Orang yang dapet jimat akan terlindungi dari serangan para serigala. Ntar tiap malem ditanyain mau jual ke siapa (sebenernya ga jualan juga sih, ga dapet duit, maap yak). Hati-hati loh tapi, kalo lu jual jimat ke serigala bisa-bisa lu dibunuh dengan 25% kemungkinan, kecil lah, peluang lu buat dapet pasangan hidup masih lebih gede :)'
+      when SPY
+        'Tiap malem dikasih tau para serigala mau bunuh siapa'
       when NECROMANCER
         'Menghidupkan kembali 1 orang mayat. Sebagai gantinya, lu yang bakal mati. Ingat, cuma ada 1 kesempatan! Dan jangan sampe lu malah dibunuh duluan sama serigala. Allaaaaahuakbar!'
       when SUPER_NECROMANCER
@@ -587,24 +592,26 @@ module Lycantulul
       case role
       when VILLAGER
         0
-      when GREEDY_VILLAGER
-        count > 3 && rand(100) < 35 ? 1 : 0 # [9-..., 1] 35% chance
-      when USELESS_VILLAGER
-        count > 5 && rand(100) < 70 ? 1 : 0 # [11-..., 1] 70% chance
       when WEREWOLF
         (count / 5) + 1 # [5-9, 1], [10-14, 2], ...
       when SEER
         ((count - 1) / 12) + 1 # [6-17, 1], [18-29, 2], ...
-      when FAUX_SEER
-        count > 6 && rand(100) < 75 ? 1 : 0 # [12-..., 1] 75% chance
       when PROTECTOR
         ((count - 3) / 14) + 1 # [8-21, 1], [22-35, 2], ...
+      when SPY
+        count > 10 ? 1 : 0 # [16,..., 1]
       when NECROMANCER
         count > 6 ? 1 : 0 # [12-..., 1]
-      when SUPER_NECROMANCER
-        count > 10 && rand(100) < 25 ? 1 : 0 # [16-..., 1] 25% chance
       when SILVER_BULLET
         ((count - 9) / 10) + 1 # [14-23, 1], [24-33, 2], ...
+      when GREEDY_VILLAGER
+        count > 3 && rand(100) < 35 ? 1 : 0 # [9-..., 1] 35% chance
+      when USELESS_VILLAGER
+        count > 5 && rand(100) < 70 ? 1 : 0 # [11-..., 1] 70% chance
+      when FAUX_SEER
+        count > 6 && rand(100) < 75 ? 1 : 0 # [12-..., 1] 75% chance
+      when SUPER_NECROMANCER
+        count > 10 && rand(100) < 25 ? 1 : 0 # [16-..., 1] 25% chance
       when AMNESTY
         count > 4 && rand(100) < 50 ? 1 : 0 # [10-..., 1] 50% chance
       end
@@ -623,9 +630,11 @@ module Lycantulul
     def next_new_role
       res = 0
       current_comp = self.role_composition
-      while !self.custom_roles && current_comp == self.role_composition(self.players.count + res)
+      while current_comp == self.role_composition(self.players.count + res) && res < 30
         res += 1
       end
+
+      return "(ga ada, karena udah di-setting semua)" if res == 30
       res
     end
 

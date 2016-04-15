@@ -101,7 +101,7 @@ module Lycantulul
                       additional_text =
                         if game.players.count >= MINIMUM_PLAYER.call
                           res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
-                          !game.custom_roles && res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran\n"
+                          res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran\n"
                           res += "#{game.list_time_settings}"
                           res
                         else
@@ -309,48 +309,32 @@ module Lycantulul
             end
           when /^\/ganti_waktu_malam(.*)?/
             if in_group?(message)
-              if game = check_game(message)
-                if game.waiting?
-                  time = $1
-                  if time =~ /^ ?(\d)+$/
-                    if time.to_i >= 10
-                      game.set_night_time(time.to_i)
-                      send(message, "Sip, waktu malam buat action jadi #{time.to_i} detik!", reply: true)
-                    else
-                      send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
-                    end
-                  else
-                    send(message, "Hah? Format yang bener /ganti_waktu_malam[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_malam 42", reply: true)
-                  end
+              time = $1
+              if time =~ /^ ?(\d)+$/
+                if time.to_i >= 10
+                  Lycantulul::Group.get(message.chat.id).update_attribute(:night_time, time)
+                  send(message, "Sip, waktu malam buat action jadi #{time.to_i} detik!", reply: true)
                 else
-                  send(message, 'Udah mulai', reply: true)
+                  send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
                 end
               else
-                send(message, '/bikin_baru dulu', reply: true)
+                send(message, "Hah? Format yang bener /ganti_waktu_malam[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_malam 42", reply: true)
               end
             else
               wrong_room(message)
             end
           when /^\/ganti_waktu_voting(.*)?/
             if in_group?(message)
-              if game = check_game(message)
-                if game.waiting?
-                  time = $1
-                  if time =~ /^ ?(\d)+$/
-                    if time.to_i >= 10
-                      game.set_voting_time(time.to_i)
-                      send(message, "Sip, waktu voting jadi #{time.to_i} detik!", reply: true)
-                    else
-                      send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
-                    end
-                  else
-                    send(message, "Hah? Format yang bener /ganti_waktu_voting[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_voting 42", reply: true)
-                  end
+              time = $1
+              if time =~ /^ ?(\d)+$/
+                if time.to_i >= 10
+                  Lycantulul::Group.get(message.chat.id).update_attribute(:voting_time, time)
+                  send(message, "Sip, waktu voting jadi #{time.to_i} detik!", reply: true)
                 else
-                  send(message, 'Udah mulai', reply: true)
+                  send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
                 end
               else
-                send(message, '/bikin_baru dulu', reply: true)
+                send(message, "Hah? Format yang bener /ganti_waktu_voting[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_voting 42", reply: true)
               end
             else
               wrong_room(message)
@@ -359,6 +343,12 @@ module Lycantulul
             if in_private?(message)
               keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
               send_to_player(message.chat.id, 'OK', reply_markup: keyboard)
+            else
+              wrong_room(message)
+            end
+          when /^\/statistik_grup(@lycantulul_bot)?/
+            if in_group?(message)
+              send_to_player(message.chat.id, Lycantulul::Group.get(message.chat.id).statistics, parse_mode: 'HTML')
             else
               wrong_room(message)
             end
@@ -507,13 +497,15 @@ module Lycantulul
           send_necromancer(dp, se[:user_id])
         end
       when WEREWOLF_KILL_BROADCAST
-        lw = game.living_werewolves
+        lw = (game.living_werewolves + game.living_spies)
         killer = aux[0]
         victim_name = aux[1]
 
         lw.each do |ww|
-          log("broadcasting killing from to #{killer}")
-          send_to_player(ww[:user_id], "#{killer} pengen si #{victim_name} modar")
+          log("broadcasting killing from #{killer}")
+          brd = "#{victim_name} pengen dibunuh"
+          ww.role == Lycantulul::Game::WEREWOLF && brd += " oleh #{killer}"
+          send_to_player(ww.user_id, brd)
         end
       when WEREWOLF_KILL_SUCCEEDED
         group_chat_id = game.group_id
@@ -542,7 +534,7 @@ module Lycantulul
         group_chat_id = game.group_id
         send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma <b>#{game.voting_time} detik</b>. kalo ga ada suara mayoritas, ga ada yang mati", parse_mode: 'HTML')
         log('enqueuing voting job')
-        Lycantulul::VotingTimerJob.perform_in(game.voting_time, game, game.round, Lycantulul::VotingTimerJob::START, game.voting_time / 2, self)
+        Lycantulul::VotingTimerJob.perform_in(game.voting_time / 2, game, game.round, Lycantulul::VotingTimerJob::START, game.voting_time / 2, self)
 
         livp = game.living_players
         livp.each do |lp|

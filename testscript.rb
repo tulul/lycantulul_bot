@@ -162,6 +162,7 @@ event('modify game contents')
 @g.players.with_id(8).assign(Lycantulul::Game::SUPER_NECROMANCER)
 @g.players.with_id(15).assign(Lycantulul::Game::FAUX_SEER)
 @g.players.with_id(9).assign(Lycantulul::Game::AMNESTY)
+@g.players.with_id(14).assign(Lycantulul::Game::SPY)
 print_game
 
 # event('werewolves no majority vote')

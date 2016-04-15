@@ -22,6 +22,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/panggil_yang_belom_voting` - cukup jelas
 - `/ganti_waktu_malam` - atur batas waktu malam buat action
 - `/ganti_waktu_voting` - atur batas waktu voting
+- `/statistik_grup` - Liat statistik grup
 - `/statistik` - Liat statistik diri sendiri
 - `/ilangin_keyboard` - Reply keyboard muncul terus? Cobain nih
 
@@ -35,6 +36,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. Tukang Ngintip: muncul saat jumlah pemain 6 orang, bertambah setiap 12 pemain (6 pemain: 1 Tukang Ngintip, 18 pemain: 2 Tukang Ngintip, dst.).
 1. Dukun: muncul saat jumlah pemain 12 orang dengan kemungkinan 75%
 1. Penjual Jimat: muncul saat jumlah pemain 8 orang, bertambah setiap 14 pemain (8 pemain: 1 Penjual Jimat, 22 pemain: 2 Penjual Jimat, dst.).
+1. Tamaki Shinichi: muncul saat jumlah pemain 16 orang
 1. Mujahid: muncul saat jumlah pemain 12 orang
 1. Pengidap Ebola: muncul saat jumlah pemain 14 orang, bertambah setiap 10 pemain (14 pemain: 1 Pengidap Ebola, 24 pemain: 2 Pengidap Ebola, dst.).
 
@@ -63,6 +65,8 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. Penjual Jimat
    - Melindungi salah satu pemain dari dibunuh TTS.
    - Jika yang dilindungi adalah TTS, ada 25% kemungkinan si Penjual Jimat akan mati.
+1. Tamaki Shinichi
+   - Setiap malam akan diberitahu siapa yang akan dibunuh oleh para TTS.
 1. Mujahid
    - Menghidupkan salah satu pemain yang sudah mati.
    - Sebagai gantinya, si Mujahid akan mati.
