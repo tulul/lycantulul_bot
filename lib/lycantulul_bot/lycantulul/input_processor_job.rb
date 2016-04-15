@@ -101,7 +101,7 @@ module Lycantulul
                       additional_text =
                         if game.players.count >= MINIMUM_PLAYER.call
                           res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
-                          !game.custom_roles && res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran\n"
+                          res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran\n"
                           res += "#{game.list_time_settings}"
                           res
                         else
@@ -359,6 +359,12 @@ module Lycantulul
             if in_private?(message)
               keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
               send_to_player(message.chat.id, 'OK', reply_markup: keyboard)
+            else
+              wrong_room(message)
+            end
+          when /^\/statistik_grup(@lycantulul_bot)?/
+            if in_group?(message)
+              send_to_player(message.chat.id, Lycantulul::Group.get(message.from.id).statistics, parse_mode: 'HTML')
             else
               wrong_room(message)
             end

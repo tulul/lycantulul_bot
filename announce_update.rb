@@ -1,8 +1,10 @@
 load 'Rakefile'
 
 updates = "latest updates:\n"
-updates += "- perbaikin pas Pak Ogah voting dianggep belom voting\n"
-updates += "- perbaikin pas ada Pak Ogah atau Pak Raden, ronde voting ga langsung selesai pas semua udah voting"
+updates += "- Waktu Voting dan Waktu Malam sekarang bakal berlanjut ke game selanjutnya (jadi settingannya per grup, bukan per game lagi)\n"
+updates += "- /statistik_grup (baru jumlah game sama yang menang tts atau warga kampung)\n"
+updates += "\n"
+updates += "Kalo nemu yang aneh2 kontak @araishikeiwai yak"
 groups = Lycantulul::Game.all.map(&:group_id).uniq
 Telegram::Bot::Client.run($token) do |bot|
   groups.each do |g|

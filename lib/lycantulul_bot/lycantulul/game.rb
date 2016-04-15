@@ -36,9 +36,6 @@ module Lycantulul
     field :pending_custom_id, type: Integer, default: nil
     field :pending_custom_role, type: Integer, default: nil
 
-    field :voting_time, type: Integer
-    field :night_time, type: Integer
-
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
 
@@ -55,6 +52,18 @@ module Lycantulul
 
     def get_player(user_id)
       Lycantulul::RegisteredPlayer.get(user_id)
+    end
+
+    def group
+      Lycantulul::Group.find_or_create_by(group_id: group_id)
+    end
+
+    def voting_time
+      self.group.voting_time || Lycantulul::InputProcessorJob::VOTING_TIME.call
+    end
+
+    def night_time
+      self.group.night_time || Lycantulul::InputProcessorJob::NIGHT_TIME.call
     end
 
     def add_player(user)
@@ -128,14 +137,14 @@ module Lycantulul
     end
 
     def set_voting_time(time)
-      self.with_lock(wait: true) do
-        self.update_attribute(:voting_time, time)
+      self.group.with_lock(wait: true) do
+        self.group.update_attribute(:voting_time, time)
       end
     end
 
     def set_night_time(time)
-      self.with_lock(wait: true) do
-        self.update_attribute(:night_time, time)
+      self.group.with_lock(wait: true) do
+        self.group.update_attribute(:night_time, time)
       end
     end
 
@@ -284,6 +293,14 @@ module Lycantulul
             player.inc_survived
           else
             player.inc_died
+          end
+        end
+        self.group.with_lock(wait: true) do
+          self.group.inc_game
+          if game.living_werewolves.count == 0
+            self.group.inc_village_victory
+          else
+            self.group.inc_werewolf_victory
           end
         end
       end
@@ -483,7 +500,7 @@ module Lycantulul
 
       if self.waiting?
         res += "\n\n#{self.role_composition}" unless self.role_composition.empty?
-        res += "\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
+        res += "\n\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
         res += "\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran"
         res += "\n\n#{self.list_time_settings}"
       end
@@ -501,8 +518,8 @@ module Lycantulul
     end
 
     def list_time_settings
-      res = "Waktu voting: #{self.voting_time || Lycantulul::InputProcessorJob::VOTING_TIME.call} detik\n"
-      res += "Waktu action malam: #{self.night_time || Lycantulul::InputProcessorJob::NIGHT_TIME.call} detik\n"
+      res = "Waktu voting: #{self.voting_time} detik\n"
+      res += "Waktu action malam: #{self.night_time} detik\n"
       res += 'Ubah pake /ganti_waktu_voting atau /ganti_waktu_malam'
     end
 
@@ -606,9 +623,11 @@ module Lycantulul
     def next_new_role
       res = 0
       current_comp = self.role_composition
-      while !self.custom_roles && current_comp == self.role_composition(self.players.count + res)
+      while current_comp == self.role_composition(self.players.count + res) && res < 30
         res += 1
       end
+
+      return "(ga ada, karena udah di-setting semua)" if res == 30
       res
     end
 
