@@ -297,7 +297,7 @@ module Lycantulul
         end
         self.group.with_lock(wait: true) do
           self.group.inc_game
-          if game.living_werewolves.count == 0
+          if self.living_werewolves.count == 0
             self.group.inc_village_victory
           else
             self.group.inc_werewolf_victory
