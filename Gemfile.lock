@@ -22,19 +22,11 @@ GEM
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
     equalizer (0.0.11)
-    gene_pool (1.4.1)
-      thread_safe
-    httmultiparty (0.3.16)
-      httparty (>= 0.7.3)
-      mimemagic
-      multipart-post
-    httparty (0.13.7)
-      json (~> 1.8)
-      multi_xml (>= 0.5.2)
+    faraday (0.9.2)
+      multipart-post (>= 1.2, < 3)
     i18n (0.7.0)
     ice_nine (0.11.2)
     json (1.8.3)
-    mimemagic (0.3.1)
     minitest (5.8.4)
     mongo (2.2.3)
       bson (~> 4.0)
@@ -49,21 +41,14 @@ GEM
     mongoid-locker (0.3.4)
       mongoid (>= 2.8, < 6.0)
       mongoid-compatibility
-    multi_xml (0.5.5)
     multipart-post (2.0.0)
     origin (2.2.0)
-    persistent_http (1.0.6)
-      gene_pool (>= 1.3)
-    persistent_httparty (0.1.2)
-      httparty (~> 0.9)
-      persistent_http (< 2)
     rake (11.1.2)
     redis (3.2.2)
     sucker_punch (2.0.1)
       concurrent-ruby (~> 1.0.0)
-    telegram-bot-ruby (0.4.2)
-      httmultiparty
-      persistent_httparty
+    telegram-bot-ruby (0.5.0)
+      faraday
       virtus
     thread_safe (0.3.5)
     tzinfo (1.2.2)
@@ -83,7 +68,7 @@ DEPENDENCIES
   rake
   redis
   sucker_punch (~> 2.0)
-  telegram-bot-ruby
+  telegram-bot-ruby (~> 0.5.0)
 
 BUNDLED WITH
    1.11.2
