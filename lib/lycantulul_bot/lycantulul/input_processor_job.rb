@@ -364,7 +364,7 @@ module Lycantulul
             end
           when /^\/statistik_grup(@lycantulul_bot)?/
             if in_group?(message)
-              send_to_player(message.chat.id, Lycantulul::Group.get(message.from.id).statistics, parse_mode: 'HTML')
+              send_to_player(message.chat.id, Lycantulul::Group.get(message.chat.id).statistics, parse_mode: 'HTML')
             else
               wrong_room(message)
             end
