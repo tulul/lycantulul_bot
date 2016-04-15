@@ -1,8 +1,9 @@
 load 'Rakefile'
 
 updates = "latest updates:\n"
-updates += "- Waktu Voting dan Waktu Malam sekarang bakal berlanjut ke game selanjutnya (jadi settingannya per grup, bukan per game lagi)\n"
-updates += "- /statistik_grup (baru jumlah game sama yang menang tts atau warga kampung)\n"
+updates += "- Peran baru: Tamaki Shinichi\n"
+updates += "- Muncul pas jumlah pemain udah 16\n"
+updates += "- Tiap malem Tamaki bakal dikasih tau TTS pengen bunuh siapa. Terserah Tamaki aja infonya mau diapain\n"
 updates += "\n"
 updates += "Kalo nemu yang aneh2 kontak @araishikeiwai yak"
 groups = Lycantulul::Game.all.map(&:group_id).uniq
