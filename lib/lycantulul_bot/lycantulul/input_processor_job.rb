@@ -548,7 +548,7 @@ module Lycantulul
         group_chat_id = game.group_id
         send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma <b>#{game.voting_time} detik</b>. kalo ga ada suara mayoritas, ga ada yang mati", parse_mode: 'HTML')
         log('enqueuing voting job')
-        Lycantulul::VotingTimerJob.perform_in(game.voting_time, game, game.round, Lycantulul::VotingTimerJob::START, game.voting_time / 2, self)
+        Lycantulul::VotingTimerJob.perform_in(game.voting_time / 2, game, game.round, Lycantulul::VotingTimerJob::START, game.voting_time / 2, self)
 
         livp = game.living_players
         livp.each do |lp|
