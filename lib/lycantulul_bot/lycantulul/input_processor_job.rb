@@ -895,7 +895,7 @@ module Lycantulul
     end
 
     def in_group?(message)
-      message.chat.type == 'group'
+      ['group', 'supergroup'].include?(message.chat.type)
     end
 
     def in_private?(message)
