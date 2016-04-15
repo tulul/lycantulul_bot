@@ -309,48 +309,32 @@ module Lycantulul
             end
           when /^\/ganti_waktu_malam(.*)?/
             if in_group?(message)
-              if game = check_game(message)
-                if game.waiting?
-                  time = $1
-                  if time =~ /^ ?(\d)+$/
-                    if time.to_i >= 10
-                      game.set_night_time(time.to_i)
-                      send(message, "Sip, waktu malam buat action jadi #{time.to_i} detik!", reply: true)
-                    else
-                      send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
-                    end
-                  else
-                    send(message, "Hah? Format yang bener /ganti_waktu_malam[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_malam 42", reply: true)
-                  end
+              time = $1
+              if time =~ /^ ?(\d)+$/
+                if time.to_i >= 10
+                  Lycantulul::Group.get(message.chat.id).update_attribute(:night_time, time)
+                  send(message, "Sip, waktu malam buat action jadi #{time.to_i} detik!", reply: true)
                 else
-                  send(message, 'Udah mulai', reply: true)
+                  send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
                 end
               else
-                send(message, '/bikin_baru dulu', reply: true)
+                send(message, "Hah? Format yang bener /ganti_waktu_malam[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_malam 42", reply: true)
               end
             else
               wrong_room(message)
             end
           when /^\/ganti_waktu_voting(.*)?/
             if in_group?(message)
-              if game = check_game(message)
-                if game.waiting?
-                  time = $1
-                  if time =~ /^ ?(\d)+$/
-                    if time.to_i >= 10
-                      game.set_voting_time(time.to_i)
-                      send(message, "Sip, waktu voting jadi #{time.to_i} detik!", reply: true)
-                    else
-                      send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
-                    end
-                  else
-                    send(message, "Hah? Format yang bener /ganti_waktu_voting[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_voting 42", reply: true)
-                  end
+              time = $1
+              if time =~ /^ ?(\d)+$/
+                if time.to_i >= 10
+                  Lycantulul::Group.get(message.chat.id).update_attribute(:voting_time, time)
+                  send(message, "Sip, waktu voting jadi #{time.to_i} detik!", reply: true)
                 else
-                  send(message, 'Udah mulai', reply: true)
+                  send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
                 end
               else
-                send(message, '/bikin_baru dulu', reply: true)
+                send(message, "Hah? Format yang bener /ganti_waktu_voting[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_voting 42", reply: true)
               end
             else
               wrong_room(message)
