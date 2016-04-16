@@ -89,22 +89,22 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. Super Mujahid: muncul saat jumlah pemain 18 orang
 
 Rujukan daftar peran sampai 20 pemain:
-5: 1 TTS
-6: 1 TTS, 1 Tukang Ngintip
-7: 1 TTS, 1 Tukang Ngintip
-8: 1 TTS, 1 Tukang Ngintip, 1 Penjual Jimat
-9: 1 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah
-10: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah 
-11: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden
-12: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid
-13: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid
-14: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun
-15: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden
-16: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi
-17: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi
-18: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
-19: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
-20: 4 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
+- 5: 1 TTS
+- 6: 1 TTS, 1 Tukang Ngintip
+- 7: 1 TTS, 1 Tukang Ngintip
+- 8: 1 TTS, 1 Tukang Ngintip, 1 Penjual Jimat
+- 9: 1 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah
+- 10: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah 
+- 11: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden
+- 12: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid
+- 13: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid
+- 14: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun
+- 15: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden
+- 16: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi
+- 17: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi
+- 18: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
+- 19: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
+- 20: 4 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
 
 Jika tidak puas dengan komposisi di atas, silakan diatur sendiri menggunakan perintah /ganti_settingan_peran
 
