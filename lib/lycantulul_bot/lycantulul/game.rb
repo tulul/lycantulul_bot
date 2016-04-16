@@ -20,10 +20,11 @@ module Lycantulul
     USELESS_VILLAGER_SKIP = 'OGAH NDAK VOTING KAK'
 
     field :group_id, type: Integer
-    field :night, type: Boolean, default: true
     field :waiting, type: Boolean, default: true
-    field :round, type: Integer, default: 0
+    field :night, type: Boolean, default: true
+    field :discussion, type: Boolean, default: false
     field :finished, type: Boolean, default: false
+    field :round, type: Integer, default: 0
     field :victim, type: Array, default: []
     field :votee, type: Array, default: []
     field :seen, type: Array, default: []
@@ -65,6 +66,16 @@ module Lycantulul
 
     def night_time
       self.group.night_time || Lycantulul::InputProcessorJob::NIGHT_TIME.call
+    end
+
+    def discussion_time
+      self.group.discussion_time || Lycantulul::InputProcessorJob::DISCUSSION_TIME.call
+    end
+
+    def end_discussion
+      self.with_lock(wait: true) do
+        self.update_attribute(:discussion, false)
+      end
     end
 
     def add_player(user)
@@ -319,6 +330,7 @@ module Lycantulul
         LycantululBot.log(vc.to_s)
         self.update_attribute(:victim, [])
         self.update_attribute(:night, false)
+        self.update_attribute(:discussion, true)
 
         if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
           victim = self.living_players.with_name(vc[0][0])

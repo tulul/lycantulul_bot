@@ -8,6 +8,7 @@ module Lycantulul
     NIGHT_TIME = -> { (res = $redis.get('lycantulul::night_time')) ? res.to_i : 90 }
     # multiply of 8 please
     VOTING_TIME = -> { (res = $redis.get('lycantulul::voting_time')) ? res.to_i : 160 }
+    DISCUSSION_TIME = -> { (res = $redis.get('lycantulul::discussion_time')) ? res.to_i : 120 }
 
     ALLOWED_DELAY = -> { (res = $redis.get('lycantulul::allowed_delay')) ? res.to_i : 20 }
 
@@ -19,6 +20,7 @@ module Lycantulul
       'werewolf_kill_broadcast',
       'werewolf_kill_succeeded',
       'werewolf_kill_failed',
+      'discussion_start',
       'voting_start',
       'voting_succeeded',
       'voting_failed',
@@ -339,6 +341,22 @@ module Lycantulul
             else
               wrong_room(message)
             end
+          when /^\/ganti_waktu_diskusi(.*)?/
+            if in_group?(message)
+              time = $1
+              if time =~ /^ ?(\d)+$/
+                if time.to_i >= 10
+                  Lycantulul::Group.get(message.chat.id).update_attribute(:discussion_time, time)
+                  send(message, "Sip, waktu diskusi jadi #{time.to_i} detik!", reply: true)
+                else
+                  send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
+                end
+              else
+                send(message, "Hah? Format yang bener /ganti_waktu_diskusi[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_diskusi 42", reply: true)
+              end
+            else
+              wrong_room(message)
+            end
           when /^\/ilangin_keyboard(@lycantulul_bot)?/
             if in_private?(message)
               keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
@@ -528,15 +546,20 @@ module Lycantulul
         end
 
         return if check_win(game)
-        message_action(game, VOTING_START)
+        message_action(game, DISCUSSION_START)
       when WEREWOLF_KILL_FAILED
         group_chat_id = game.group_id
         log('no victim')
         send_to_player(group_chat_id, 'PFFFTTT CUPU BANGET SERIGALA PADA, ga ada yang mati')
-        message_action(game, VOTING_START)
+        message_action(game, DISCUSSION_START)
+      when DISCUSSION_START
+        group_chat_id = game.group_id
+        send_to_player(group_chat_id, "Silakan bertulul dan bermufakat, waktunya cuma <b>#{game.discussion_time} detik</b>", parse_mode: 'HTML')
+        log('enqueuing discussion job')
+        Lycantulul::DiscussionTimerJob.perform_in(game.discussion_time, game, game.round, self)
       when VOTING_START
         group_chat_id = game.group_id
-        send_to_player(group_chat_id, "Silakan bertulul dan bermufakat. Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma <b>#{game.voting_time} detik</b>. kalo ga ada suara mayoritas, ga ada yang mati", parse_mode: 'HTML')
+        send_to_player(group_chat_id, "Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma <b>#{game.voting_time} detik</b>. kalo ga ada suara mayoritas, ga ada yang mati", parse_mode: 'HTML')
         log('enqueuing voting job')
         Lycantulul::VotingTimerJob.perform_in(game.voting_time / 2, game, game.round, Lycantulul::VotingTimerJob::START, game.voting_time / 2, self)
 
@@ -757,7 +780,7 @@ module Lycantulul
 
     def check_werewolf_in_game(message)
       log('checking werewolf votes')
-      Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
+      Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'werewolf')
           return wwg
         end
@@ -768,7 +791,7 @@ module Lycantulul
 
     def check_voting(message)
       log('checking voters')
-      Lycantulul::Game.where(finished: false, waiting: false, night: false).each do |wwg|
+      Lycantulul::Game.where(finished: false, waiting: false, night: false, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'player')
           return wwg
         end
@@ -779,7 +802,7 @@ module Lycantulul
 
     def check_seer(message)
       log('checking seer')
-      Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
+      Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'seer')
           return wwg
         end
@@ -790,7 +813,7 @@ module Lycantulul
 
     def check_protector(message)
       log('checking protector')
-      Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
+      Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'protector')
           return wwg
         end
@@ -801,7 +824,7 @@ module Lycantulul
 
     def check_necromancer(message)
       log('checking necromancer')
-      Lycantulul::Game.where(finished: false, waiting: false, night: true).each do |wwg|
+      Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'necromancer') || wwg.valid_action?(message.from.id, message.text, 'super_necromancer')
           return wwg
         end
@@ -813,7 +836,7 @@ module Lycantulul
     def check_round_finished(game, round, force = false)
       log("checking round finished #{round}")
       game.reload
-      return unless round == game.round && game.night? && !game.waiting? && !game.finished?
+      return unless round == game.round && game.night? && !game.waiting? && !game.discussion? && !game.finished?
       log('continuing')
       if force || game.round_finished?
         killed = game.kill_victim
@@ -838,10 +861,18 @@ module Lycantulul
       end
     end
 
+    def end_discussion_and_start_voting(game, round, force = false)
+      log("starting voting round from discussion: #{round}")
+      game.reload
+      return unless round == game.round && !game.night? && !game.waiting? && game.discussion? && !game.finished?
+      game.end_discussion
+      message_action(game, VOTING_START)
+    end
+
     def check_voting_finished(game, round, force = false)
       log("checking voting finished: #{round}")
       game.reload
-      return unless round == game.round && !game.night? && !game.waiting? && !game.finished?
+      return unless round == game.round && !game.night? && !game.waiting? && !game.discussion? && !game.finished?
       log('continuing')
       if force || game.check_voting_finished
         if killed = game.kill_votee

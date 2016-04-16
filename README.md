@@ -23,6 +23,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/panggil_yang_belom_voting` - cukup jelas
 - `/ganti_waktu_malam` - atur batas waktu malam buat action
 - `/ganti_waktu_voting` - atur batas waktu voting
+- `/ganti_waktu_diskusi` - atur batas waktu diskusi
 - `/statistik_grup` - Liat statistik grup
 - `/statistik` - Liat statistik diri sendiri
 - `/ilangin_keyboard` - Reply keyboard muncul terus? Cobain nih
