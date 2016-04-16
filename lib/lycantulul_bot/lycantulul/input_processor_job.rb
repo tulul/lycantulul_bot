@@ -758,7 +758,7 @@ module Lycantulul
       game.reload
       return unless next_reminder && round == game.round && !game.night? && !game.waiting? && !game.finished?
       log('continuing')
-      send_to_player(game.group_id, "Waktu nulul tinggal #{time} detik.\n/panggil_yang_belom_voting atau liat /hasil_voting")
+      send_to_player(game.group_id, "Waktu voting tinggal #{time} detik.\n/panggil_yang_belom_voting atau liat /hasil_voting")
       Lycantulul::VotingTimerJob.perform_in(next_reminder, game, round, Lycantulul::VotingTimerJob.next_state(state), next_reminder, self)
     end
 

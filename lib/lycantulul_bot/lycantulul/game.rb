@@ -533,9 +533,10 @@ module Lycantulul
     end
 
     def list_time_settings
-      res = "Waktu voting: #{self.voting_time} detik\n"
-      res += "Waktu action malam: #{self.night_time} detik\n"
-      res += 'Ubah pake /ganti_waktu_voting atau /ganti_waktu_malam'
+      res = "Waktu action malam: #{self.night_time} detik\n"
+      res += "Waktu diskusi: #{self.discussion_time} detik\n"
+      res += "Waktu voting: #{self.voting_time} detik\n"
+      res += 'Ubah pake /ganti_waktu_voting, /ganti_waktu_diskusi, atau /ganti_waktu_malam'
     end
 
     def get_role(role)
