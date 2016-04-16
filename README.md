@@ -28,22 +28,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/statistik` - Liat statistik diri sendiri
 - `/ilangin_keyboard` - Reply keyboard muncul terus? Cobain nih
 
-### Jumlah & Penjelasan Peran
-
-#### Jumlah dan Pola Kemunculan Peran
-
-1. Warga Kampung: selalu ada, sisa pemain yang tidak dapat peran.
-1. TTS (Tulul-Tulul Serigala): selalu ada, bertambah setiap 5 pemain (5 pemain: 1 TTS, 10 pemain: 2 TTS, dst.).
-1. Tukang Ngintip: muncul saat jumlah pemain 6 orang, bertambah setiap 12 pemain (6 pemain: 1 Tukang Ngintip, 18 pemain: 2 Tukang Ngintip, dst.).
-1. Penjual Jimat: muncul saat jumlah pemain 8 orang, bertambah setiap 14 pemain (8 pemain: 1 Penjual Jimat, 22 pemain: 2 Penjual Jimat, dst.).
-1. Pengidap Ebola: muncul saat jumlah pemain 14 orang, bertambah setiap 10 pemain (14 pemain: 1 Pengidap Ebola, 24 pemain: 2 Pengidap Ebola, dst.).
-1. Tamaki Shinichi: muncul saat jumlah pemain 16 orang
-1. Pak Ogah: muncul saat jumlah pemain 9 orang
-1. Pak Raden: muncul saat jumlah pemain 11 orang
-1. Mujahid: muncul saat jumlah pemain 12 orang
-1. Dukun: muncul saat jumlah pemain 14 orang
-1. Anak Presiden: muncul saat jumlah pemain 15 orang
-1. Super Mujahid: muncul saat jumlah pemain 18 orang
+### Peran
 
 #### Penjelasan Tugas Peran
 
@@ -87,6 +72,41 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
    - Jika ada lebih dari 1 TTS, maka proses membunuh adalah voting antara para TTS. Jika tidak ada suara yang mayoritas, tidak ada yang mati.
    - Jika membunuh seseorang yang dilindungi Penjual Jimat, korban tidak akan mati.
    - Jika membunuh Pengidap Ebola, salah satu serigala yang masih hidup akan ikut mati (dipilih secara acak).
+
+#### Jumlah dan Pola Kemunculan Peran
+
+1. Warga Kampung: selalu ada, sisa pemain yang tidak dapat peran.
+1. TTS (Tulul-Tulul Serigala): selalu ada, bertambah setiap 5 pemain (5 pemain: 1 TTS, 10 pemain: 2 TTS, dst.).
+1. Tukang Ngintip: muncul saat jumlah pemain 6 orang, bertambah setiap 12 pemain (6 pemain: 1 Tukang Ngintip, 18 pemain: 2 Tukang Ngintip, dst.).
+1. Penjual Jimat: muncul saat jumlah pemain 8 orang, bertambah setiap 14 pemain (8 pemain: 1 Penjual Jimat, 22 pemain: 2 Penjual Jimat, dst.).
+1. Pengidap Ebola: muncul saat jumlah pemain 14 orang, bertambah setiap 10 pemain (14 pemain: 1 Pengidap Ebola, 24 pemain: 2 Pengidap Ebola, dst.).
+1. Tamaki Shinichi: muncul saat jumlah pemain 16 orang
+1. Pak Ogah: muncul saat jumlah pemain 9 orang
+1. Pak Raden: muncul saat jumlah pemain 11 orang
+1. Mujahid: muncul saat jumlah pemain 12 orang
+1. Dukun: muncul saat jumlah pemain 14 orang
+1. Anak Presiden: muncul saat jumlah pemain 15 orang
+1. Super Mujahid: muncul saat jumlah pemain 18 orang
+
+Rujukan daftar peran sampai 20 pemain:
+5: 1 TTS
+6: 1 TTS, 1 Tukang Ngintip
+7: 1 TTS, 1 Tukang Ngintip
+8: 1 TTS, 1 Tukang Ngintip, 1 Penjual Jimat
+9: 1 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah
+10: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah 
+11: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden
+12: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid
+13: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid
+14: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun
+15: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden
+16: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi
+17: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi
+18: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
+19: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
+20: 4 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
+
+Jika tidak puas dengan komposisi di atas, silakan diatur sendiri menggunakan perintah /ganti_settingan_peran
 
 ### Akhir Permainan
 
