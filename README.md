@@ -32,58 +32,61 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 
 #### Jumlah dan Pola Kemunculan Peran
 
-##### Peran Pasti Ada
 1. Warga Kampung: selalu ada, sisa pemain yang tidak dapat peran.
 1. TTS (Tulul-Tulul Serigala): selalu ada, bertambah setiap 5 pemain (5 pemain: 1 TTS, 10 pemain: 2 TTS, dst.).
 1. Tukang Ngintip: muncul saat jumlah pemain 6 orang, bertambah setiap 12 pemain (6 pemain: 1 Tukang Ngintip, 18 pemain: 2 Tukang Ngintip, dst.).
 1. Penjual Jimat: muncul saat jumlah pemain 8 orang, bertambah setiap 14 pemain (8 pemain: 1 Penjual Jimat, 22 pemain: 2 Penjual Jimat, dst.).
-1. Tamaki Shinichi: muncul saat jumlah pemain 16 orang
-1. Mujahid: muncul saat jumlah pemain 12 orang
 1. Pengidap Ebola: muncul saat jumlah pemain 14 orang, bertambah setiap 10 pemain (14 pemain: 1 Pengidap Ebola, 24 pemain: 2 Pengidap Ebola, dst.).
-1. Pak Raden: muncul saat jumlah pemain 11 orang
+1. Tamaki Shinichi: muncul saat jumlah pemain 16 orang
 1. Pak Ogah: muncul saat jumlah pemain 9 orang
+1. Pak Raden: muncul saat jumlah pemain 11 orang
+1. Mujahid: muncul saat jumlah pemain 12 orang
 1. Dukun: muncul saat jumlah pemain 14 orang
-1. Super Mujahid: muncul saat jumlah pemain 18 orang
 1. Anak Presiden: muncul saat jumlah pemain 15 orang
+1. Super Mujahid: muncul saat jumlah pemain 18 orang
 
 #### Penjelasan Tugas Peran
 
-##### Peran Pasti Ada
+##### Warga Biasa (pasif)
 1. Warga Kampung
    - Dibunuh dan ikut voting eksekusi.
-1. TTS (Tulul-Tulul Serigala)
-   - Membunuh semua yang bukan TTS.
-   - Jika ada lebih dari 1 TTS, maka proses membunuh adalah voting antara para TTS. Jika tidak ada suara yang mayoritas, tidak ada yang mati.
-   - Jika membunuh seseorang yang dilindungi Penjual Jimat, korban tidak akan mati.
-   - Jika membunuh Pengidap Ebola, salah satu serigala yang masih hidup akan ikut mati (dipilih secara acak).
-1. Tukang Ngintip
-   - Mengintip peran pemain lain.
-1. Penjual Jimat
-   - Melindungi salah satu pemain dari dibunuh TTS.
-   - Jika yang dilindungi adalah TTS, ada 25% kemungkinan si Penjual Jimat akan mati.
-1. Tamaki Shinichi
-   - Setiap malam akan diberitahu siapa yang akan dibunuh oleh para TTS.
-1. Mujahid
-   - Menghidupkan salah satu pemain yang sudah mati.
-   - Sebagai gantinya, si Mujahid akan mati.
-1. Pengidap Ebola
-   - Sama seperti Warga Kampung.
-   - Jika dibunuh TTS, maka salah satu dari TTS akan ikut mati (dipilih secara acak).
 1. Pak Raden
    - Dibunuh dan ikut voting eksekusi.
    - Saat voting, bobot suaranya 3.
 1. Pak Ogah
    - Dibunuh dan ikut voting eksekusi.
    - Saat voting, bobot suaranya 0.
-1. Dukun
-   - Diberitahu peran salah satu pemain yang masih hidup (seperti tukang ngintip, tapi ga bisa milih).
-   - Karena random, tidak ada jaminan pemain yang sudah diberitahu tidak diberitahu lagi.
-1. Super Mujahid
-   - Menghidupkan salah satu pemain yang sudah mati.
-   - Setelah menghidupkan, si Super Mujahid masih tetap hidup (dan tidak diberitahu ke publik).
 1. Anak Presiden
    - Dibunuh dan ikut voting eksekusi.
    - Tidak akan mati saat dieksekusi pertama kali.
+1. Dukun
+   - Diberitahu peran salah satu pemain yang masih hidup (seperti tukang ngintip, tapi ga bisa milih).
+   - Karena random, tidak ada jaminan pemain yang sudah diberitahu tidak diberitahu lagi.
+1. Tamaki Shinichi
+   - Setiap malam akan diberitahu siapa yang akan dibunuh oleh para TTS.
+1. Pengidap Ebola
+   - Sama seperti Warga Kampung.
+   - Jika dibunuh TTS, maka salah satu dari TTS akan ikut mati (dipilih secara acak).
+
+##### Warga sakti (aktif)
+1. Tukang Ngintip
+   - Mengintip peran pemain lain.
+1. Penjual Jimat
+   - Melindungi salah satu pemain dari dibunuh TTS.
+   - Jika yang dilindungi adalah TTS, ada 25% kemungkinan si Penjual Jimat akan mati.
+1. Mujahid
+   - Menghidupkan salah satu pemain yang sudah mati.
+   - Sebagai gantinya, si Mujahid akan mati.
+1. Super Mujahid
+   - Menghidupkan salah satu pemain yang sudah mati.
+   - Setelah menghidupkan, si Super Mujahid masih tetap hidup (dan tidak diberitahu ke publik).
+
+##### Penjahat
+1. TTS (Tulul-Tulul Serigala)
+   - Membunuh semua yang bukan TTS.
+   - Jika ada lebih dari 1 TTS, maka proses membunuh adalah voting antara para TTS. Jika tidak ada suara yang mayoritas, tidak ada yang mati.
+   - Jika membunuh seseorang yang dilindungi Penjual Jimat, korban tidak akan mati.
+   - Jika membunuh Pengidap Ebola, salah satu serigala yang masih hidup akan ikut mati (dipilih secara acak).
 
 ### Akhir Permainan
 
