@@ -378,7 +378,8 @@ module Lycantulul
                 log('voter confirmed')
                 case game.add_votee(message.from.id, message.text)
                 when Lycantulul::Game::RESPONSE_OK
-                  send(message, 'Seeep')
+                  keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
+                  send(message, 'Seeep', keyboard: keyboard)
                   send_to_player(game.group_id, '<i>Seseorang udah voting</i>', parse_mode: 'HTML')
                 when Lycantulul::Game::RESPONSE_INVALID
                   full_name = Lycantulul::Player.get_full_name(message.from)
@@ -390,7 +391,8 @@ module Lycantulul
                 log('seer confirmed')
                 case game.add_seen(message.from.id, message.text)
                 when Lycantulul::Game::RESPONSE_OK
-                  send(message, 'Seeep. Tunggu ronde berakhir yak, kalo lu atau yang mau lu liat mati, ya jadi ga ngasih tau~')
+                  keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
+                  send(message, 'Seeep. Tunggu ronde berakhir yak, kalo lu atau yang mau lu liat mati, ya jadi ga ngasih tau~', keyboard: keyboard)
                 when Lycantulul::Game::RESPONSE_INVALID
                   full_name = Lycantulul::Player.get_full_name(message.from)
                   send_seer(game.living_players, full_name, message.chat.id)
@@ -401,7 +403,8 @@ module Lycantulul
                 log('protector confirmed')
                 case game.add_protectee(message.from.id, message.text)
                 when Lycantulul::Game::RESPONSE_OK
-                  send(message, 'Seeep')
+                  keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
+                  send(message, 'Seeep', keyboard: keyboard)
                 when Lycantulul::Game::RESPONSE_INVALID
                   full_name = Lycantulul::Player.get_full_name(message.from)
                   send_protector(game.living_players, full_name, message.chat.id)
@@ -412,7 +415,8 @@ module Lycantulul
                 log('necromancer confirmed')
                 case game.add_necromancee(message.from.id, message.text)
                 when Lycantulul::Game::RESPONSE_OK
-                  send(message, 'Seeep. Kamu sungguh berjasa :\') Tapi kalo kamu dibunuh serigala, gajadi deh :\'(')
+                  keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
+                  send(message, 'Seeep. Kamu sungguh berjasa :\') Tapi kalo kamu dibunuh serigala, gajadi deh :\'(', keyboard: keyboard)
                 when Lycantulul::Game::RESPONSE_SKIP
                   send(message, 'Okay, sungguh bijaksana')
                 when Lycantulul::Game::RESPONSE_INVALID
