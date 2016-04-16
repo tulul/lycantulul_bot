@@ -618,7 +618,7 @@ module Lycantulul
       rescue StandardError => e
         puts e.message
         puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
-        sleep(1)
+        sleep(1.5)
         retry
       end
     end
@@ -634,7 +634,7 @@ module Lycantulul
       rescue StandardError => e
         puts e.message
         puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
-        sleep(1)
+        sleep(1.5)
         retry
       end
     end
