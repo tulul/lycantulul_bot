@@ -3,10 +3,9 @@ module Lycantulul
     include Mongoid::Document
     include Mongoid::Locker
 
-    HIDDEN_ROLES = ['greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty']
-    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet']
+    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet', 'greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty']
     DEFAULT_ROLES = ['villager']
-    ROLES = DEFAULT_ROLES + IMPORTANT_ROLES + HIDDEN_ROLES
+    ROLES = DEFAULT_ROLES + IMPORTANT_ROLES
 
     ROLES.each_with_index do |role, value|
       const_set(role.upcase, value)
@@ -620,15 +619,15 @@ module Lycantulul
       when SILVER_BULLET
         ((count - 9) / 10) + 1 # [14-23, 1], [24-33, 2], ...
       when GREEDY_VILLAGER
-        count > 3 && rand(100) < 35 ? 1 : 0 # [9-..., 1] 35% chance
+        count > 5 ? 1 : 0 # [11-..., 1]
       when USELESS_VILLAGER
-        count > 5 && rand(100) < 70 ? 1 : 0 # [11-..., 1] 70% chance
+        count > 3 ? 1 : 0 # [9-..., 1]
       when FAUX_SEER
-        count > 6 && rand(100) < 75 ? 1 : 0 # [12-..., 1] 75% chance
+        count > 8 ? 1 : 0 # [14-..., 1]
       when SUPER_NECROMANCER
-        count > 10 && rand(100) < 25 ? 1 : 0 # [16-..., 1] 25% chance
+        count > 12 ? 1 : 0 # [18-..., 1]
       when AMNESTY
-        count > 4 && rand(100) < 50 ? 1 : 0 # [10-..., 1] 50% chance
+        count > 9 ? 1 : 0 # [15-..., 1]
       end
     end
 

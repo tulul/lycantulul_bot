@@ -12,7 +12,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/batalin` - Batalin game
 - `/ikutan` - Ikutan main
 - `/gajadi` - Ga jadi ikutan main
-- `/ganti_settingan_peran` - Ngubah jumlah salah satu dari "Peran Pasti Ada"
+- `/ganti_settingan_peran` - Ngubah jumlah salah satu dari peran
 - `/batal_nyetting_peran` - Batalin settingan peran yang lagi di-setting sekarang
 - `/apus_settingan_peran` - Apus semua settingan peran yang udah dibikin
 - `/mulai_main` - Mulai main
@@ -40,13 +40,11 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. Tamaki Shinichi: muncul saat jumlah pemain 16 orang
 1. Mujahid: muncul saat jumlah pemain 12 orang
 1. Pengidap Ebola: muncul saat jumlah pemain 14 orang, bertambah setiap 10 pemain (14 pemain: 1 Pengidap Ebola, 24 pemain: 2 Pengidap Ebola, dst.).
-
-##### Peran Mungkin Ada
-1. Pak Raden: muncul saat jumlah pemain 9 orang dengan kemungkinan 35%
-1. Pak Ogah: muncul saat jumlah pemain 11 orang dengan kemungkinan 70%
-1. Dukun: muncul saat jumlah pemain 12 orang dengan kemungkinan 75%
-1. Super Mujahid: muncul saat jumlah pemain 16 orang dengan kemungkinan 25%
-1. Anak Presiden: muncul saat jumlah pemain 10 orang dengan kemungkinan 50%
+1. Pak Raden: muncul saat jumlah pemain 11 orang
+1. Pak Ogah: muncul saat jumlah pemain 9 orang
+1. Dukun: muncul saat jumlah pemain 14 orang
+1. Super Mujahid: muncul saat jumlah pemain 18 orang
+1. Anak Presiden: muncul saat jumlah pemain 15 orang
 
 #### Penjelasan Tugas Peran
 
@@ -71,8 +69,6 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. Pengidap Ebola
    - Sama seperti Warga Kampung.
    - Jika dibunuh TTS, maka salah satu dari TTS akan ikut mati (dipilih secara acak).
-
-##### Peran Mungkin Ada
 1. Pak Raden
    - Dibunuh dan ikut voting eksekusi.
    - Saat voting, bobot suaranya 3.

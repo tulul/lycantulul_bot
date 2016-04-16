@@ -1,8 +1,8 @@
 load 'Rakefile'
 
 updates = "latest updates:\n"
-updates += "- Abis bunuh ga langsung voting, ada waktu diskusi. Bisa ganti juga pake /ganti_waktu_diskusi\n"
-updates += "- Keyboard langsung ilang sekarang pas ngirim jawaban. Kalo ga ilang juga, masih ada /ilangin_keyboard\n"
+updates += "- KABAR GEMBIRA: Pak Raden, Pak Ogah, Dukun, Super Mujahid, dan Anak Presiden sekarang pasti ada (ga pake kemungkinan lagi)\n"
+updates += "- Jadi kalo mau nyobain tapi pemainnya kurang, bisa diatur pake /ganti_settingan_peran ;)"
 updates += "\n"
 updates += "Kalo nemu yang aneh2 kontak @araishikeiwai yak"
 groups = Lycantulul::Game.all.map(&:group_id).uniq
