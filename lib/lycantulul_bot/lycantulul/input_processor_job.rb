@@ -398,7 +398,7 @@ module Lycantulul
                 when Lycantulul::Game::RESPONSE_OK
                   keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
                   send(message, 'Seeep', keyboard: keyboard)
-                  send_to_player(game.group_id, '<i>Seseorang udah voting</i>', parse_mode: 'HTML')
+                  send_to_player(game.group_id, "<i>Seseorang udah nge-vote</i>: <b>#{message.text}</b>", parse_mode: 'HTML')
                 when Lycantulul::Game::RESPONSE_INVALID
                   full_name = Lycantulul::Player.get_full_name(message.from)
                   send_voting(game.living_players, full_name, message.chat.id)
@@ -875,6 +875,7 @@ module Lycantulul
       return unless round == game.round && !game.night? && !game.waiting? && !game.discussion? && !game.finished?
       log('continuing')
       if force || game.check_voting_finished
+        list_voting(game)
         if killed = game.kill_votee
           message_action(game, VOTING_SUCCEEDED, killed)
         else

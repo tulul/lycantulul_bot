@@ -1,8 +1,8 @@
 load 'Rakefile'
 
 updates = "latest updates:\n"
-updates += "- KABAR GEMBIRA: Pak Raden, Pak Ogah, Dukun, Super Mujahid, dan Anak Presiden sekarang pasti ada (ga pake kemungkinan lagi)\n"
-updates += "- Jadi kalo mau nyobain tapi pemainnya kurang, bisa diatur pake /ganti_settingan_peran ;)"
+updates += "- Setiap ada yang voting, dikasih tau siapa yang di-voting (tapi ga dikasih tau siapa yang voting)\n"
+updates += "- Pas waktu voting berakhir, dikasih tau hasil voting terakhir\n"
 updates += "\n"
 updates += "Kalo nemu yang aneh2 kontak @araishikeiwai yak"
 groups = Lycantulul::Game.all.map(&:group_id).uniq

@@ -508,7 +508,7 @@ module Lycantulul
 
       if ded_count > 0
         res += "\n\n"
-        res += "Udah mati: #{ded_count} makhluk\n"
+        res += "Udah mati: <b>#{ded_count} makhluk</b>\n"
         res += (self.dead_players).map{ |lp| "- #{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
       end
 
@@ -527,7 +527,15 @@ module Lycantulul
       self.sort(votee).each do |votee|
         res += "#{votee[0]} - <b>#{votee[1]} suara</b>\n"
       end
-      return 'Belum ada yang mulai voting. Mulai woy!' if res.empty?
+
+      if res.empty?
+        if self.discussion?
+          return 'Belom mulai waktu voting'
+        else
+          return 'Belum ada yang mulai voting, MULAI WOY!'
+        end
+      end
+
       res
     end
 
