@@ -636,13 +636,16 @@ module Lycantulul
       options.merge!({ parse_mode: 'HTML' }) if html
       options.merge!({ reply_markup: keyboard }) if keyboard
       log("sending to #{message.chat.id}: #{text}")
+      retry_count = 0
       begin
         @bot.api.send_message(options)
       rescue StandardError => e
         puts e.message
         puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
         sleep(1.5)
-        retry
+        puts "retrying: #{retry_count}"
+        retry_count += 1
+        retry if retry_count < 20
       end
     end
 
@@ -652,13 +655,16 @@ module Lycantulul
         text: text,
       })
       log("sending to #{chat_id}: #{text}")
+      retry_count = 0
       begin
         @bot.api.send_message(options)
       rescue StandardError => e
         puts e.message
         puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
         sleep(1.5)
-        retry
+        puts "retrying: #{retry_count}"
+        retry_count += 1
+        retry if retry_count < 20
       end
     end
 
