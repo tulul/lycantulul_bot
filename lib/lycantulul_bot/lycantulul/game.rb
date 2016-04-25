@@ -33,7 +33,6 @@ module Lycantulul
     field :super_necromancer_done, type: Boolean, default: false
     field :amnesty_done, type: Boolean, default: false
 
-    field :custom_roles, type: Array, default: nil
     field :pending_custom_id, type: Integer, default: nil
     field :pending_custom_role, type: Integer, default: nil
 
@@ -77,6 +76,18 @@ module Lycantulul
       end
     end
 
+    def custom_roles
+      self.group.custom_roles
+    end
+
+    def update_custom_roles(role, amount)
+      self.with_lock(wait: true) do
+        cr = self.custom_roles || []
+        cr[role] = amount
+        self.group.update_attribute(:custom_roles, cr)
+      end
+    end
+
     def add_player(user)
       return false if self.players.with_id(user.id)
       return self.players.create_player(user, self.id)
@@ -112,8 +123,7 @@ module Lycantulul
 
     def set_custom_role(amount)
       self.with_lock(wait: true) do
-        self.custom_roles ||= []
-        self.custom_roles[self.pending_custom_role] = amount
+        self.update_custom_roles(self.pending_custom_role, amount)
         res = [self.get_role(self.pending_custom_role), amount]
         self.cancel_pending_custom
         self.save
@@ -123,7 +133,7 @@ module Lycantulul
 
     def remove_custom_roles
       self.with_lock(wait: true) do
-        self.custom_roles = nil
+        self.group.update_attribute(:custom_roles, nil)
         self.cancel_pending_custom
         self.save
       end
@@ -652,11 +662,11 @@ module Lycantulul
     def next_new_role
       res = 0
       current_comp = self.role_composition
-      while current_comp == self.role_composition(self.players.count + res) && res < 30
+      while current_comp == self.role_composition(self.players.count + res) && res < 100
         res += 1
       end
 
-      return "(ga ada, karena udah di-setting semua)" if res == 30
+      return "(ga ada, karena udah di-setting semua)" if res == 100
       res
     end
 

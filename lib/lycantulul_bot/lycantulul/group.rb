@@ -9,6 +9,8 @@ module Lycantulul
     field :night_time,                    type: Integer
     field :discussion_time,               type: Integer
 
+    field :custom_roles,                  type: Array
+
     field :game,                          type: Integer, default: 0
 
     field :werewolf_victory,              type: Integer, default: 0
