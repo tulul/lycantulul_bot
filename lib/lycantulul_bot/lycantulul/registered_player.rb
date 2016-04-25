@@ -14,6 +14,10 @@ module Lycantulul
     field :mauled_first_day,              type: Integer, default: 0
     field :mauled_under_protection,       type: Integer, default: 0
 
+    field :homeless_safe,                 type: Integer, default: 0
+    field :homeless_mauled,               type: Integer, default: 0
+    field :homeless_werewolf,             type: Integer, default: 0
+
     field :executed,                      type: Integer, default: 0
     field :executed_first_day,            type: Integer, default: 0
     field :executed_under_protection,     type: Integer, default: 0
@@ -71,9 +75,13 @@ module Lycantulul
       res += "Bertahan hidup <b>#{self.percentage(self.survived)}</b>\n"
       res += "Mati <b>#{self.percentage(self.died)}</b>\n"
       res += "\n"
-      res += "Jumlah dibunuh serigala <b>#{self.mauled}</b>\n"
+      res += "Jumlah dibunuh TTS <b>#{self.mauled}</b>\n"
       res += "Hari pertama <b>#{self.mauled_first_day}</b>\n"
       res += "Dijimatin <b>#{self.mauled_under_protection}</b>\n"
+      res += "\n"
+      res += "Ndak di rumah pas mau dibunuh TTS <b>#{self.homeless_safe}</b>\n"
+      res += "Nebeng di rumah korban <b>#{self.homeless_mauled}</b>\n"
+      res += "Nebeng di rumah TTS <b>#{self.homeless_werewolf}</b>\n"
       res += "\n"
       res += "Jumlah dieksekusi <b>#{self.executed}</b>\n"
       res += "Hari pertama <b>#{self.executed_first_day}</b>\n"

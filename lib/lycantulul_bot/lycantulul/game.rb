@@ -3,10 +3,9 @@ module Lycantulul
     include Mongoid::Document
     include Mongoid::Locker
 
-    HIDDEN_ROLES = ['greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty']
-    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet']
+    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet', 'greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty', 'homeless']
     DEFAULT_ROLES = ['villager']
-    ROLES = DEFAULT_ROLES + IMPORTANT_ROLES + HIDDEN_ROLES
+    ROLES = DEFAULT_ROLES + IMPORTANT_ROLES
 
     ROLES.each_with_index do |role, value|
       const_set(role.upcase, value)
@@ -20,20 +19,23 @@ module Lycantulul
     USELESS_VILLAGER_SKIP = 'OGAH NDAK VOTING KAK'
 
     field :group_id, type: Integer
-    field :night, type: Boolean, default: true
-    field :waiting, type: Boolean, default: true
     field :round, type: Integer, default: 0
+
+    field :waiting, type: Boolean, default: true
+    field :night, type: Boolean, default: true
+    field :discussion, type: Boolean, default: false
     field :finished, type: Boolean, default: false
+
     field :victim, type: Array, default: []
     field :votee, type: Array, default: []
     field :seen, type: Array, default: []
     field :protectee, type: Array, default: []
     field :necromancee, type: Array, default: []
+    field :homeless_host, type: Array, default: []
 
     field :super_necromancer_done, type: Boolean, default: false
     field :amnesty_done, type: Boolean, default: false
 
-    field :custom_roles, type: Array, default: nil
     field :pending_custom_id, type: Integer, default: nil
     field :pending_custom_role, type: Integer, default: nil
 
@@ -65,6 +67,28 @@ module Lycantulul
 
     def night_time
       self.group.night_time || Lycantulul::InputProcessorJob::NIGHT_TIME.call
+    end
+
+    def discussion_time
+      self.group.discussion_time || Lycantulul::InputProcessorJob::DISCUSSION_TIME.call
+    end
+
+    def end_discussion
+      self.with_lock(wait: true) do
+        self.update_attribute(:discussion, false)
+      end
+    end
+
+    def custom_roles
+      self.group.custom_roles
+    end
+
+    def update_custom_roles(role, amount)
+      self.with_lock(wait: true) do
+        cr = self.custom_roles || []
+        cr[role] = amount
+        self.group.update_attribute(:custom_roles, cr)
+      end
     end
 
     def add_player(user)
@@ -102,8 +126,7 @@ module Lycantulul
 
     def set_custom_role(amount)
       self.with_lock(wait: true) do
-        self.custom_roles ||= []
-        self.custom_roles[self.pending_custom_role] = amount
+        self.update_custom_roles(self.pending_custom_role, amount)
         res = [self.get_role(self.pending_custom_role), amount]
         self.cancel_pending_custom
         self.save
@@ -113,7 +136,7 @@ module Lycantulul
 
     def remove_custom_roles
       self.with_lock(wait: true) do
-        self.custom_roles = nil
+        self.group.update_attribute(:custom_roles, nil)
         self.cancel_pending_custom
         self.save
       end
@@ -257,6 +280,23 @@ module Lycantulul
       end
     end
 
+    def add_homeless_host(homeless_id, homeless_host)
+      self.with_lock(wait: true) do
+        return RESPONSE_DOUBLE if self.homeless_host.any?{ |se| se[:homeless_id] == homeless_id }
+        return RESPONSE_INVALID unless valid_action?(homeless_id, homeless_host, 'homeless')
+
+        homeless_host = self.living_players.with_name(homeless_host).full_name
+
+        new_homeless_host = {
+          homeless_id: homeless_id,
+          full_name: homeless_host
+        }
+        self.homeless_host << new_homeless_host
+        self.save
+        RESPONSE_OK
+      end
+    end
+
     def start
       self.with_lock(wait: true) do
         self.waiting = false
@@ -283,25 +323,27 @@ module Lycantulul
     rescue
     end
 
-    def finish
+    def finish(stats: true)
       self.with_lock(wait: true) do
         self.update_attribute(:finished, true)
-        self.players.each do |pl|
-          player = self.get_player(pl.user_id)
-          player.inc_game
-          player.send("inc_#{ROLES[pl.role]}")
-          if pl.alive
-            player.inc_survived
-          else
-            player.inc_died
+        if stats
+          self.players.each do |pl|
+            player = self.get_player(pl.user_id)
+            player.inc_game
+            player.send("inc_#{ROLES[pl.role]}")
+            if pl.alive
+              player.inc_survived
+            else
+              player.inc_died
+            end
           end
-        end
-        self.group.with_lock(wait: true) do
-          self.group.inc_game
-          if self.living_werewolves.count == 0
-            self.group.inc_village_victory
-          else
-            self.group.inc_werewolf_victory
+          self.group.with_lock(wait: true) do
+            self.group.inc_game
+            if self.living_werewolves.count == 0
+              self.group.inc_village_victory
+            else
+              self.group.inc_werewolf_victory
+            end
           end
         end
       end
@@ -314,28 +356,49 @@ module Lycantulul
     def kill_victim
       self.with_lock(wait: true) do
         vc = self.sort(victim)
+        hhost = self.homeless_host
         LycantululBot.log(vc.to_s)
         self.update_attribute(:victim, [])
+        self.update_attribute(:homeless_host, [])
         self.update_attribute(:night, false)
+        self.update_attribute(:discussion, true)
 
         if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
           victim = self.living_players.with_name(vc[0][0])
-          if !under_protection?(victim.full_name)
-            victim.kill
-            self.get_player(victim.user_id).inc_mauled
-            self.get_player(victim.user_id).inc_mauled_first_day if self.round == 1
-            LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
-            dead_werewolf =
-              if victim.role == SILVER_BULLET
-                ded = self.living_werewolves.sample
-                ded.kill
-                LycantululBot.log("#{ded.full_name} is killed because werewolves killed a silver bullet (from GAME)")
-                ded
+          if victim.role != HOMELESS
+            if !under_protection?(victim.full_name)
+              victim.kill
+              self.get_player(victim.user_id).inc_mauled
+              self.get_player(victim.user_id).inc_mauled_first_day if self.round == 1
+              LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
+              dead_werewolf =
+                if victim.role == SILVER_BULLET
+                  ded = self.living_werewolves.sample
+                  ded.kill
+                  LycantululBot.log("#{ded.full_name} is killed because werewolves killed a silver bullet (from GAME)")
+                  ded
+                end
+
+              dead_homeless = []
+              hhost.each do |hh|
+                vh = hh[:full_name] == victim.full_name
+                wh = self.living_werewolves.with_name(hh[:full_name])
+                if vh || wh
+                  dh = self.players.with_id(hh[:homeless_id])
+                  dh.kill
+                  self.get_player(dh.user_id).inc_homeless_mauled if vh
+                  self.get_player(dh.user_id).inc_homeless_werewolf if wh
+                  dead_homeless << dh
+                end
               end
 
-            return [victim.user_id, victim.full_name, self.get_role(victim.role), dead_werewolf]
+              return [victim.user_id, victim.full_name, self.get_role(victim.role), dead_werewolf, dead_homeless]
+            else
+              self.get_player(victim.user_id).inc_mauled_under_protection
+              return nil
+            end
           else
-            self.get_player(victim.user_id).inc_mauled_under_protection
+            self.get_player(victim.user_id).inc_homeless_safe
             return nil
           end
         end
@@ -445,7 +508,8 @@ module Lycantulul
         res =
           self.victim.count == self.living_werewolves.count &&
           self.seen.count == self.living_seers.count &&
-          self.protectee.count == self.living_protectors.count
+          self.protectee.count == self.living_protectors.count &&
+          self.homeless_host.count == self.living_homelesses.count
 
         necromancer_count = self.living_necromancers.count
         necromancer_count += self.living_super_necromancers.count unless self.super_necromancer_done
@@ -495,7 +559,7 @@ module Lycantulul
 
       if ded_count > 0
         res += "\n\n"
-        res += "Udah mati: #{ded_count} makhluk\n"
+        res += "Udah mati: <b>#{ded_count} makhluk</b>\n"
         res += (self.dead_players).map{ |lp| "- #{lp.full_name} - <i>#{self.get_role(lp.role)}</i>" }.sort.join("\n")
       end
 
@@ -514,14 +578,23 @@ module Lycantulul
       self.sort(votee).each do |votee|
         res += "#{votee[0]} - <b>#{votee[1]} suara</b>\n"
       end
-      return 'Belum ada yang mulai voting. Mulai woy!' if res.empty?
+
+      if res.empty?
+        if self.discussion?
+          return 'Belom mulai waktu voting'
+        else
+          return 'Belum ada yang mulai voting, MULAI WOY!'
+        end
+      end
+
       res
     end
 
     def list_time_settings
-      res = "Waktu voting: #{self.voting_time} detik\n"
-      res += "Waktu action malam: #{self.night_time} detik\n"
-      res += 'Ubah pake /ganti_waktu_voting atau /ganti_waktu_malam'
+      res = "Waktu action malam: #{self.night_time} detik\n"
+      res += "Waktu diskusi: #{self.discussion_time} detik\n"
+      res += "Waktu voting: #{self.voting_time} detik\n"
+      res += 'Ubah pake /ganti_waktu_voting, /ganti_waktu_diskusi, atau /ganti_waktu_malam'
     end
 
     def get_role(role)
@@ -550,6 +623,8 @@ module Lycantulul
         'Pengidap Ebola'
       when AMNESTY
         'Anak Presiden'
+      when HOMELESS
+        'Gelandangan'
       end
     end
 
@@ -570,7 +645,7 @@ module Lycantulul
       when PROTECTOR
         'Jualin jimat ke orang-orang. Orang yang dapet jimat akan terlindungi dari serangan para serigala. Ntar tiap malem ditanyain mau jual ke siapa (sebenernya ga jualan juga sih, ga dapet duit, maap yak). Hati-hati loh tapi, kalo lu jual jimat ke serigala bisa-bisa lu dibunuh dengan 25% kemungkinan, kecil lah, peluang lu buat dapet pasangan hidup masih lebih gede :)'
       when SPY
-        'Tiap malem dikasih tau para serigala mau bunuh siapa'
+        'Tiap malem dikasih tau para serigala mau bunuh siapa. Terserah itu info mau lu apain'
       when NECROMANCER
         'Menghidupkan kembali 1 orang mayat. Sebagai gantinya, lu yang bakal mati. Ingat, cuma ada 1 kesempatan! Dan jangan sampe lu malah dibunuh duluan sama serigala. Allaaaaahuakbar!'
       when SUPER_NECROMANCER
@@ -579,6 +654,8 @@ module Lycantulul
         'Diam menunggu kematian. Tapi, kalo lu dibunuh serigala, 1 ekor serigalanya ikutan mati. Aduh itu kenapa kena ebola lu ga dikarantina aja sih'
       when AMNESTY
         'Diam menunggu kematian. Tapi, kalo lu dieksekusi oleh warga, lu bakal selamat (tapi cuma bisa sekali itu aja). Tiati aja sih malam berikutnya dibunuh serigala'
+      when HOMELESS
+        'Nebeng ke rumah orang lain tiap malem, jadi lu selalu aman dari serangan TTS. Tapi kalo orang yang lu tebengi dibunuh TTS atau malah TTS itu sendiri, lu ikutan mati.'
       end
     end
 
@@ -605,15 +682,17 @@ module Lycantulul
       when SILVER_BULLET
         ((count - 9) / 10) + 1 # [14-23, 1], [24-33, 2], ...
       when GREEDY_VILLAGER
-        count > 3 && rand(100) < 35 ? 1 : 0 # [9-..., 1] 35% chance
+        count > 5 ? 1 : 0 # [11-..., 1]
       when USELESS_VILLAGER
-        count > 5 && rand(100) < 70 ? 1 : 0 # [11-..., 1] 70% chance
+        count > 3 ? 1 : 0 # [9-..., 1]
       when FAUX_SEER
-        count > 6 && rand(100) < 75 ? 1 : 0 # [12-..., 1] 75% chance
+        count > 8 ? 1 : 0 # [14-..., 1]
       when SUPER_NECROMANCER
-        count > 10 && rand(100) < 25 ? 1 : 0 # [16-..., 1] 25% chance
+        count > 12 ? 1 : 0 # [18-..., 1]
       when AMNESTY
-        count > 4 && rand(100) < 50 ? 1 : 0 # [10-..., 1] 50% chance
+        count > 9 ? 1 : 0 # [15-..., 1]
+      when HOMELESS
+        count > 10 ? 1 : 0 # [16-..., 1]
       end
     end
 
@@ -630,11 +709,11 @@ module Lycantulul
     def next_new_role
       res = 0
       current_comp = self.role_composition
-      while current_comp == self.role_composition(self.players.count + res) && res < 30
+      while current_comp == self.role_composition(self.players.count + res) && res < 100
         res += 1
       end
 
-      return "(ga ada, karena udah di-setting semua)" if res == 30
+      return "(ga ada, karena udah di-setting semua)" if res == 100
       res
     end
 

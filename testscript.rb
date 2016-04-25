@@ -39,7 +39,8 @@ def event(message)
 end
 
 def start_vote
-  LycantululBot.message_action(game, LycantululBot::VOTING_START)
+  @g.reload
+  @g.update_attribute(:discussion, false)
 end
 
 event('reset db')
@@ -54,17 +55,17 @@ a1 = Telegram::Bot::Types::User.bikin(1)
 a2 = Telegram::Bot::Types::User.bikin(2)
 a3 = Telegram::Bot::Types::User.bikin(3)
 a4 = Telegram::Bot::Types::User.bikin(4)
-a5 = Telegram::Bot::Types::User.bikin(5)
-a6 = Telegram::Bot::Types::User.bikin(6)
-a7 = Telegram::Bot::Types::User.bikin(7)
-a8 = Telegram::Bot::Types::User.bikin(8)
-a9 = Telegram::Bot::Types::User.bikin(9)
-a10 = Telegram::Bot::Types::User.bikin(10)
-a11 = Telegram::Bot::Types::User.bikin(11)
-a12 = Telegram::Bot::Types::User.bikin(12)
-a13 = Telegram::Bot::Types::User.bikin(13)
-a14 = Telegram::Bot::Types::User.bikin(14)
-a15 = Telegram::Bot::Types::User.bikin(15)
+# a5 = Telegram::Bot::Types::User.bikin(5)
+# a6 = Telegram::Bot::Types::User.bikin(6)
+# a7 = Telegram::Bot::Types::User.bikin(7)
+# a8 = Telegram::Bot::Types::User.bikin(8)
+# a9 = Telegram::Bot::Types::User.bikin(9)
+# a10 = Telegram::Bot::Types::User.bikin(10)
+# a11 = Telegram::Bot::Types::User.bikin(11)
+# a12 = Telegram::Bot::Types::User.bikin(12)
+# a13 = Telegram::Bot::Types::User.bikin(13)
+# a14 = Telegram::Bot::Types::User.bikin(14)
+# a15 = Telegram::Bot::Types::User.bikin(15)
 
 event('registration')
 a0.pm('/start')
@@ -72,17 +73,17 @@ a1.pm('/start')
 a2.pm('/start')
 a3.pm('/start')
 a4.pm('/start')
-a5.pm('/start')
-a6.pm('/start')
-a7.pm('/start')
-a8.pm('/start')
-a9.pm('/start')
-a10.pm('/start')
-a11.pm('/start')
-a12.pm('/start')
-a13.pm('/start')
-a14.pm('/start')
-a15.pm('/start')
+# a5.pm('/start')
+# a6.pm('/start')
+# a7.pm('/start')
+# a8.pm('/start')
+# a9.pm('/start')
+# a10.pm('/start')
+# a11.pm('/start')
+# a12.pm('/start')
+# a13.pm('/start')
+# a14.pm('/start')
+# a15.pm('/start')
 
 # event('invalid commands')
 # a0.gr('/start')
@@ -116,17 +117,17 @@ a1.gr('/ikutan')
 a2.gr('/ikutan')
 a3.gr('/ikutan')
 a4.gr('/ikutan')
-a5.gr('/ikutan')
-a6.gr('/ikutan')
-a7.gr('/ikutan')
-a8.gr('/ikutan')
-a9.gr('/ikutan')
-a10.gr('/ikutan')
-a11.gr('/ikutan')
-a12.gr('/ikutan')
-a13.gr('/ikutan')
-a14.gr('/ikutan')
-a15.gr('/ikutan')
+# a5.gr('/ikutan')
+# a6.gr('/ikutan')
+# a7.gr('/ikutan')
+# a8.gr('/ikutan')
+# a9.gr('/ikutan')
+# a10.gr('/ikutan')
+# a11.gr('/ikutan')
+# a12.gr('/ikutan')
+# a13.gr('/ikutan')
+# a14.gr('/ikutan')
+# a15.gr('/ikutan')
 a0.gr('/mulai_main')
 
 # event('cant action to self')
@@ -152,18 +153,33 @@ event('modify game contents')
 @g.restart
 @g.update_attribute(:waiting, false)
 @g.players.with_id(0).assign(Lycantulul::Game::WEREWOLF)
-@g.players.with_id(1).assign(Lycantulul::Game::WEREWOLF)
-@g.players.with_id(2).assign(Lycantulul::Game::WEREWOLF)
-@g.players.with_id(3).assign(Lycantulul::Game::SEER)
-@g.players.with_id(4).assign(Lycantulul::Game::SEER)
-@g.players.with_id(5).assign(Lycantulul::Game::PROTECTOR)
-@g.players.with_id(6).assign(Lycantulul::Game::NECROMANCER)
-@g.players.with_id(7).assign(Lycantulul::Game::SILVER_BULLET)
-@g.players.with_id(8).assign(Lycantulul::Game::SUPER_NECROMANCER)
-@g.players.with_id(15).assign(Lycantulul::Game::FAUX_SEER)
-@g.players.with_id(9).assign(Lycantulul::Game::AMNESTY)
-@g.players.with_id(14).assign(Lycantulul::Game::SPY)
+@g.players.with_id(1).assign(Lycantulul::Game::HOMELESS)
 print_game
+
+event('homeless not at home')
+a0.pm('1')
+a1.pm('4')
+print_game
+
+event('kill 2')
+start_vote
+a0.pm('2')
+a1.pm('2')
+a2.pm('1')
+a3.pm('2')
+a4.pm('2')
+
+event('homeless visits victim')
+a0.pm('4')
+a1.pm('4')
+print_game
+a1.pm('/statistik')
+
+# event('homeless visits werewolf')
+# a0.pm('4')
+# a1.pm('0')
+# print_game
+# a1.pm('/statistik')
 
 # event('werewolves no majority vote')
 # a0.pm('5')
@@ -261,115 +277,115 @@ print_game
 # a3.pm('1')
 # print_game
 
-event('werewolves kill silver bullet')
-a0.pm('7')
-a1.pm('7')
-a2.pm('7')
-a3.pm('15')
-a4.pm('15')
-a5.pm('15')
-a6.pm(Lycantulul::Game::NECROMANCER_SKIP)
-a8.pm(Lycantulul::Game::NECROMANCER_SKIP)
-print_game
+# event('werewolves kill silver bullet')
+# a0.pm('7')
+# a1.pm('7')
+# a2.pm('7')
+# a3.pm('15')
+# a4.pm('15')
+# a5.pm('15')
+# a6.pm(Lycantulul::Game::NECROMANCER_SKIP)
+# a8.pm(Lycantulul::Game::NECROMANCER_SKIP)
+# print_game
 
-event('execute innocent')
-a0.gr('/siapa_aja')
-a0.gr('/hasil_voting')
-a0.pm('9')
-a1.pm('9')
-a2.pm('9')
-a3.pm('9')
-a4.pm('9')
-a5.pm('9')
-a6.pm('9')
-a7.pm('9')
-a8.pm('9')
-a9.pm('8')
-a10.pm('9')
-a10.gr('/panggil_yang_belom_voting')
-a10.gr('/hasil_voting')
-a11.pm('9')
-a12.pm('9')
-a13.pm('9')
-a14.pm('9')
-a15.pm('9')
+# event('execute innocent')
+# a0.gr('/siapa_aja')
+# a0.gr('/hasil_voting')
+# a0.pm('9')
+# a1.pm('9')
+# a2.pm('9')
+# a3.pm('9')
+# a4.pm('9')
+# a5.pm('9')
+# a6.pm('9')
+# a7.pm('9')
+# a8.pm('9')
+# a9.pm('8')
+# a10.pm('9')
+# a10.gr('/panggil_yang_belom_voting')
+# a10.gr('/hasil_voting')
+# a11.pm('9')
+# a12.pm('9')
+# a13.pm('9')
+# a14.pm('9')
+# a15.pm('9')
 
-event('necromancer raises someone')
-@g.players.with_id(0).kill
-@g.players.with_id(1).kill
-@g.players.with_id(2).kill
-@g.players.with_id(3).kill
-@g.players.with_id(4).kill
-@g.players.with_id(5).kill
-a6.pm('1')
-a8.pm(Lycantulul::Game::NECROMANCER_SKIP)
-print_game
+# event('necromancer raises someone')
+# @g.players.with_id(0).kill
+# @g.players.with_id(1).kill
+# @g.players.with_id(2).kill
+# @g.players.with_id(3).kill
+# @g.players.with_id(4).kill
+# @g.players.with_id(5).kill
+# a6.pm('1')
+# a8.pm(Lycantulul::Game::NECROMANCER_SKIP)
+# print_game
 
-event('execute innocent')
-a0.pm('9')
-a1.pm('9')
-a2.pm('9')
-a3.pm('9')
-a4.pm('9')
-a5.pm('9')
-a6.pm('9')
-a7.pm('9')
-a8.pm('9')
-a9.pm('10')
-a10.pm('9')
-a11.pm('9')
-a12.pm('9')
-a13.pm('9')
-a14.pm('9')
-a15.pm('9')
+# event('execute innocent')
+# a0.pm('9')
+# a1.pm('9')
+# a2.pm('9')
+# a3.pm('9')
+# a4.pm('9')
+# a5.pm('9')
+# a6.pm('9')
+# a7.pm('9')
+# a8.pm('9')
+# a9.pm('10')
+# a10.pm('9')
+# a11.pm('9')
+# a12.pm('9')
+# a13.pm('9')
+# a14.pm('9')
+# a15.pm('9')
 
-event('necromancer killed before raising & super necromancer raises someone')
-@g.players.with_id(0).revive
-@g.players.with_id(1).revive
-@g.players.with_id(2).revive
-@g.players.with_id(3).kill
-@g.players.with_id(4).kill
-@g.players.with_id(5).kill
-@g.players.with_id(6).revive
-a0.pm('6')
-a1.pm('6')
-a2.pm('6')
-a6.pm('9')
-a8.pm('3')
-print_game
+# event('necromancer killed before raising & super necromancer raises someone')
+# @g.players.with_id(0).revive
+# @g.players.with_id(1).revive
+# @g.players.with_id(2).revive
+# @g.players.with_id(3).kill
+# @g.players.with_id(4).kill
+# @g.players.with_id(5).kill
+# @g.players.with_id(6).revive
+# a0.pm('6')
+# a1.pm('6')
+# a2.pm('6')
+# a6.pm('9')
+# a8.pm('3')
+# print_game
 
-event('execute innocent')
-a0.pm('11')
-a1.pm('11')
-a2.pm('11')
-a3.pm('11')
-a4.pm('11')
-a5.pm('11')
-a6.pm('11')
-a7.pm('11')
-a8.pm('11')
-a9.pm('11')
-a10.pm('11')
-a11.pm('10')
-a12.pm('11')
-a13.pm('11')
-a14.pm('11')
-a15.pm('11')
+# event('execute innocent')
+# a0.pm('11')
+# a1.pm('11')
+# a2.pm('11')
+# a3.pm('11')
+# a4.pm('11')
+# a5.pm('11')
+# a6.pm('11')
+# a7.pm('11')
+# a8.pm('11')
+# a9.pm('11')
+# a10.pm('11')
+# a11.pm('10')
+# a12.pm('11')
+# a13.pm('11')
+# a14.pm('11')
+# a15.pm('11')
 
-event('super necromancer tries to revive someone again')
-@g.players.with_id(0).revive
-@g.players.with_id(1).revive
-@g.players.with_id(2).revive
-@g.players.with_id(3).kill
-@g.players.with_id(4).kill
-@g.players.with_id(5).kill
-@g.players.with_id(6).revive
-a0.pm('6')
-a1.pm('6')
-a2.pm('6')
-a8.pm('11')
-a6.pm('9')
-print_game
+# event('super necromancer tries to revive someone again')
+# @g.players.with_id(0).revive
+# @g.players.with_id(1).revive
+# @g.players.with_id(2).revive
+# @g.players.with_id(3).kill
+# @g.players.with_id(4).kill
+# @g.players.with_id(5).kill
+# @g.players.with_id(6).revive
+# a0.pm('6')
+# a1.pm('6')
+# a2.pm('6')
+# a8.pm('11')
+# a6.pm('9')
+# print_game
 
 event('reset db')
 Lycantulul::Game.all.map(&:destroy)

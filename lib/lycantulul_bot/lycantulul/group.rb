@@ -7,6 +7,9 @@ module Lycantulul
 
     field :voting_time,                   type: Integer
     field :night_time,                    type: Integer
+    field :discussion_time,               type: Integer
+
+    field :custom_roles,                  type: Array
 
     field :game,                          type: Integer, default: 0
 
@@ -15,7 +18,7 @@ module Lycantulul
 
     index({ group_id: 1 }, { unique: true })
 
-    EXCEPTION = ['_id', 'group_id', 'voting_time', 'night_time']
+    EXCEPTION = ['_id', 'group_id', 'voting_time', 'night_time', 'discussion_time']
     self.fields.keys.reject{ |field| EXCEPTION.include?(field) }.each do |field|
       define_method("inc_#{field}") do
         self.inc("#{field}" => 1)
