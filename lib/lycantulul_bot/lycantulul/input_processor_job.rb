@@ -442,6 +442,18 @@ module Lycantulul
                 end
 
                 check_round_finished(game, game.round)
+              elsif game = check_homeless(message)
+                log('homeless confirmed')
+                case game.add_homeless_host(message.from.id, message.text)
+                when Lycantulul::Game::RESPONSE_OK
+                  keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
+                  send(message, 'Selamat datang! Anggap saja rumah sendiri~', keyboard: keyboard)
+                when Lycantulul::Game::RESPONSE_INVALID
+                  full_name = Lycantulul::Player.get_full_name(message.from)
+                  send_homeless(game.living_players, full_name, message.chat.id)
+                end
+
+                check_round_finished(game, game.round)
               else
                 send(message, 'WUT?')
               end
@@ -493,7 +505,6 @@ module Lycantulul
         Lycantulul::NightTimerJob.perform_in(game.night_time, game, game.round, self)
 
         game.living_werewolves.each do |ww|
-          log("sending killing instruction to #{ww[:full_name]}")
           send_kill_voting(game, ww[:user_id])
         end
 
@@ -508,6 +519,10 @@ module Lycantulul
 
         game.living_protectors.each do |se|
           send_protector(lp, se[:full_name], se[:user_id])
+        end
+
+        game.living_homelesses.each do |se|
+          send_homeless(lp, se[:full_name], se[:user_id])
         end
 
         dp = game.dead_players
@@ -535,6 +550,7 @@ module Lycantulul
         victim_full_name = aux[1]
         victim_role = aux[2]
         dead_werewolf = aux[3]
+        dead_homeless = aux[4]
 
         log("#{victim_full_name} is killed by werewolves")
         send_to_player(victim_chat_id, 'MPOZ LO MATEK')
@@ -543,6 +559,13 @@ module Lycantulul
         if dead_werewolf
           send_to_player(dead_werewolf.user_id, 'MPOZ. Sial kan bunuh pengidap ebola, lu ikutan terjangkit. Mati deh')
           send_to_player(group_chat_id, "#{victim_full_name} yang ternyata mengidap ebola ikut menjangkiti seekor serigala #{dead_werewolf.full_name} yang pada akhirnya meninggal dunia. Mari berantas ebola dari muka bumi ini secepatnya!")
+        end
+
+        unless dead_homeless.empty?
+          dead_homeless.each do |dh|
+            send_to_player(dh.user_id, 'MPOZ salah kamar woy nebeng yang bener ya besok-besok!')
+            send_to_player(group_chat_id, "#{dh.full_name} si gelandangan salah kamar tadi malem, nebeng di tempat yang salah pffft. Mati deh.")
+          end
         end
 
         return if check_win(game)
@@ -714,6 +737,12 @@ module Lycantulul
       send_to_player(necromancer_chat_id, 'Mau menghidupkan siapa?', reply_markup: vote_keyboard)
     end
 
+    def send_homeless(living_players, homeless_full_name, homeless_chat_id)
+      log("sending homeless instruction to #{homeless_full_name}")
+      vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [homeless_full_name], resize_keyboard: true, one_time_keyboard: true)
+      send_to_player(homeless_chat_id, 'Mau nebeng di rumah siapa?', reply_markup: vote_keyboard)
+    end
+
     def wrong_room(message)
       if in_private?(message)
         send(message, 'Di grup doang tjoy ini bisanya')
@@ -832,6 +861,17 @@ module Lycantulul
       log('checking necromancer')
       Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'necromancer') || wwg.valid_action?(message.from.id, message.text, 'super_necromancer')
+          return wwg
+        end
+      end
+      log('not found')
+      nil
+    end
+
+    def check_homeless(message)
+      log('checking homeless')
+      Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
+        if wwg.valid_action?(message.from.id, message.text, 'homeless')
           return wwg
         end
       end

@@ -3,7 +3,7 @@ module Lycantulul
     include Mongoid::Document
     include Mongoid::Locker
 
-    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet', 'greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty']
+    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet', 'greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty', 'homeless']
     DEFAULT_ROLES = ['villager']
     ROLES = DEFAULT_ROLES + IMPORTANT_ROLES
 
@@ -19,16 +19,19 @@ module Lycantulul
     USELESS_VILLAGER_SKIP = 'OGAH NDAK VOTING KAK'
 
     field :group_id, type: Integer
+    field :round, type: Integer, default: 0
+
     field :waiting, type: Boolean, default: true
     field :night, type: Boolean, default: true
     field :discussion, type: Boolean, default: false
     field :finished, type: Boolean, default: false
-    field :round, type: Integer, default: 0
+
     field :victim, type: Array, default: []
     field :votee, type: Array, default: []
     field :seen, type: Array, default: []
     field :protectee, type: Array, default: []
     field :necromancee, type: Array, default: []
+    field :homeless_host, type: Array, default: []
 
     field :super_necromancer_done, type: Boolean, default: false
     field :amnesty_done, type: Boolean, default: false
@@ -277,6 +280,23 @@ module Lycantulul
       end
     end
 
+    def add_homeless_host(homeless_id, homeless_host)
+      self.with_lock(wait: true) do
+        return RESPONSE_DOUBLE if self.homeless_host.any?{ |se| se[:homeless_id] == homeless_id }
+        return RESPONSE_INVALID unless valid_action?(homeless_id, homeless_host, 'homeless')
+
+        homeless_host = self.living_players.with_name(homeless_host).full_name
+
+        new_homeless_host = {
+          homeless_id: homeless_id,
+          full_name: homeless_host
+        }
+        self.homeless_host << new_homeless_host
+        self.save
+        RESPONSE_OK
+      end
+    end
+
     def start
       self.with_lock(wait: true) do
         self.waiting = false
@@ -336,29 +356,49 @@ module Lycantulul
     def kill_victim
       self.with_lock(wait: true) do
         vc = self.sort(victim)
+        hhost = self.homeless_host
         LycantululBot.log(vc.to_s)
         self.update_attribute(:victim, [])
+        self.update_attribute(:homeless_host, [])
         self.update_attribute(:night, false)
         self.update_attribute(:discussion, true)
 
         if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
           victim = self.living_players.with_name(vc[0][0])
-          if !under_protection?(victim.full_name)
-            victim.kill
-            self.get_player(victim.user_id).inc_mauled
-            self.get_player(victim.user_id).inc_mauled_first_day if self.round == 1
-            LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
-            dead_werewolf =
-              if victim.role == SILVER_BULLET
-                ded = self.living_werewolves.sample
-                ded.kill
-                LycantululBot.log("#{ded.full_name} is killed because werewolves killed a silver bullet (from GAME)")
-                ded
+          if victim.role != HOMELESS
+            if !under_protection?(victim.full_name)
+              victim.kill
+              self.get_player(victim.user_id).inc_mauled
+              self.get_player(victim.user_id).inc_mauled_first_day if self.round == 1
+              LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
+              dead_werewolf =
+                if victim.role == SILVER_BULLET
+                  ded = self.living_werewolves.sample
+                  ded.kill
+                  LycantululBot.log("#{ded.full_name} is killed because werewolves killed a silver bullet (from GAME)")
+                  ded
+                end
+
+              dead_homeless = []
+              hhost.each do |hh|
+                vh = hh[:full_name] == victim.full_name
+                wh = self.living_werewolves.with_name(hh[:full_name])
+                if vh || wh
+                  dh = self.players.with_id(hh[:homeless_id])
+                  dh.kill
+                  self.get_player(dh.user_id).inc_homeless_mauled if vh
+                  self.get_player(dh.user_id).inc_homeless_werewolf if wh
+                  dead_homeless << dh
+                end
               end
 
-            return [victim.user_id, victim.full_name, self.get_role(victim.role), dead_werewolf]
+              return [victim.user_id, victim.full_name, self.get_role(victim.role), dead_werewolf, dead_homeless]
+            else
+              self.get_player(victim.user_id).inc_mauled_under_protection
+              return nil
+            end
           else
-            self.get_player(victim.user_id).inc_mauled_under_protection
+            self.get_player(victim.user_id).inc_homeless_safe
             return nil
           end
         end
@@ -468,7 +508,8 @@ module Lycantulul
         res =
           self.victim.count == self.living_werewolves.count &&
           self.seen.count == self.living_seers.count &&
-          self.protectee.count == self.living_protectors.count
+          self.protectee.count == self.living_protectors.count &&
+          self.homeless_host.count == self.living_homelesses.count
 
         necromancer_count = self.living_necromancers.count
         necromancer_count += self.living_super_necromancers.count unless self.super_necromancer_done
@@ -582,6 +623,8 @@ module Lycantulul
         'Pengidap Ebola'
       when AMNESTY
         'Anak Presiden'
+      when HOMELESS
+        'Gelandangan'
       end
     end
 
@@ -611,6 +654,8 @@ module Lycantulul
         'Diam menunggu kematian. Tapi, kalo lu dibunuh serigala, 1 ekor serigalanya ikutan mati. Aduh itu kenapa kena ebola lu ga dikarantina aja sih'
       when AMNESTY
         'Diam menunggu kematian. Tapi, kalo lu dieksekusi oleh warga, lu bakal selamat (tapi cuma bisa sekali itu aja). Tiati aja sih malam berikutnya dibunuh serigala'
+      when HOMELESS
+        'Nebeng ke rumah orang lain tiap malem, jadi lu selalu aman dari serangan TTS. Tapi kalo orang yang lu tebengi dibunuh TTS atau malah TTS itu sendiri, lu ikutan mati.'
       end
     end
 
@@ -646,6 +691,8 @@ module Lycantulul
         count > 12 ? 1 : 0 # [18-..., 1]
       when AMNESTY
         count > 9 ? 1 : 0 # [15-..., 1]
+      when HOMELESS
+        count > 10 ? 1 : 0 # [16-..., 1]
       end
     end
 

@@ -65,6 +65,9 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. Super Mujahid
    - Menghidupkan salah satu pemain yang sudah mati.
    - Setelah menghidupkan, si Super Mujahid masih tetap hidup (dan tidak diberitahu ke publik).
+1. Gelandangan
+   - Menumpang di rumah warga lain jadi imun terhadap serangan langsung TTS.
+   - Apabila menumpang di rumah TTS atau warga yang dibunuh TTS, maka mati.
 
 ##### Penjahat
 1. TTS (Tulul-Tulul Serigala)
@@ -86,6 +89,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. Mujahid: muncul saat jumlah pemain 12 orang
 1. Dukun: muncul saat jumlah pemain 14 orang
 1. Anak Presiden: muncul saat jumlah pemain 15 orang
+1. Gelandangan: muncul saat jumlah pemain 16 orang
 1. Super Mujahid: muncul saat jumlah pemain 18 orang
 
 Rujukan daftar peran sampai 20 pemain:
@@ -100,13 +104,13 @@ Rujukan daftar peran sampai 20 pemain:
 - 13: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid
 - 14: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun
 - 15: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden
-- 16: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi
-- 17: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi
-- 18: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
-- 19: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
-- 20: 4 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Super Mujahid
+- 16: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Gelandangan
+- 17: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Gelandangan
+- 18: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Gelandangan, 1 Super Mujahid
+- 19: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Gelandangan, 1 Super Mujahid
+- 20: 4 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Gelandangan, 1 Super Mujahid
 
-Jika tidak puas dengan komposisi di atas, silakan diatur sendiri menggunakan perintah /ganti_settingan_peran
+Jika tidak puas dengan komposisi di atas, silakan diatur sendiri menggunakan perintah `/ganti_settingan_peran`
 
 ### Akhir Permainan
 
