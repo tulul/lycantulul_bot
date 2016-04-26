@@ -420,8 +420,8 @@ module Lycantulul
 
         if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
           votee = self.living_players.with_name(vc[0][0])
-          if votee.role == AMNESTY && !self.amnesty_done[votee.user_id]
-            self.update_attribute(:amnesty_done, self.amnesty_done.merge(votee.user_id => true))
+          if votee.role == AMNESTY && !self.amnesty_done[votee.user_id.to_s]
+            self.update_attribute(:amnesty_done, self.amnesty_done.merge(votee.user_id.to_s => true))
             self.get_player(votee.user_id).inc_executed_under_protection
           else
             votee.kill
@@ -488,13 +488,13 @@ module Lycantulul
         ss && ss.each do |vc|
           next if vc[:full_name] == NECROMANCER_SKIP
           necromancee = self.dead_players.with_name(vc[:full_name])
-          necromancer = self.living_necromancers.with_id(vc[:necromancer_id]) || (!self.super_necromancer_done[vc[:necromancer_id]] && self.living_super_necromancers.with_id(vc[:necromancer_id]))
+          necromancer = self.living_necromancers.with_id(vc[:necromancer_id]) || (!self.super_necromancer_done[vc[:necromancer_id].to_s] && self.living_super_necromancers.with_id(vc[:necromancer_id]))
           if necromancee && necromancer
             LycantululBot.log("#{necromancee.full_name} is raised from the dead by #{necromancer.full_name} (from GAME)")
             necromancee.revive
             self.get_player(necromancee.user_id).inc_revived
             if necromancer.role == SUPER_NECROMANCER
-              self.update_attribute(:super_necromancer_done, self.super_necromancer_done.merge(necromancer.user_id => true))
+              self.update_attribute(:super_necromancer_done, self.super_necromancer_done.merge(necromancer.user_id.to_s => true))
             else
               necromancer.kill
             end
@@ -518,7 +518,7 @@ module Lycantulul
         necromancer_count = self.living_necromancers.count
         necromancer_count +=
           self.living_super_necromancers.count do |sn|
-            !self.super_necromancer_done[sn.user_id]
+            !self.super_necromancer_done[sn.user_id.to_s]
           end
         res &&  self.necromancee.count == necromancer_count
       end
@@ -530,7 +530,7 @@ module Lycantulul
 
     def valid_action?(actor_id, actee_name, role)
       self.with_lock(wait: true) do
-        return false if role == 'super_necromancer' && self.super_necromancer_done[actor_id]
+        return false if role == 'super_necromancer' && self.super_necromancer_done[actor_id.to_s]
 
         actor = self.send("living_#{role.pluralize}").with_id(actor_id)
 
