@@ -314,50 +314,29 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /^\/ganti_waktu_malam(.*)?/
+          when /^\/ganti_settingan_waktu(@lycantulul_bot)?/
             if in_group?(message)
-              time = $1
-              if time =~ /^ ?(\d)+$/
-                if time.to_i >= 10
-                  Lycantulul::Group.get(message.chat.id).update_attribute(:night_time, time)
-                  send(message, "Sip, waktu malam buat action jadi #{time.to_i} detik!", reply: true)
+              if group = Lycantulul::Group.get(message.chat.id)
+                if !group.pending_time_id
+                  keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: group.time_setting_keyboard, resize_keyboard: true, one_time_keyboard: true, selective: true)
+                  pending = send(message, 'Ubah waktu apa?', reply: true, keyboard: keyboard)
+                  group.pending_reply(pending['result']['message_id'])
                 else
-                  send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
+                  send(message, 'Udah ada yang mulai nyetting tadi, selesaiin dulu atau /batal_nyetting_waktu', reply: true)
                 end
-              else
-                send(message, "Hah? Format yang bener /ganti_waktu_malam[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_malam 42", reply: true)
               end
             else
               wrong_room(message)
             end
-          when /^\/ganti_waktu_voting(.*)?/
+          when /^\/batal_nyetting_waktu(@lycantulul_bot)?/
             if in_group?(message)
-              time = $1
-              if time =~ /^ ?(\d)+$/
-                if time.to_i >= 10
-                  Lycantulul::Group.get(message.chat.id).update_attribute(:voting_time, time)
-                  send(message, "Sip, waktu voting jadi #{time.to_i} detik!", reply: true)
+              if group = Lycantulul::Group.get(message.chat.id)
+                if group.pending_time_id
+                  group.cancel_pending_time
+                  send(message, 'Yosh. Udah boleh /ganti_settingan_waktu lagi', reply: true)
                 else
-                  send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
+                  send(message, 'Ga ada yang lagi nyetting, /ganti_settingan_waktu dulu', reply: true)
                 end
-              else
-                send(message, "Hah? Format yang bener /ganti_waktu_voting[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_voting 42", reply: true)
-              end
-            else
-              wrong_room(message)
-            end
-          when /^\/ganti_waktu_diskusi(.*)?/
-            if in_group?(message)
-              time = $1
-              if time =~ /^ ?(\d)+$/
-                if time.to_i >= 10
-                  Lycantulul::Group.get(message.chat.id).update_attribute(:discussion_time, time)
-                  send(message, "Sip, waktu diskusi jadi #{time.to_i} detik!", reply: true)
-                else
-                  send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
-                end
-              else
-                send(message, "Hah? Format yang bener /ganti_waktu_diskusi[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_diskusi 42", reply: true)
               end
             else
               wrong_room(message)
@@ -460,13 +439,32 @@ module Lycantulul
               end
             else
               if (game = check_game(message)) && (game.pending_custom_id == message.reply_to_message.message_id rescue false)
-                if message.text =~ /^\d$/
+                if message.text =~ /^\d+$/
                   res = game.set_custom_role(message.text.to_i)
                   send(message, "Sip. Jumlah #{res[0]} ntar jadi #{res[1]}")
                 elsif (role = game.check_custom_role(message.text))
                   force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
                   pending = send(message, "Mau berapa #{game.get_role(role)}?", reply: true, keyboard: force)
                   game.pending_reply(pending['result']['message_id'])
+                else
+                  send(message, 'WUT?', reply: true)
+                end
+              elsif (group = Lycantulul::Group.get(message.chat.id)) && (group.pending_time_id == message.reply_to_message.message_id rescue false)
+                puts message.text.inspect
+                puts group.inspect
+                if message.text =~ /^\d+$/ && group.pending_time
+                  time = message.text.to_i
+                  if time >= 10
+                    res = group.set_custom_time(time)
+                    send(message, "Sip, waktu #{res[0]} jadi #{res[1]} detik!", reply: true)
+                  else
+                    group.cancel_pending_time
+                    send(message, "Sejak kapan #{time.to_i} >= 10? Ulang /ganti_settingan_waktu lagi", reply: true)
+                  end
+                elsif group.check_time_setting(message.text)
+                  force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
+                  pending = send(message, "Mau berapa detik? (minimal 10 detik)", reply: true, keyboard: force)
+                  group.pending_reply(pending['result']['message_id'])
                 else
                   send(message, 'WUT?', reply: true)
                 end

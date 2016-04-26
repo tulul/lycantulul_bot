@@ -616,7 +616,7 @@ module Lycantulul
       res = "Waktu action malam: #{self.night_time} detik\n"
       res += "Waktu diskusi: #{self.discussion_time} detik\n"
       res += "Waktu voting: #{self.voting_time} detik\n"
-      res += 'Ubah pake /ganti_waktu_voting, /ganti_waktu_diskusi, atau /ganti_waktu_malam'
+      res += 'Ubah pake /ganti_settingan_waktu'
     end
 
     def get_role(role)
