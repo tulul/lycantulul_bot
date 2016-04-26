@@ -466,7 +466,7 @@ module Lycantulul
         res = []
         ss && ss.each do |vc|
           protectee = self.living_players.with_name(vc[:full_name])
-          if protectee.role == WEREWOLF && rand.round + rand.round == 0 # 25% ded if protecting werewolf
+          if protectee && protectee.role == WEREWOLF && rand.round + rand.round == 0 # 25% ded if protecting werewolf
             ded = self.living_players.with_id(vc[:protector_id])
             ded.kill
             LycantululBot.log("#{ded.full_name} is killed because they protected werewolf (from GAME)")
