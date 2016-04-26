@@ -53,6 +53,10 @@ module Lycantulul
       self.find_by(group_id: group.id, finished: false)
     end
 
+    def self.running
+      self.where(finished: false, waiting: false)
+    end
+
     def get_player(user_id)
       Lycantulul::RegisteredPlayer.get(user_id)
     end
