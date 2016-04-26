@@ -68,6 +68,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. Gelandangan
    - Menumpang di rumah warga lain jadi imun terhadap serangan langsung TTS.
    - Apabila menumpang di rumah TTS atau warga yang dibunuh TTS, maka mati.
+   - Apabila menumpang di rumah TTS dan akan dibunuh TTS, tidak mati.
 
 ##### Penjahat
 1. TTS (Tulul-Tulul Serigala)

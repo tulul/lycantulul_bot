@@ -662,7 +662,7 @@ module Lycantulul
       when AMNESTY
         'Diam menunggu kematian. Tapi, kalo lu dieksekusi oleh warga, lu bakal selamat (tapi cuma bisa sekali itu aja). Tiati aja sih malam berikutnya dibunuh serigala'
       when HOMELESS
-        'Nebeng ke rumah orang lain tiap malem, jadi lu selalu aman dari serangan TTS. Tapi kalo orang yang lu tebengi dibunuh TTS atau malah TTS itu sendiri, lu ikutan mati.'
+        'Nebeng ke rumah orang lain tiap malem, jadi lu selalu aman dari serangan TTS. Tapi kalo orang yang lu tebengi dibunuh TTS atau malah TTS itu sendiri, lu ikutan mati. Tapi lu jago ngumpet juga sih, kalo TTS ngincer lu dan lu nebeng di TTS lu tetep aman.'
       end
     end
 

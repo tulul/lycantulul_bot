@@ -13,6 +13,7 @@ module Lycantulul
     ALLOWED_DELAY = -> { (res = $redis.get('lycantulul::allowed_delay')) ? res.to_i : 20 }
 
     MAINTENANCE = -> { $redis.get('lycantulul::maintenance').to_i == 1 rescue nil }
+    MAINTENANCE_PREVENT = -> { $redis.get('lycantulul::maintenance_prevent').to_i == 1 rescue nil }
 
     [
       'broadcast_role',
@@ -223,16 +224,20 @@ module Lycantulul
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
-                  if game.players.count >= MINIMUM_PLAYER.call
-                    if game.role_valid?
-                      game.start
-                      message_action(game, BROADCAST_ROLE)
-                      message_action(game, ROUND_START)
+                  if !MAINTENANCE_PREVENT.call
+                    if game.players.count >= MINIMUM_PLAYER.call
+                      if game.role_valid?
+                        game.start
+                        message_action(game, BROADCAST_ROLE)
+                        message_action(game, ROUND_START)
+                      else
+                        send(message, 'Pembagian peran yang dikasih kebanyakan jumlahnya, /apus_settingan_peran atau /ganti_settingan_peran!', reply: true)
+                      end
                     else
-                      send(message, 'Pembagian peran yang dikasih kebanyakan jumlahnya, /apus_settingan_peran atau /ganti_settingan_peran!', reply: true)
+                      send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", reply: true)
                     end
                   else
-                    send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", reply: true)
+                    send(message, 'Jangan /mulai_main dulu ya, mau main tenis bentar', reply: true)
                   end
                 else
                   send(message, 'Udah mulai tjoy dari tadi', reply: true)
