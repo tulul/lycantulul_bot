@@ -105,6 +105,21 @@ module Lycantulul
       return self.players.with_id(user.id).destroy
     end
 
+    def role_setting_keyboard
+      keyboard = []
+      max = IMPORTANT_ROLES.count
+      count = -1
+      while count < max
+        tmp = []
+        3.times do
+          role = IMPORTANT_ROLES[count += 1].upcase rescue nil
+          tmp << self.get_role(self.class.const_get(role)) if role
+        end
+        keyboard << tmp.compact
+      end
+      keyboard.reject{ |x| x.empty? }
+    end
+
     def check_custom_role(role_string)
       self.with_lock(wait: true) do
         custom = nil

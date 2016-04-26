@@ -1,11 +1,13 @@
 load 'Rakefile'
 
 updates = "latest updates:\n"
-updates += "- Sekarang bisa lebih dari 1 Anak Presiden/Super Mujahid\n"
-updates += "- Silakan dicoba main pake >1 peran di atas. Ganti pake /ganti_settingan_peran sebelom mulai main\n"
-updates += "- Harusnya masing-masing Anak Presiden/Super Mujahid udah bisa action sendiri2 (kemaren cuma 1 doang yang bisa hiks)\n"
+updates += "- <b>Pas /ganti_settingan_peran sekarang rada bagusan, karena disediain keyboard custom peran apa aja yang bisa diubah</b>\n"
+updates += "- <b>Kalo misalnya keyboard custom-nya ga ilang2, cobain /ilangin_keyboard biar keyboard balik normal</b>\n"
 updates += "\n"
-updates += "Kalo nemu yang aneh2 kontak @araishikeiwai yak"
+updates += "- <a href='https://github.com/tulul/lycantulul_bot'>Klik sini kalo mau saran/lapor bug/dll (github)</a>\n"
+updates += "- <a href='https://storebot.me/bot/lycantulul_bot'>Klik sini kalo mau ngasing rating/review (storebot)</a>\n"
+updates += "\n"
+updates += "Kalo nemu yang aneh2 dan darurat kontak @araishikeiwai (Rick [time zone UTC+1]) yak, kalo engga ke github aja bikin issue (Rick mau ujian, doakan dia ya)"
 groups = Lycantulul::Game.all.map(&:group_id).uniq
 
 success = 0
@@ -14,7 +16,7 @@ failure = 0
 Telegram::Bot::Client.run($token) do |bot|
   groups.each do |g|
     begin
-      bot.api.send_message(chat_id: g, text: updates)
+      bot.api.send_message(chat_id: g, text: updates, parse_mode: 'HTML')
       success += 1
       sleep(0.1)
     rescue StandardError => e

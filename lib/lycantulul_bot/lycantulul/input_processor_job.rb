@@ -167,8 +167,8 @@ module Lycantulul
               if game = check_game(message)
                 if game.waiting?
                   if !game.pending_custom_id
-                    force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
-                    pending = send(message, "Ubah jumlah peran siapa?\n\np.s.:daftar peran liat /help dan cuma bisa yang [peran pasti ada] kecuali warga kampung", reply: true, keyboard: force)
+                    keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: game.role_setting_keyboard, resize_keyboard: true, one_time_keyboard: true, selective: true)
+                    pending = send(message, 'Ubah jumlah peran siapa?', reply: true, keyboard: keyboard)
                     game.pending_reply(pending['result']['message_id'])
                   else
                     send(message, 'Udah ada yang mulai nyetting tadi, selesaiin dulu atau /batal_nyetting_peran', reply: true)
@@ -363,12 +363,8 @@ module Lycantulul
               wrong_room(message)
             end
           when /^\/ilangin_keyboard(@lycantulul_bot)?/
-            if in_private?(message)
-              keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
-              send_to_player(message.chat.id, 'OK', reply_markup: keyboard)
-            else
-              wrong_room(message)
-            end
+            keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
+            send(message, 'OK', reply: in_group?(message), keyboard: keyboard)
           when /^\/statistik_grup(@lycantulul_bot)?/
             if in_group?(message)
               send_to_player(message.chat.id, Lycantulul::Group.get(message.chat.id).statistics, parse_mode: 'HTML')
