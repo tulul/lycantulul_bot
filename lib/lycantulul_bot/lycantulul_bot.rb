@@ -6,6 +6,7 @@ class LycantululBot
       end
     end
   rescue Telegram::Bot::Exceptions::ResponseError => e
+    puts Time.now.utc
     puts e.message
     puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
     if e.message =~ /429/

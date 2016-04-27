@@ -681,6 +681,7 @@ module Lycantulul
       begin
         @bot.api.send_message(options)
       rescue Telegram::Bot::Exceptions::ResponseError => e
+        puts Time.now.utc
         puts e.message
         puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
         puts "retrying: #{retry_count}"
@@ -702,6 +703,7 @@ module Lycantulul
       begin
         @bot.api.send_message(options)
       rescue Telegram::Bot::Exceptions::ResponseError => e
+        puts Time.now.utc
         puts e.message
         puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
         puts "retrying: #{retry_count}"
