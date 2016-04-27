@@ -5,6 +5,11 @@ class LycantululBot
         Lycantulul::InputProcessorJob.perform_async(message, bot)
       end
     end
+  rescue Net::ReadTimeout => e
+    puts Time.now.utc
+    puts 'TIMEOUT'
+    sleep(1)
+    retry
   rescue Telegram::Bot::Exceptions::ResponseError => e
     puts Time.now.utc
     puts e.message
