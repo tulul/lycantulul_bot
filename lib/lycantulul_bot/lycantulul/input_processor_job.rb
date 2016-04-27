@@ -169,7 +169,7 @@ module Lycantulul
                   if !game.pending_custom_id
                     keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: game.role_setting_keyboard, resize_keyboard: true, one_time_keyboard: true, selective: true)
                     pending = send(message, 'Ubah jumlah peran siapa?', reply: true, keyboard: keyboard)
-                    game.pending_reply(pending['result']['message_id'])
+                    game.pending_reply(pending['result']['message_id']) rescue nil
                   else
                     send(message, 'Udah ada yang mulai nyetting tadi, selesaiin dulu atau /batal_nyetting_peran', reply: true)
                   end
@@ -335,7 +335,7 @@ module Lycantulul
                 if !group.pending_time_id
                   keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: group.time_setting_keyboard, resize_keyboard: true, one_time_keyboard: true, selective: true)
                   pending = send(message, 'Ubah waktu apa?', reply: true, keyboard: keyboard)
-                  group.pending_reply(pending['result']['message_id'])
+                  group.pending_reply(pending['result']['message_id']) rescue nil
                 else
                   send(message, 'Udah ada yang mulai nyetting tadi, selesaiin dulu atau /batal_nyetting_waktu', reply: true)
                 end
@@ -461,7 +461,7 @@ module Lycantulul
                 elsif (role = game.check_custom_role(message.text))
                   force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
                   pending = send(message, "Mau berapa #{game.get_role(role)}?", reply: true, keyboard: force)
-                  game.pending_reply(pending['result']['message_id'])
+                  game.pending_reply(pending['result']['message_id']) rescue nil
                 else
                   send(message, 'WUT?', reply: true)
                 end
@@ -478,7 +478,7 @@ module Lycantulul
                 elsif group.check_time_setting(message.text)
                   force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
                   pending = send(message, "Mau berapa detik? (minimal 10 detik)", reply: true, keyboard: force)
-                  group.pending_reply(pending['result']['message_id'])
+                  group.pending_reply(pending['result']['message_id']) rescue nil
                 else
                   send(message, 'WUT?', reply: true)
                 end
