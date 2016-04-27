@@ -455,7 +455,7 @@ module Lycantulul
               end
             else
               if (game = check_game(message)) && (game.pending_custom_id == message.reply_to_message.message_id rescue false)
-                if message.text =~ /^\d+$/
+                if message.text =~ /^\d+$/ && game.pending_custom_role
                   res = game.set_custom_role(message.text.to_i)
                   send(message, "Sip. Jumlah #{res[0]} ntar jadi #{res[1]}")
                 elsif (role = game.check_custom_role(message.text))
