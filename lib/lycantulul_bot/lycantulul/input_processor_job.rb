@@ -489,6 +489,11 @@ module Lycantulul
           log('stale message. purged')
         end
       end
+    rescue Net::ReadTimeout => e
+      puts Time.now.utc
+      puts 'TIMEOUT'
+      sleep(1)
+      retry
     rescue StandardError => e
       puts Time.now.utc
       puts e.message
