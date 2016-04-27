@@ -5,13 +5,16 @@ class LycantululBot
         Lycantulul::InputProcessorJob.perform_async(message, bot)
       end
     end
-  rescue StandardError => e
+  rescue Telegram::Bot::Exceptions::ResponseError => e
     puts e.message
     puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
-    retry
+    if e.message =~ /429/
+      sleep(3)
+    end
+    retry unless e.message =~ /[400|403|409]/
   end
 
   def self.log(message)
-    puts "#{Time.now.utc} -- #{message}"
+    #puts "#{Time.now.utc} -- #{message}"
   end
 end

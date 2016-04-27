@@ -38,7 +38,7 @@ module Lycantulul
 
       if MAINTENANCE.call
         reply = in_group?(message)
-        if !reply || message.text =~ /@lycantulul_bot/
+        if !reply || message.text =~ /@lycantulul_(dev_)?bot/
           send(message, 'Lagi bermain bersama Ecchi-men Ryoman dan Nopak Jokowi', reply: reply)
         end
       else
@@ -466,8 +466,6 @@ module Lycantulul
                   send(message, 'WUT?', reply: true)
                 end
               elsif (group = Lycantulul::Group.get(message.chat.id)) && (group.pending_time_id == message.reply_to_message.message_id rescue false)
-                puts message.text.inspect
-                puts group.inspect
                 if message.text =~ /^\d+$/ && group.pending_time
                   time = message.text.to_i
                   if time >= 10
@@ -494,6 +492,9 @@ module Lycantulul
     rescue StandardError => e
       puts e.message
       puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
+      $redis.set('lycantulul::maintenance_prevent', 1)
+      $redis.set('lycantulul::maintenance', 1)
+      send_to_player(Lycantulul::RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, "EXCEPTION! CHECK SERVER")
       retry
     end
 
@@ -677,13 +678,15 @@ module Lycantulul
       retry_count = 0
       begin
         @bot.api.send_message(options)
-      rescue StandardError => e
+      rescue Telegram::Bot::Exceptions::ResponseError => e
         puts e.message
         puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
-        sleep(1.5)
         puts "retrying: #{retry_count}"
-        retry_count += 1
-        retry if retry_count < 20
+
+        if e.message =~ /429/
+          sleep(3)
+        end
+        retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
       end
     end
 
@@ -696,13 +699,15 @@ module Lycantulul
       retry_count = 0
       begin
         @bot.api.send_message(options)
-      rescue StandardError => e
+      rescue Telegram::Bot::Exceptions::ResponseError => e
         puts e.message
         puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
-        sleep(1.5)
         puts "retrying: #{retry_count}"
-        retry_count += 1
-        retry if retry_count < 20
+
+        if e.message =~ /429/
+          sleep(3)
+        end
+        retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
       end
     end
 
