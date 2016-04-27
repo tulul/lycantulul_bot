@@ -3,6 +3,7 @@
 inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 
 [play me in public group!](https://telegram.me/lycantulul)
+
 [or add the bot to your group!](https://telegram.me/lycantulul_bot)
 
 ### Daftar Perintah
@@ -45,7 +46,8 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
    - Dibunuh dan ikut voting eksekusi.
    - Tidak akan mati saat dieksekusi pertama kali.
 1. Dukun
-   - Diberitahu peran salah satu pemain yang masih hidup (seperti tukang ngintip, tapi ga bisa milih).
+   - Setiap malam diberitahu peran salah satu pemain yang masih hidup (seperti Tukang Ngintip, tapi ga bisa milih).
+   - Keunggulannya dibanding Tukang Ngintip, diberitahu perannya saat malam hari, jadi ada jaminan akan tahu peran seseorang setiap malem.
    - Karena random, tidak ada jaminan pemain yang sudah diberitahu tidak diberitahu lagi.
 1. Tamaki Shinichi
    - Setiap malam akan diberitahu siapa yang akan dibunuh oleh para TTS.

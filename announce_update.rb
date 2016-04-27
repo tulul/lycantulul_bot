@@ -1,8 +1,8 @@
 load 'Rakefile'
 
 updates = "latest updates:\n"
-updates += "- <b>Pas /ganti_settingan_peran sekarang rada bagusan, karena disediain keyboard custom peran apa aja yang bisa diubah</b>\n"
-updates += "- <b>Kalo misalnya keyboard custom-nya ga ilang2, cobain /ilangin_keyboard biar keyboard balik normal</b>\n"
+updates += "- <b>Fitur Baru</b>: /ganti_settingan_voting --> ngubah sistem voting untuk grup, apakah publik (semua tau siapa voting siapa) atau rahasia (cuma tau siapa yang di-voting)\n"
+updates += "- /ganti_settingan_waktu sekarang lebih kece (dibikin keyboard custom kaya /ganti_settingan_peran)\n"
 updates += "\n"
 updates += "- <a href='https://github.com/tulul/lycantulul_bot'>Klik sini kalo mau saran/lapor bug/dll (github)</a>\n"
 updates += "- <a href='https://storebot.me/bot/lycantulul_bot'>Klik sini kalo mau ngasing rating/review (storebot)</a>\n"
