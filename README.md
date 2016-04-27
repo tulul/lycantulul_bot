@@ -29,6 +29,16 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/statistik` - Liat statistik diri sendiri
 - `/ilangin_keyboard` - Reply keyboard muncul terus? Cobain nih
 
+### Kustomisasi
+
+Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pengaturan permainan sebagai berikut:
+- **/ganti\_settingan\_peran** - Digunakan untuk mengganti jumlah peran dalam permainan. _Tidak disarankan karena dapat merusak keseimbangan permainan yang telah dirancang_. Cukup berguna saat ingin mencoba memainkan suatu peran tertentu.
+- **/ganti\_settingan\_voting** - Digunakan untuk mengganti sistem voting dari rahasia menjadi publik (dan sebaliknya). Pada sistem rahasia, bot hanya memberitahu seseorang telah melakukan voting dan siapa yang di-vote. Pada sistem publik, bot memberitahu nama seseorang yang telah voting tersebut. _Tidak disarankan karena dapat memberitahu beberapa peran tertentu (seperti Pak Ogah/Pak Raden)_.
+- **/ganti\_settingan\_waktu** - Digunakan untuk mengganti waktu permainan. Masing-masing pengaturan waktu memiliki batas minimal 10 detik. Ada tiga waktu permainan yang dapat diganti:
+   - waktu malam hari
+   - waktu diskusi
+   - waktu voting
+
 ### Peran
 
 #### Penjelasan Tugas Peran
@@ -47,7 +57,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
    - Tidak akan mati saat dieksekusi pertama kali.
 1. Dukun
    - Setiap malam diberitahu peran salah satu pemain yang masih hidup (seperti Tukang Ngintip, tapi ga bisa milih).
-   - Keunggulannya dibanding Tukang Ngintip, diberitahu perannya saat malam hari, jadi ada jaminan akan tahu peran seseorang setiap malem.
+   - Keunggulannya dibanding Tukang Ngintip, diberitahu perannya saat malam hari, jadi ada jaminan akan tahu peran seseorang setiap malam.
    - Karena random, tidak ada jaminan pemain yang sudah diberitahu tidak diberitahu lagi.
 1. Tamaki Shinichi
    - Setiap malam akan diberitahu siapa yang akan dibunuh oleh para TTS.
@@ -76,7 +86,6 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. TTS (Tulul-Tulul Serigala)
    - Membunuh semua yang bukan TTS.
    - Jika ada lebih dari 1 TTS, maka proses membunuh adalah voting antara para TTS. Jika tidak ada suara yang mayoritas, tidak ada yang mati.
-   - Jika membunuh seseorang yang dilindungi Penjual Jimat, korban tidak akan mati.
    - Jika membunuh Pengidap Ebola, salah satu serigala yang masih hidup akan ikut mati (dipilih secara acak).
 
 #### Jumlah dan Pola Kemunculan Peran
