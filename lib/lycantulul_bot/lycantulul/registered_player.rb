@@ -26,6 +26,8 @@ module Lycantulul
     field :survived,                      type: Integer, default: 0
     field :died,                          type: Integer, default: 0
 
+    field :blocked,                       type: Boolean, default: false
+
     Lycantulul::Game::ROLES.each do |role|
       field role, type: Integer, default: 0
     end
@@ -59,7 +61,10 @@ module Lycantulul
     end
 
     def self.create_from_message(user)
-      self.create(user_id: user.id, first_name: user.first_name, last_name: user.last_name, username: user.username)
+      rp = self.get_and_update(user)
+      rp ||= self.create(user_id: user.id, first_name: user.first_name, last_name: user.last_name, username: user.username)
+      rp.update_attribute(:blocked, false)
+      rp
     end
 
     def full_name

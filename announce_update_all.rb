@@ -21,6 +21,9 @@ Telegram::Bot::Client.run($token) do |bot|
       success += 1
       sleep(0.1)
     rescue StandardError => e
+      if e.message =~ /403/
+        Lycantulul::RegisteredPlayer.find_by(user_id: g).update_attribute(:blocked, true) rescue nil
+      end
       failure += 1
       puts e.message
     end

@@ -9,6 +9,7 @@ module Lycantulul
     field :username, type: String
     field :role, type: Integer, default: Lycantulul::Game::VILLAGER
     field :alive, type: Boolean, default: true
+    field :ready, type: Boolean, default: false
 
     index({ user_id: 1 })
     index({ full_name: 1 })

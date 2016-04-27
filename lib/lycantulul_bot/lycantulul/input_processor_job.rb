@@ -54,7 +54,7 @@ module Lycantulul
           when /^\/start(@lycantulul_bot)?/
             if in_private?(message)
               if check_player(message)
-                send(message, 'Udah kedaftar wey!')
+                send(message, 'Udah kedaftar!')
               else
                 Lycantulul::RegisteredPlayer.create_from_message(message.from)
                 send(message, 'Terdaftar! Lood Guck and Fave hun! Kalo mau ikutan main, balik ke grup, terus pencet /ikutan')
@@ -688,6 +688,8 @@ module Lycantulul
 
         if e.message =~ /429/
           sleep(3)
+        elsif e.message =~ /403/
+          Lycantulul::RegisteredPlayer.find_by(user_id: message.chat.id).update_attribute(:blocked, true) rescue nil
         end
         retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
       end
@@ -710,6 +712,8 @@ module Lycantulul
 
         if e.message =~ /429/
           sleep(3)
+        elsif e.message =~ /403/
+          Lycantulul::RegisteredPlayer.find_by(user_id: chat_id).update_attribute(:blocked, true) rescue nil
         end
         retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
       end
@@ -805,7 +809,7 @@ module Lycantulul
     end
 
     def unregistered(message)
-      send(message, 'Lau belom terdaftar cuy. PM gua @lycantulul_bot terus /start, baru balik sini dan lakukan lagi apa yang mau lu lakukan tadi', reply: true)
+      send(message, 'Belom terdaftar (atau lu nge-block gua) cuy. PM gua @lycantulul_bot terus /start (jangan lupa unblock dulu), baru balik sini dan lakukan lagi apa yang mau lu lakukan tadi', reply: true)
     end
 
     def bot_help
@@ -834,7 +838,8 @@ module Lycantulul
     end
 
     def check_player(message)
-      Lycantulul::RegisteredPlayer.get_and_update(message.from)
+      rp = Lycantulul::RegisteredPlayer.get_and_update(message.from)
+      rp && !rp.blocked?
     end
 
     def check_werewolf_in_game(message)
