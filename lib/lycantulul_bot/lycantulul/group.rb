@@ -10,6 +10,7 @@ module Lycantulul
     field :discussion_time,               type: Integer
 
     field :custom_roles,                  type: Array
+    field :public_vote,                   type: Boolean, default: false
 
     field :game,                          type: Integer, default: 0
 

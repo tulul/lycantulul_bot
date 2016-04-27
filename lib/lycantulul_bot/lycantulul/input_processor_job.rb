@@ -105,7 +105,7 @@ module Lycantulul
                         if game.players.count >= MINIMUM_PLAYER.call
                           res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
                           res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran\n"
-                          res += "#{game.list_time_settings}"
+                          res += "#{game.list_settings}"
                           res
                         else
                           "#{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
@@ -211,6 +211,21 @@ module Lycantulul
                   else
                     send(message, 'Belom ada yang nyetting2 peran, /ganti_settingan_peran dulu', reply: true)
                   end
+                else
+                  send(message, 'Udah mulai', reply: true)
+                end
+              else
+                send(message, '/bikin_baru dulu', reply: true)
+              end
+            else
+              wrong_room(message)
+            end
+          when /^\/ganti_settingan_voting(@lycantulul_bot)?/
+            if in_group?(message)
+              if game = check_game(message)
+                if game.waiting?
+                  game.toggle_voting_scheme
+                  send(message, "Sistem voting berubah jadi #{game.voting_scheme}", reply: true)
                 else
                   send(message, 'Udah mulai', reply: true)
                 end
@@ -378,7 +393,8 @@ module Lycantulul
                 when Lycantulul::Game::RESPONSE_OK
                   keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
                   send(message, 'Seeep', keyboard: keyboard)
-                  send_to_player(game.group_id, "<i>Seseorang udah nge-vote</i>: <b>#{message.text}</b>", parse_mode: 'HTML')
+                  voter = game.public_vote? ? "<b>#{message.from.first_name}</b>" : '<i>Seseorang</i>'
+                  send_to_player(game.group_id, "#{voter} <i>udah nge-vote:</i> <b>#{message.text}</b>", parse_mode: 'HTML')
                 when Lycantulul::Game::RESPONSE_INVALID
                   full_name = Lycantulul::Player.get_full_name(message.from)
                   send_voting(game.living_players, full_name, message.chat.id)

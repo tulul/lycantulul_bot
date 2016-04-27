@@ -15,6 +15,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/ganti_settingan_peran` - Ngubah jumlah salah satu dari peran
 - `/batal_nyetting_peran` - Batalin settingan peran yang lagi di-setting sekarang
 - `/apus_settingan_peran` - Apus semua settingan peran yang udah dibikin
+- `/ganti_settingan_voting` - Ngubah voting publik atau rahasia
 - `/mulai_main` - Mulai main
 - `/siapa_aja` - Liat siapa aja yang lagi main
 - `/hasil_voting` - Liat hasil voting sementara

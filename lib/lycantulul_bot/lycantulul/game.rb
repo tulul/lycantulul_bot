@@ -77,6 +77,20 @@ module Lycantulul
       self.group.discussion_time || Lycantulul::InputProcessorJob::DISCUSSION_TIME.call
     end
 
+    def public_vote?
+      self.group.public_vote?
+    end
+
+    def voting_scheme
+      self.public_vote? ? 'publik' : 'rahasia'
+    end
+
+    def toggle_voting_scheme
+      self.group.with_lock(wait: true) do
+        self.group.update_attribute(:public_vote, !self.group.public_vote?)
+      end
+    end
+
     def end_discussion
       self.with_lock(wait: true) do
         self.update_attribute(:discussion, false)
@@ -589,7 +603,7 @@ module Lycantulul
         res += "\n\n#{self.role_composition}" unless self.role_composition.empty?
         res += "\n\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
         res += "\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran"
-        res += "\n\n#{self.list_time_settings}"
+        res += "\n\n#{self.list_settings}"
       end
 
       res
@@ -612,11 +626,14 @@ module Lycantulul
       res
     end
 
-    def list_time_settings
-      res = "Waktu action malam: #{self.night_time} detik\n"
-      res += "Waktu diskusi: #{self.discussion_time} detik\n"
-      res += "Waktu voting: #{self.voting_time} detik\n"
-      res += 'Ubah pake /ganti_settingan_waktu'
+    def list_settings
+      res = "Waktu action malam: <b>#{self.night_time}</b> detik\n"
+      res += "Waktu diskusi: <b>#{self.discussion_time}</b> detik\n"
+      res += "Waktu voting: <b>#{self.voting_time}</b> detik\n"
+      res += "Ubah pake /ganti_settingan_waktu\n"
+      res += "\n"
+      res += "Sistem voting: <b>#{self.voting_scheme}</b>\n"
+      res += "Ubah pake /ganti_settingan_voting"
     end
 
     def get_role(role)
