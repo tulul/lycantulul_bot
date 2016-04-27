@@ -490,10 +490,12 @@ module Lycantulul
         end
       end
     rescue StandardError => e
+      puts Time.now.utc
       puts e.message
       puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
       $redis.set('lycantulul::maintenance_prevent', 1)
       $redis.set('lycantulul::maintenance', 1)
+      Lycantulul::Game.running.each{ |rg| rg.finish(false) }
       send_to_player(Lycantulul::RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, "EXCEPTION! CHECK SERVER")
       retry
     end
