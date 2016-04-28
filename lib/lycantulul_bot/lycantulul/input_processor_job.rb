@@ -457,7 +457,8 @@ module Lycantulul
               if (game = check_game(message)) && (game.pending_custom_id == message.reply_to_message.message_id rescue false)
                 if message.text =~ /^\d+$/ && game.pending_custom_role
                   res = game.set_custom_role(message.text.to_i)
-                  send(message, "Sip. Jumlah #{res[0]} ntar jadi #{res[1]}")
+                  keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
+                  send(message, "Sip. Jumlah #{res[0]} ntar jadi #{res[1]}", reply: true, keyboard: keyboard)
                 elsif (role = game.check_custom_role(message.text))
                   force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
                   pending = send(message, "Mau berapa #{game.get_role(role)}?", reply: true, keyboard: force)
@@ -470,10 +471,12 @@ module Lycantulul
                   time = message.text.to_i
                   if time >= 10
                     res = group.set_custom_time(time)
-                    send(message, "Sip, waktu #{res[0]} jadi #{res[1]} detik!", reply: true)
+                    keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
+                    send(message, "Sip, waktu #{res[0]} jadi #{res[1]} detik!", reply: true, keyboard: keyboard)
                   else
                     group.cancel_pending_time
-                    send(message, "Sejak kapan #{time.to_i} >= 10? Ulang /ganti_settingan_waktu lagi", reply: true)
+                    keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
+                    send(message, "Sejak kapan #{time.to_i} >= 10? Ulang /ganti_settingan_waktu lagi", reply: true, keyboard: keyboard)
                   end
                 elsif group.check_time_setting(message.text)
                   force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
