@@ -88,7 +88,7 @@ Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pen
    - Jika ada lebih dari 1 serigala, maka proses membunuh adalah voting antara para serigala. Jika tidak ada suara yang mayoritas, tidak ada yang mati.
    - Jika membunuh Pengidap Ebola, salah satu TTS yang masih hidup akan ikut mati (dipilih secara acak).
 1. PPS (Pinter-Pinter Serigala)
-   - TTS yang punya suara 2 saat voting siapa yang mau dibunuh.
+   - TTS yang punya suara 2 saat voting antar serigala siapa yang mau dibunuh.
    - Tidak akan dipilih ikut mati saat membunuh Pengidap Ebola.
    - Tidak akan didengar oleh Tamaki Shinichi saat ingin membunuh seseorang.
    - Akan terlihat sebagai Warga Kampung oleh Tukang Ngintip dan Dukun.
