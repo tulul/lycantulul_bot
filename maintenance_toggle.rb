@@ -10,5 +10,9 @@ while res == 0 && (count = Lycantulul::Game.running.count) > 0
   sleep(30)
 end
 
+Telegram::Bot::Client.run($token) do |bot|
+  bot.api.send_message(chat_id: Lycantulul::RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, text: 'MAINTENANCE TOGGLED')
+end
+
 puts "Maintenance mode toggling to #{res ^ 1 == 0 ? 'deactivated' : 'activated' }"
 $redis.set('lycantulul::maintenance', res ^ 1)
