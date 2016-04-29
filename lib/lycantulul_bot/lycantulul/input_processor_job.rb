@@ -41,6 +41,11 @@ module Lycantulul
         if !reply || message.text =~ /@lycantulul_(dev_)?bot/
           send(message, 'Lagi bermain bersama Ecchi-men Ryoman dan Nopak Jokowi', reply: reply)
         end
+      elsif player_invalid?(message)
+        reply = in_group?(message)
+        if !reply || message.text =~ /@lycantulul_(dev_)?bot/
+          send(message, 'Namanya jangan alay pake karakter-karakter aneh dong :( Ganti dulu!', reply: reply)
+        end
       else
         if Time.now.to_i - message.date < ALLOWED_DELAY.call
           if new_member = message.new_chat_member
@@ -1030,6 +1035,12 @@ module Lycantulul
 
     def in_private?(message)
       message.chat.type == 'private'
+    end
+
+    def player_invalid?(message)
+      player = message.from
+      string = "#{player.first_name}#{player.last_name}#{player.username}".downcase
+      string =~ /[`\/\\:*_\[\](){}]/
     end
 
     def log(message)

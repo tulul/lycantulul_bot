@@ -34,7 +34,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pengaturan permainan sebagai berikut:
 - **/ganti\_settingan\_peran** - Digunakan untuk mengganti jumlah peran dalam permainan. _Tidak disarankan karena dapat merusak keseimbangan permainan yang telah dirancang_. Cukup berguna saat ingin mencoba memainkan suatu peran tertentu.
 - **/ganti\_settingan\_voting** - Digunakan untuk mengganti sistem voting dari rahasia menjadi publik (dan sebaliknya). Pada sistem rahasia, bot hanya memberitahu seseorang telah melakukan voting dan siapa yang di-vote. Pada sistem publik, bot memberitahu nama seseorang yang telah voting tersebut. _Tidak disarankan karena dapat memberitahu beberapa peran tertentu (seperti Pak Ogah/Pak Raden)_.
-- **/ganti\_settingan\_waktu** - Digunakan untuk mengganti waktu permainan. Masing-masing pengaturan waktu memiliki batas minimal 10 detik. Ada tiga waktu permainan yang dapat diganti:
+- **/ganti\_settingan\_waktu** - Digunakan untuk mengganti waktu permainan. Masing-masing pengaturan waktu memiliki batas minimal 10 detik dan maksimal 300 detik. Ada tiga waktu permainan yang dapat diganti:
    - waktu malam hari
    - waktu diskusi
    - waktu voting
