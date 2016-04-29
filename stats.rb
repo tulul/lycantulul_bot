@@ -14,3 +14,9 @@ puts "Registered groups: #{Lycantulul::Group.count}"
 puts
 puts "Games waiting: #{Lycantulul::Game.where(finished: false, waiting: true).count}"
 puts "Games running: #{Lycantulul::Game.running.count}"
+puts
+puts "Role frequency statistics"
+sum = Lycantulul::RegisteredPlayer.all.sum(&:game)
+Lycantulul::Game::ROLES.each do |role|
+  puts "#{role}: #{"%.2f%" % ((Lycantulul::RegisteredPlayer.all.sum{ |x| x.send(role) }) * 100.0 / sum)}"
+end
