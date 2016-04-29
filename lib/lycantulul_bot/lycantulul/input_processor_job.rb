@@ -13,6 +13,7 @@ module Lycantulul
     ALLOWED_DELAY = -> { (res = $redis.get('lycantulul::allowed_delay')) ? res.to_i : 20 }
 
     MAINTENANCE = -> { $redis.get('lycantulul::maintenance').to_i == 1 rescue nil }
+    MAINTENANCE_PREVENT = -> { $redis.get('lycantulul::maintenance_prevent').to_i == 1 rescue nil }
 
     [
       'broadcast_role',
@@ -37,7 +38,7 @@ module Lycantulul
 
       if MAINTENANCE.call
         reply = in_group?(message)
-        if !reply || message.text =~ /@lycantulul_bot/
+        if !reply || message.text =~ /@lycantulul_(dev_)?bot/
           send(message, 'Lagi bermain bersama Ecchi-men Ryoman dan Nopak Jokowi', reply: reply)
         end
       else
@@ -53,7 +54,7 @@ module Lycantulul
           when /^\/start(@lycantulul_bot)?/
             if in_private?(message)
               if check_player(message)
-                send(message, 'Udah kedaftar wey!')
+                send(message, 'Udah kedaftar!')
               else
                 Lycantulul::RegisteredPlayer.create_from_message(message.from)
                 send(message, 'Terdaftar! Lood Guck and Fave hun! Kalo mau ikutan main, balik ke grup, terus pencet /ikutan')
@@ -104,7 +105,7 @@ module Lycantulul
                         if game.players.count >= MINIMUM_PLAYER.call
                           res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
                           res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran\n"
-                          res += "#{game.list_time_settings}"
+                          res += "#{game.list_settings}"
                           res
                         else
                           "#{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
@@ -166,9 +167,9 @@ module Lycantulul
               if game = check_game(message)
                 if game.waiting?
                   if !game.pending_custom_id
-                    force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
-                    pending = send(message, "Ubah jumlah peran siapa?\n\np.s.:daftar peran liat /help dan cuma bisa yang [peran pasti ada] kecuali warga kampung", reply: true, keyboard: force)
-                    game.pending_reply(pending['result']['message_id'])
+                    keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: game.role_setting_keyboard, resize_keyboard: true, one_time_keyboard: true, selective: true)
+                    pending = send(message, 'Ubah jumlah peran siapa?', reply: true, keyboard: keyboard)
+                    game.pending_reply(pending['result']['message_id']) rescue nil
                   else
                     send(message, 'Udah ada yang mulai nyetting tadi, selesaiin dulu atau /batal_nyetting_peran', reply: true)
                   end
@@ -219,20 +220,39 @@ module Lycantulul
             else
               wrong_room(message)
             end
+          when /^\/ganti_settingan_voting(@lycantulul_bot)?/
+            if in_group?(message)
+              if game = check_game(message)
+                if game.waiting?
+                  game.toggle_voting_scheme
+                  send(message, "Sistem voting berubah jadi #{game.voting_scheme}", reply: true)
+                else
+                  send(message, 'Udah mulai', reply: true)
+                end
+              else
+                send(message, '/bikin_baru dulu', reply: true)
+              end
+            else
+              wrong_room(message)
+            end
           when /^\/mulai_main(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
-                  if game.players.count >= MINIMUM_PLAYER.call
-                    if game.role_valid?
-                      game.start
-                      message_action(game, BROADCAST_ROLE)
-                      message_action(game, ROUND_START)
+                  if !MAINTENANCE_PREVENT.call
+                    if game.players.count >= MINIMUM_PLAYER.call
+                      if game.role_valid?
+                        game.start
+                        message_action(game, BROADCAST_ROLE)
+                        message_action(game, ROUND_START)
+                      else
+                        send(message, 'Pembagian peran yang dikasih kebanyakan jumlahnya, /apus_settingan_peran atau /ganti_settingan_peran!', reply: true)
+                      end
                     else
-                      send(message, 'Pembagian peran yang dikasih kebanyakan jumlahnya, /apus_settingan_peran atau /ganti_settingan_peran!', reply: true)
+                      send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", reply: true)
                     end
                   else
-                    send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", reply: true)
+                    send(message, 'Jangan /mulai_main dulu ya, mau main tenis bentar', reply: true)
                   end
                 else
                   send(message, 'Udah mulai tjoy dari tadi', reply: true)
@@ -309,61 +329,36 @@ module Lycantulul
             else
               wrong_room(message)
             end
-          when /^\/ganti_waktu_malam(.*)?/
+          when /^\/ganti_settingan_waktu(@lycantulul_bot)?/
             if in_group?(message)
-              time = $1
-              if time =~ /^ ?(\d)+$/
-                if time.to_i >= 10
-                  Lycantulul::Group.get(message.chat.id).update_attribute(:night_time, time)
-                  send(message, "Sip, waktu malam buat action jadi #{time.to_i} detik!", reply: true)
+              if group = Lycantulul::Group.get(message.chat.id)
+                if !group.pending_time_id
+                  keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: group.time_setting_keyboard, resize_keyboard: true, one_time_keyboard: true, selective: true)
+                  pending = send(message, 'Ubah waktu apa?', reply: true, keyboard: keyboard)
+                  group.pending_reply(pending['result']['message_id']) rescue nil
                 else
-                  send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
+                  send(message, 'Udah ada yang mulai nyetting tadi, selesaiin dulu atau /batal_nyetting_waktu', reply: true)
                 end
-              else
-                send(message, "Hah? Format yang bener /ganti_waktu_malam[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_malam 42", reply: true)
               end
             else
               wrong_room(message)
             end
-          when /^\/ganti_waktu_voting(.*)?/
+          when /^\/batal_nyetting_waktu(@lycantulul_bot)?/
             if in_group?(message)
-              time = $1
-              if time =~ /^ ?(\d)+$/
-                if time.to_i >= 10
-                  Lycantulul::Group.get(message.chat.id).update_attribute(:voting_time, time)
-                  send(message, "Sip, waktu voting jadi #{time.to_i} detik!", reply: true)
+              if group = Lycantulul::Group.get(message.chat.id)
+                if group.pending_time_id
+                  group.cancel_pending_time
+                  send(message, 'Yosh. Udah boleh /ganti_settingan_waktu lagi', reply: true)
                 else
-                  send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
+                  send(message, 'Ga ada yang lagi nyetting, /ganti_settingan_waktu dulu', reply: true)
                 end
-              else
-                send(message, "Hah? Format yang bener /ganti_waktu_voting[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_voting 42", reply: true)
-              end
-            else
-              wrong_room(message)
-            end
-          when /^\/ganti_waktu_diskusi(.*)?/
-            if in_group?(message)
-              time = $1
-              if time =~ /^ ?(\d)+$/
-                if time.to_i >= 10
-                  Lycantulul::Group.get(message.chat.id).update_attribute(:discussion_time, time)
-                  send(message, "Sip, waktu diskusi jadi #{time.to_i} detik!", reply: true)
-                else
-                  send(message "Sejak kapan #{time.to_i} >= 10?", reply: true)
-                end
-              else
-                send(message, "Hah? Format yang bener /ganti_waktu_diskusi[spasi][angka dalam detik, minimal 10]\nmisalnya /ganti_waktu_diskusi 42", reply: true)
               end
             else
               wrong_room(message)
             end
           when /^\/ilangin_keyboard(@lycantulul_bot)?/
-            if in_private?(message)
-              keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
-              send_to_player(message.chat.id, 'OK', reply_markup: keyboard)
-            else
-              wrong_room(message)
-            end
+            keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
+            send(message, 'OK', reply: in_group?(message), keyboard: keyboard)
           when /^\/statistik_grup(@lycantulul_bot)?/
             if in_group?(message)
               send_to_player(message.chat.id, Lycantulul::Group.get(message.chat.id).statistics, parse_mode: 'HTML')
@@ -398,7 +393,8 @@ module Lycantulul
                 when Lycantulul::Game::RESPONSE_OK
                   keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
                   send(message, 'Seeep', keyboard: keyboard)
-                  send_to_player(game.group_id, "<i>Seseorang udah nge-vote</i>: <b>#{message.text}</b>", parse_mode: 'HTML')
+                  voter = game.public_vote? ? "<b>#{message.from.first_name}</b>" : '<i>Seseorang</i>'
+                  send_to_player(game.group_id, "#{voter} <i>udah nge-vote:</i> <b>#{message.text}</b>", parse_mode: 'HTML')
                 when Lycantulul::Game::RESPONSE_INVALID
                   full_name = Lycantulul::Player.get_full_name(message.from)
                   send_voting(game.living_players, full_name, message.chat.id)
@@ -459,13 +455,33 @@ module Lycantulul
               end
             else
               if (game = check_game(message)) && (game.pending_custom_id == message.reply_to_message.message_id rescue false)
-                if message.text =~ /^\d$/
+                if message.text =~ /^\d+$/ && game.pending_custom_role
                   res = game.set_custom_role(message.text.to_i)
-                  send(message, "Sip. Jumlah #{res[0]} ntar jadi #{res[1]}")
+                  keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
+                  send(message, "Sip. Jumlah #{res[0]} ntar jadi #{res[1]}", reply: true, keyboard: keyboard)
                 elsif (role = game.check_custom_role(message.text))
                   force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
                   pending = send(message, "Mau berapa #{game.get_role(role)}?", reply: true, keyboard: force)
-                  game.pending_reply(pending['result']['message_id'])
+                  game.pending_reply(pending['result']['message_id']) rescue nil
+                else
+                  send(message, 'WUT?', reply: true)
+                end
+              elsif (group = Lycantulul::Group.get(message.chat.id)) && (group.pending_time_id == message.reply_to_message.message_id rescue false)
+                if message.text =~ /^\d+$/ && group.pending_time
+                  time = message.text.to_i
+                  if time >= 10 && time <= 300
+                    res = group.set_custom_time(time)
+                    keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
+                    send(message, "Sip, waktu #{res[0]} jadi #{res[1]} detik!", reply: true, keyboard: keyboard)
+                  else
+                    group.cancel_pending_time
+                    keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
+                    send(message, "Sejak kapan 10 <= #{time.to_i} <= 300? Ulang /ganti_settingan_waktu lagi", reply: true, keyboard: keyboard)
+                  end
+                elsif group.check_time_setting(message.text)
+                  force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
+                  pending = send(message, "Mau berapa detik? (10-300 detik)", reply: true, keyboard: force)
+                  group.pending_reply(pending['result']['message_id']) rescue nil
                 else
                   send(message, 'WUT?', reply: true)
                 end
@@ -476,9 +492,20 @@ module Lycantulul
           log('stale message. purged')
         end
       end
+    rescue Net::ReadTimeout => e
+      puts Time.now.utc
+      puts 'TIMEOUT'
+      sleep(1)
+      retry
     rescue StandardError => e
+      puts Time.now.utc
       puts e.message
       puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
+      $redis.set('lycantulul::maintenance_prevent', 1)
+      $redis.set('lycantulul::maintenance', 1)
+      rg = Lycantulul::Game.running
+      send_to_player(Lycantulul::RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, "EXCEPTION! CHECK SERVER! #{rg.count} GAMES STOPPED")
+      rg.each{ |rg| rg.finish(stats: false) }
       retry
     end
 
@@ -530,8 +557,8 @@ module Lycantulul
           send_necromancer(dp, se[:user_id])
         end
 
-        !game.super_necromancer_done && game.living_super_necromancers.each do |se|
-          send_necromancer(dp, se[:user_id])
+        game.living_super_necromancers.each do |se|
+          !game.super_necromancer_done[se[:user_id].to_s] && send_necromancer(dp, se[:user_id])
         end
       when WEREWOLF_KILL_BROADCAST
         lw = (game.living_werewolves + game.living_spies)
@@ -665,10 +692,14 @@ module Lycantulul
       rescue StandardError => e
         puts e.message
         puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
-        sleep(1.5)
         puts "retrying: #{retry_count}"
-        retry_count += 1
-        retry if retry_count < 20
+
+        if e.message =~ /429/
+          sleep(3)
+        elsif e.message =~ /403/
+          Lycantulul::RegisteredPlayer.find_by(user_id: message.chat.id).update_attribute(:blocked, true) rescue nil
+        end
+        retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
       end
     end
 
@@ -684,10 +715,14 @@ module Lycantulul
       rescue StandardError => e
         puts e.message
         puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
-        sleep(1.5)
         puts "retrying: #{retry_count}"
-        retry_count += 1
-        retry if retry_count < 20
+
+        if e.message =~ /429/
+          sleep(3)
+        elsif e.message =~ /403/
+          Lycantulul::RegisteredPlayer.find_by(user_id: chat_id).update_attribute(:blocked, true) rescue nil
+        end
+        retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
       end
     end
 
@@ -781,7 +816,7 @@ module Lycantulul
     end
 
     def unregistered(message)
-      send(message, 'Lau belom terdaftar cuy. PM gua @lycantulul_bot terus /start, baru balik sini dan lakukan lagi apa yang mau lu lakukan tadi', reply: true)
+      send(message, 'Belom terdaftar (atau lu nge-block gua) cuy. PM gua @lycantulul_bot terus /start (jangan lupa unblock dulu), baru balik sini dan lakukan lagi apa yang mau lu lakukan tadi', reply: true)
     end
 
     def bot_help
@@ -810,7 +845,8 @@ module Lycantulul
     end
 
     def check_player(message)
-      Lycantulul::RegisteredPlayer.get_and_update(message.from)
+      rp = Lycantulul::RegisteredPlayer.get_and_update(message.from)
+      rp && !rp.blocked?
     end
 
     def check_werewolf_in_game(message)

@@ -26,6 +26,8 @@ module Lycantulul
     field :survived,                      type: Integer, default: 0
     field :died,                          type: Integer, default: 0
 
+    field :blocked,                       type: Boolean, default: false
+
     Lycantulul::Game::ROLES.each do |role|
       field role, type: Integer, default: 0
     end
@@ -59,7 +61,10 @@ module Lycantulul
     end
 
     def self.create_from_message(user)
-      self.create(user_id: user.id, first_name: user.first_name, last_name: user.last_name, username: user.username)
+      rp = self.get_and_update(user)
+      rp ||= self.create(user_id: user.id, first_name: user.first_name, last_name: user.last_name, username: user.username)
+      rp.update_attribute(:blocked, false)
+      rp
     end
 
     def full_name
@@ -80,8 +85,8 @@ module Lycantulul
       res += "Dijimatin <b>#{self.mauled_under_protection}</b>\n"
       res += "\n"
       res += "Ndak di rumah pas mau dibunuh TTS <b>#{self.homeless_safe}</b>\n"
-      res += "Nebeng di rumah korban <b>#{self.homeless_mauled}</b>\n"
-      res += "Nebeng di rumah TTS <b>#{self.homeless_werewolf}</b>\n"
+      res += "Salah nebeng di rumah korban <b>#{self.homeless_mauled}</b>\n"
+      res += "Salah nebeng di rumah TTS <b>#{self.homeless_werewolf}</b>\n"
       res += "\n"
       res += "Jumlah dieksekusi <b>#{self.executed}</b>\n"
       res += "Hari pertama <b>#{self.executed_first_day}</b>\n"

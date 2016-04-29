@@ -33,11 +33,13 @@ module Lycantulul
     field :necromancee, type: Array, default: []
     field :homeless_host, type: Array, default: []
 
-    field :super_necromancer_done, type: Boolean, default: false
-    field :amnesty_done, type: Boolean, default: false
+    field :super_necromancer_done, type: Hash, default: {}
+    field :amnesty_done, type: Hash, default: {}
 
     field :pending_custom_id, type: Integer, default: nil
     field :pending_custom_role, type: Integer, default: nil
+
+    field :temp_stats, type: Hash, default: {}
 
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
@@ -51,6 +53,10 @@ module Lycantulul
 
     def self.active_for_group(group)
       self.find_by(group_id: group.id, finished: false)
+    end
+
+    def self.running
+      self.where(finished: false, waiting: false)
     end
 
     def get_player(user_id)
@@ -71,6 +77,20 @@ module Lycantulul
 
     def discussion_time
       self.group.discussion_time || Lycantulul::InputProcessorJob::DISCUSSION_TIME.call
+    end
+
+    def public_vote?
+      self.group.public_vote?
+    end
+
+    def voting_scheme
+      self.public_vote? ? 'publik' : 'rahasia'
+    end
+
+    def toggle_voting_scheme
+      self.group.with_lock(wait: true) do
+        self.group.update_attribute(:public_vote, !self.group.public_vote?)
+      end
     end
 
     def end_discussion
@@ -99,6 +119,21 @@ module Lycantulul
     def remove_player(user)
       return false unless self.players.with_id(user.id)
       return self.players.with_id(user.id).destroy
+    end
+
+    def role_setting_keyboard
+      keyboard = []
+      max = IMPORTANT_ROLES.count
+      count = -1
+      while count < max
+        tmp = []
+        3.times do
+          role = IMPORTANT_ROLES[count += 1].upcase rescue nil
+          tmp << self.get_role(self.class.const_get(role)) if role
+        end
+        keyboard << tmp.compact
+      end
+      keyboard.reject{ |x| x.empty? }
     end
 
     def check_custom_role(role_string)
@@ -176,13 +211,22 @@ module Lycantulul
     def restart
       self.with_lock(wait: true) do
         self.players.map(&:reset_state)
+        self.round = 0
         self.night = true
         self.waiting = true
+        self.discussion = false
         self.finished = false
         self.victim = []
         self.votee = []
         self.seen = []
         self.protectee = []
+        self.necromancee = []
+        self.homeless_host = []
+        self.super_necromancer_done = {}
+        self.amnesty_done = {}
+        self.pending_custom_id = nil
+        self.pending_custom_role = nil
+        self.temp_stats = {}
         self.save
       end
     end
@@ -345,6 +389,12 @@ module Lycantulul
               self.group.inc_werewolf_victory
             end
           end
+          self.temp_stats.each do |id, arr|
+            player = self.get_player(id)
+            arr.each do |stat|
+              player.send("inc_#{stat}")
+            end
+          end
         end
       end
     end
@@ -368,8 +418,10 @@ module Lycantulul
           if victim.role != HOMELESS
             if !under_protection?(victim.full_name)
               victim.kill
-              self.get_player(victim.user_id).inc_mauled
-              self.get_player(victim.user_id).inc_mauled_first_day if self.round == 1
+              self.temp_stats[victim.user_id] ||= []
+              self.temp_stats[victim.user_id] << 'mauled'
+              self.temp_stats[victim.user_id] << 'mauled_first_day' if self.round == 1
+              self.save
               LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
               dead_werewolf =
                 if victim.role == SILVER_BULLET
@@ -386,19 +438,25 @@ module Lycantulul
                 if vh || wh
                   dh = self.players.with_id(hh[:homeless_id])
                   dh.kill
-                  self.get_player(dh.user_id).inc_homeless_mauled if vh
-                  self.get_player(dh.user_id).inc_homeless_werewolf if wh
+                  self.temp_stats[dh.user_id] ||= []
+                  self.temp_stats[dh.user_id] << 'homeless_mauled' if vh
+                  self.temp_stats[dh.user_id] << 'homeless_werewolf' if wh
+                  self.save
                   dead_homeless << dh
                 end
               end
 
               return [victim.user_id, victim.full_name, self.get_role(victim.role), dead_werewolf, dead_homeless]
             else
-              self.get_player(victim.user_id).inc_mauled_under_protection
+              self.temp_stats[victim.user_id] ||= []
+              self.temp_stats[victim.user_id] << 'mauled_under_protection'
+              self.save
               return nil
             end
           else
-            self.get_player(victim.user_id).inc_homeless_safe
+            self.temp_stats[victim.user_id] ||= []
+            self.temp_stats[victim.user_id] << 'homeless_safe'
+            self.save
             return nil
           end
         end
@@ -416,14 +474,16 @@ module Lycantulul
 
         if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
           votee = self.living_players.with_name(vc[0][0])
-          if votee.role == AMNESTY && !self.amnesty_done
-            self.update_attribute(:amnesty_done, true)
-            self.get_player(votee.user_id).inc_executed_under_protection
+          self.temp_stats[votee.user_id] ||= []
+          if votee.role == AMNESTY && !self.amnesty_done[votee.user_id.to_s]
+            self.update_attribute(:amnesty_done, self.amnesty_done.merge(votee.user_id.to_s => true))
+            self.temp_stats[votee.user_id] << 'executed_under_protection'
           else
             votee.kill
-            self.get_player(votee.user_id).inc_executed
-            self.get_player(votee.user_id).inc_executed_first_day if self.round == 1
+            self.temp_stats[votee.user_id] << 'executed'
+            self.temp_stats[votee.user_id] << 'executed_first_day' if self.round == 1
           end
+          self.save
           LycantululBot.log("#{votee.full_name} is executed (from GAME)")
           return votee
         end
@@ -462,7 +522,7 @@ module Lycantulul
         res = []
         ss && ss.each do |vc|
           protectee = self.living_players.with_name(vc[:full_name])
-          if protectee.role == WEREWOLF && rand.round + rand.round < 3 # 100%
+          if protectee && protectee.role == WEREWOLF && rand.round + rand.round < 3 # 100%
             ded = self.living_players.with_id(vc[:protector_id])
             ded.kill
             LycantululBot.log("#{ded.full_name} is killed because they protected werewolf (from GAME)")
@@ -484,13 +544,15 @@ module Lycantulul
         ss && ss.each do |vc|
           next if vc[:full_name] == NECROMANCER_SKIP
           necromancee = self.dead_players.with_name(vc[:full_name])
-          necromancer = self.living_necromancers.with_id(vc[:necromancer_id]) || (!self.super_necromancer_done && self.living_super_necromancers.with_id(vc[:necromancer_id]))
+          necromancer = self.living_necromancers.with_id(vc[:necromancer_id]) || (!self.super_necromancer_done[vc[:necromancer_id].to_s] && self.living_super_necromancers.with_id(vc[:necromancer_id]))
           if necromancee && necromancer
             LycantululBot.log("#{necromancee.full_name} is raised from the dead by #{necromancer.full_name} (from GAME)")
             necromancee.revive
-            self.get_player(necromancee.user_id).inc_revived
+            self.temp_stats[necromancee.user_id] ||= []
+            self.temp_stats[necromancee.user_id] << 'revived'
+            self.save
             if necromancer.role == SUPER_NECROMANCER
-              self.update_attribute(:super_necromancer_done, true)
+              self.update_attribute(:super_necromancer_done, self.super_necromancer_done.merge(necromancer.user_id.to_s => true))
             else
               necromancer.kill
             end
@@ -512,7 +574,10 @@ module Lycantulul
           self.homeless_host.count == self.living_homelesses.count
 
         necromancer_count = self.living_necromancers.count
-        necromancer_count += self.living_super_necromancers.count unless self.super_necromancer_done
+        necromancer_count +=
+          self.living_super_necromancers.count do |sn|
+            !self.super_necromancer_done[sn.user_id.to_s]
+          end
         res &&  self.necromancee.count == necromancer_count
       end
     end
@@ -523,7 +588,7 @@ module Lycantulul
 
     def valid_action?(actor_id, actee_name, role)
       self.with_lock(wait: true) do
-        return false if role == 'super_necromancer' && self.super_necromancer_done
+        return false if role == 'super_necromancer' && self.super_necromancer_done[actor_id.to_s]
 
         actor = self.send("living_#{role.pluralize}").with_id(actor_id)
 
@@ -567,7 +632,7 @@ module Lycantulul
         res += "\n\n#{self.role_composition}" unless self.role_composition.empty?
         res += "\n\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
         res += "\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran"
-        res += "\n\n#{self.list_time_settings}"
+        res += "\n\n#{self.list_settings}"
       end
 
       res
@@ -590,11 +655,14 @@ module Lycantulul
       res
     end
 
-    def list_time_settings
-      res = "Waktu action malam: #{self.night_time} detik\n"
-      res += "Waktu diskusi: #{self.discussion_time} detik\n"
-      res += "Waktu voting: #{self.voting_time} detik\n"
-      res += 'Ubah pake /ganti_waktu_voting, /ganti_waktu_diskusi, atau /ganti_waktu_malam'
+    def list_settings
+      res = "Waktu action malam: <b>#{self.night_time}</b> detik\n"
+      res += "Waktu diskusi: <b>#{self.discussion_time}</b> detik\n"
+      res += "Waktu voting: <b>#{self.voting_time}</b> detik\n"
+      res += "Ubah pake /ganti_settingan_waktu\n"
+      res += "\n"
+      res += "Sistem voting: <b>#{self.voting_scheme}</b>\n"
+      res += "Ubah pake /ganti_settingan_voting"
     end
 
     def get_role(role)
@@ -655,7 +723,7 @@ module Lycantulul
       when AMNESTY
         'Diam menunggu kematian. Tapi, kalo lu dieksekusi oleh warga, lu bakal selamat (tapi cuma bisa sekali itu aja). Tiati aja sih malam berikutnya dibunuh serigala'
       when HOMELESS
-        'Nebeng ke rumah orang lain tiap malem, jadi lu selalu aman dari serangan TTS. Tapi kalo orang yang lu tebengi dibunuh TTS atau malah TTS itu sendiri, lu ikutan mati.'
+        'Nebeng ke rumah orang lain tiap malem, jadi lu selalu aman dari serangan TTS. Tapi kalo orang yang lu tebengi dibunuh TTS atau malah TTS itu sendiri, lu ikutan mati. Tapi lu jago ngumpet juga sih, kalo TTS ngincer lu dan lu nebeng di TTS lu tetep aman.'
       end
     end
 

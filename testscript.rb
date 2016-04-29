@@ -387,6 +387,8 @@ a1.pm('/statistik')
 # a6.pm('9')
 # print_game
 
+puts Lycantulul::RegisteredPlayer.all.map(&:inspect)
+
 event('reset db')
 Lycantulul::Game.all.map(&:destroy)
 Lycantulul::Player.all.map(&:destroy)

@@ -3,6 +3,7 @@
 inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 
 [play me in public group!](https://telegram.me/lycantulul)
+
 [or add the bot to your group!](https://telegram.me/lycantulul_bot)
 
 ### Daftar Perintah
@@ -15,18 +16,28 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/ganti_settingan_peran` - Ngubah jumlah salah satu dari peran
 - `/batal_nyetting_peran` - Batalin settingan peran yang lagi di-setting sekarang
 - `/apus_settingan_peran` - Apus semua settingan peran yang udah dibikin
+- `/ganti_settingan_voting` - Ngubah voting publik atau rahasia
 - `/mulai_main` - Mulai main
 - `/siapa_aja` - Liat siapa aja yang lagi main
 - `/hasil_voting` - Liat hasil voting sementara
 - `/panggil_semua` - Panggil semua pemain
 - `/panggil_yang_idup` - cukup jelas
 - `/panggil_yang_belom_voting` - cukup jelas
-- `/ganti_waktu_malam` - atur batas waktu malam buat action
-- `/ganti_waktu_voting` - atur batas waktu voting
-- `/ganti_waktu_diskusi` - atur batas waktu diskusi
+- `/ganti_settingan_waktu` - Ngubah waktu (malam, diskusi, voting)
+- `/batal_nyetting_waktu` - Batalin settingan waktu yang lagi di-setting sekarang
 - `/statistik_grup` - Liat statistik grup
 - `/statistik` - Liat statistik diri sendiri
 - `/ilangin_keyboard` - Reply keyboard muncul terus? Cobain nih
+
+### Kustomisasi
+
+Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pengaturan permainan sebagai berikut:
+- **/ganti\_settingan\_peran** - Digunakan untuk mengganti jumlah peran dalam permainan. _Tidak disarankan karena dapat merusak keseimbangan permainan yang telah dirancang_. Cukup berguna saat ingin mencoba memainkan suatu peran tertentu.
+- **/ganti\_settingan\_voting** - Digunakan untuk mengganti sistem voting dari rahasia menjadi publik (dan sebaliknya). Pada sistem rahasia, bot hanya memberitahu seseorang telah melakukan voting dan siapa yang di-vote. Pada sistem publik, bot memberitahu nama seseorang yang telah voting tersebut. _Tidak disarankan karena dapat memberitahu beberapa peran tertentu (seperti Pak Ogah/Pak Raden)_.
+- **/ganti\_settingan\_waktu** - Digunakan untuk mengganti waktu permainan. Masing-masing pengaturan waktu memiliki batas minimal 10 detik. Ada tiga waktu permainan yang dapat diganti:
+   - waktu malam hari
+   - waktu diskusi
+   - waktu voting
 
 ### Peran
 
@@ -45,7 +56,8 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
    - Dibunuh dan ikut voting eksekusi.
    - Tidak akan mati saat dieksekusi pertama kali.
 1. Dukun
-   - Diberitahu peran salah satu pemain yang masih hidup (seperti tukang ngintip, tapi ga bisa milih).
+   - Setiap malam diberitahu peran salah satu pemain yang masih hidup (seperti Tukang Ngintip, tapi ga bisa milih).
+   - Keunggulannya dibanding Tukang Ngintip, diberitahu perannya saat malam hari, jadi ada jaminan akan tahu peran seseorang setiap malam.
    - Karena random, tidak ada jaminan pemain yang sudah diberitahu tidak diberitahu lagi.
 1. Tamaki Shinichi
    - Setiap malam akan diberitahu siapa yang akan dibunuh oleh para TTS.
@@ -68,12 +80,12 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 1. Gelandangan
    - Menumpang di rumah warga lain jadi imun terhadap serangan langsung TTS.
    - Apabila menumpang di rumah TTS atau warga yang dibunuh TTS, maka mati.
+   - Apabila menumpang di rumah TTS dan akan dibunuh TTS, tidak mati.
 
 ##### Penjahat
 1. TTS (Tulul-Tulul Serigala)
    - Membunuh semua yang bukan TTS.
    - Jika ada lebih dari 1 TTS, maka proses membunuh adalah voting antara para TTS. Jika tidak ada suara yang mayoritas, tidak ada yang mati.
-   - Jika membunuh seseorang yang dilindungi Penjual Jimat, korban tidak akan mati.
    - Jika membunuh Pengidap Ebola, salah satu serigala yang masih hidup akan ikut mati (dipilih secara acak).
 
 #### Jumlah dan Pola Kemunculan Peran
