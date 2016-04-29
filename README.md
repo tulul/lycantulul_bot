@@ -101,12 +101,12 @@ Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pen
 1. Tukang Ngintip: muncul saat jumlah pemain 6 orang, bertambah setiap 12 pemain (6 pemain: 1 Tukang Ngintip, 18 pemain: 2 Tukang Ngintip, dst.).
 1. Penjual Jimat: muncul saat jumlah pemain 8 orang, bertambah setiap 14 pemain (8 pemain: 1 Penjual Jimat, 22 pemain: 2 Penjual Jimat, dst.).
 1. Pengidap Ebola: muncul saat jumlah pemain 14 orang, bertambah setiap 10 pemain (14 pemain: 1 Pengidap Ebola, 24 pemain: 2 Pengidap Ebola, dst.).
-1. Tamaki Shinichi: muncul saat jumlah pemain 16 orang
 1. Pak Ogah: muncul saat jumlah pemain 9 orang
 1. Pak Raden: muncul saat jumlah pemain 11 orang
 1. Mujahid: muncul saat jumlah pemain 12 orang
 1. Dukun: muncul saat jumlah pemain 14 orang
 1. Anak Presiden: muncul saat jumlah pemain 15 orang
+1. Tamaki Shinichi: muncul saat jumlah pemain 16 orang
 1. Gelandangan: muncul saat jumlah pemain 16 orang
 1. Super Mujahid: muncul saat jumlah pemain 18 orang
 1. Pinter-Pinter Serigala: muncul saat jumlah pemain 18 orang
