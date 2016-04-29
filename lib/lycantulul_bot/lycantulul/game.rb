@@ -807,7 +807,7 @@ module Lycantulul
     end
 
     def killables
-      self.living_players.without_role(WEREWOLF).without_role(SUPER_WEREWOLF)
+      self.living_players.without_role([WEREWOLF, SUPER_WEREWOLF])
     end
 
     def pending_voters

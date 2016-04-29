@@ -31,7 +31,7 @@ module Lycantulul
     end
 
     def self.without_role(role)
-      self.where(:role.ne => role)
+      self.where(:role.nin => role)
     end
 
     def self.alive
