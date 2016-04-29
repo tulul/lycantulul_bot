@@ -53,6 +53,10 @@ module Lycantulul
               name = new_member.username ? "@#{new_member.username}" : new_member.first_name
               send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /start yaa~", reply: true)
             end
+          elsif left_member = message.left_chat_member
+            if game = check_game(message)
+              game.players.with_id(left_member.id).destroy rescue nil
+            end
           end
 
           case message.text
