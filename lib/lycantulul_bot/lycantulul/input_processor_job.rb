@@ -507,13 +507,14 @@ module Lycantulul
       sleep(1)
       retry
     rescue StandardError => e
-      puts Time.now.utc
-      puts e.message
-      puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
+      err = e.message + "\n"
+      err += e.backtrace.select{ |err| err =~ /tulul/ }.join(', ') + "\n"
+      err += Time.now.utc.to_s
+      puts err
       $redis.set('lycantulul::maintenance_prevent', 1)
       $redis.set('lycantulul::maintenance', 1)
       rg = Lycantulul::Game.running
-      send_to_player(Lycantulul::RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, "EXCEPTION! CHECK SERVER! #{rg.count} GAMES STOPPED")
+      send_to_player(Lycantulul::RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, "EXCEPTION! CHECK SERVER! #{rg.count} GAMES STOPPED\n\n#{err}")
       rg.each{ |rg| rg.finish(stats: false) }
       retry
     end

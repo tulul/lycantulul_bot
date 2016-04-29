@@ -21,6 +21,6 @@ class LycantululBot
   end
 
   def self.log(message)
-    #puts "#{Time.now.utc} -- #{message}"
+    puts "#{Time.now.utc} -- #{message}"
   end
 end
