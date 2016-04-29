@@ -91,7 +91,7 @@ Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pen
    - TTS yang punya suara 2 saat voting antar serigala siapa yang mau dibunuh.
    - Tidak akan dipilih ikut mati saat membunuh Pengidap Ebola.
    - Tidak akan didengar oleh Tamaki Shinichi saat ingin membunuh seseorang.
-   - Akan terlihat sebagai Warga Kampung oleh Tukang Ngintip dan Dukun.
+   - Akan terlihat sebagai warga (salah satu peran yang masih hidup) oleh Tukang Ngintip dan Dukun.
    - Peluang Penjual Jimat mati saat menjual jimat ke PPS menjadi 75%.
 
 #### Jumlah dan Pola Kemunculan Peran
