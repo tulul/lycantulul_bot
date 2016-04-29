@@ -503,8 +503,9 @@ module Lycantulul
       puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
       $redis.set('lycantulul::maintenance_prevent', 1)
       $redis.set('lycantulul::maintenance', 1)
-      Lycantulul::Game.running.each{ |rg| rg.finish(stats: false) }
-      send_to_player(Lycantulul::RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, "EXCEPTION! CHECK SERVER")
+      rg = Lycantulul::Game.running
+      send_to_player(Lycantulul::RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, "EXCEPTION! CHECK SERVER! #{rg.count} GAMES STOPPED")
+      rg.each{ |rg| rg.finish(stats: false) }
       retry
     end
 
