@@ -5,6 +5,12 @@ $redis.set('lycantulul::maintenance_prevent', rp ^ 1)
 
 res = $redis.get('lycantulul::maintenance').to_i rescue 0
 
+Telegram::Bot::Client.run($token) do |bot|
+  Lycantulul::Game.running.each do |game|
+    bot.api.send_message(chat_id: game.group_id, text: 'Abis ini mau main tenis bentar yak, nungguin pada selese main dulu. Bentar doang kok.') rescue nil
+  end
+end
+
 while res == 0 && (count = Lycantulul::Game.running.count) > 0
   puts "Still #{count} game(s) running, sleeping for 30 seconds"
   sleep(30)
