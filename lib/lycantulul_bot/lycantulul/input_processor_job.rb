@@ -469,18 +469,18 @@ module Lycantulul
               elsif (group = Lycantulul::Group.get(message.chat.id)) && (group.pending_time_id == message.reply_to_message.message_id rescue false)
                 if message.text =~ /^\d+$/ && group.pending_time
                   time = message.text.to_i
-                  if time >= 10
+                  if time >= 10 && time <= 300
                     res = group.set_custom_time(time)
                     keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
                     send(message, "Sip, waktu #{res[0]} jadi #{res[1]} detik!", reply: true, keyboard: keyboard)
                   else
                     group.cancel_pending_time
                     keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
-                    send(message, "Sejak kapan #{time.to_i} >= 10? Ulang /ganti_settingan_waktu lagi", reply: true, keyboard: keyboard)
+                    send(message, "Sejak kapan 10 <= #{time.to_i} <= 300? Ulang /ganti_settingan_waktu lagi", reply: true, keyboard: keyboard)
                   end
                 elsif group.check_time_setting(message.text)
                   force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
-                  pending = send(message, "Mau berapa detik? (minimal 10 detik)", reply: true, keyboard: force)
+                  pending = send(message, "Mau berapa detik? (10-300 detik)", reply: true, keyboard: force)
                   group.pending_reply(pending['result']['message_id']) rescue nil
                 else
                   send(message, 'WUT?', reply: true)
