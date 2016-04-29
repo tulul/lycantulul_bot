@@ -39,6 +39,8 @@ module Lycantulul
     field :pending_custom_id, type: Integer, default: nil
     field :pending_custom_role, type: Integer, default: nil
 
+    field :temp_stats, type: Hash, default: {}
+
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
 
@@ -209,13 +211,22 @@ module Lycantulul
     def restart
       self.with_lock(wait: true) do
         self.players.map(&:reset_state)
+        self.round = 0
         self.night = true
         self.waiting = true
+        self.discussion = false
         self.finished = false
         self.victim = []
         self.votee = []
         self.seen = []
         self.protectee = []
+        self.necromancee = []
+        self.homeless_host = []
+        self.super_necromancer_done = {}
+        self.amnesty_done = {}
+        self.pending_custom_id = nil
+        self.pending_custom_role = nil
+        self.temp_stats = {}
         self.save
       end
     end
@@ -378,6 +389,12 @@ module Lycantulul
               self.group.inc_werewolf_victory
             end
           end
+          self.temp_stats.each do |id, arr|
+            player = self.get_player(id)
+            arr.each do |stat|
+              player.send("inc_#{stat}")
+            end
+          end
         end
       end
     end
@@ -401,8 +418,10 @@ module Lycantulul
           if victim.role != HOMELESS
             if !under_protection?(victim.full_name)
               victim.kill
-              self.get_player(victim.user_id).inc_mauled
-              self.get_player(victim.user_id).inc_mauled_first_day if self.round == 1
+              self.temp_stats[victim.user_id] ||= []
+              self.temp_stats[victim.user_id] << 'mauled'
+              self.temp_stats[victim.user_id] << 'mauled_first_day' if self.round == 1
+              self.save
               LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
               dead_werewolf =
                 if victim.role == SILVER_BULLET
@@ -419,19 +438,25 @@ module Lycantulul
                 if vh || wh
                   dh = self.players.with_id(hh[:homeless_id])
                   dh.kill
-                  self.get_player(dh.user_id).inc_homeless_mauled if vh
-                  self.get_player(dh.user_id).inc_homeless_werewolf if wh
+                  self.temp_stats[dh.user_id] ||= []
+                  self.temp_stats[dh.user_id] << 'homeless_mauled' if vh
+                  self.temp_stats[dh.user_id] << 'homeless_werewolf' if wh
+                  self.save
                   dead_homeless << dh
                 end
               end
 
               return [victim.user_id, victim.full_name, self.get_role(victim.role), dead_werewolf, dead_homeless]
             else
-              self.get_player(victim.user_id).inc_mauled_under_protection
+              self.temp_stats[victim.user_id] ||= []
+              self.temp_stats[victim.user_id] << 'mauled_under_protection'
+              self.save
               return nil
             end
           else
-            self.get_player(victim.user_id).inc_homeless_safe
+            self.temp_stats[victim.user_id] ||= []
+            self.temp_stats[victim.user_id] << 'homeless_safe'
+            self.save
             return nil
           end
         end
@@ -449,14 +474,16 @@ module Lycantulul
 
         if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
           votee = self.living_players.with_name(vc[0][0])
+          self.temp_stats[votee.user_id] ||= []
           if votee.role == AMNESTY && !self.amnesty_done[votee.user_id.to_s]
             self.update_attribute(:amnesty_done, self.amnesty_done.merge(votee.user_id.to_s => true))
-            self.get_player(votee.user_id).inc_executed_under_protection
+            self.temp_stats[votee.user_id] << 'executed_under_protection'
           else
             votee.kill
-            self.get_player(votee.user_id).inc_executed
-            self.get_player(votee.user_id).inc_executed_first_day if self.round == 1
+            self.temp_stats[votee.user_id] << 'executed'
+            self.temp_stats[votee.user_id] << 'executed_first_day' if self.round == 1
           end
+          self.save
           LycantululBot.log("#{votee.full_name} is executed (from GAME)")
           return votee
         end
@@ -521,7 +548,9 @@ module Lycantulul
           if necromancee && necromancer
             LycantululBot.log("#{necromancee.full_name} is raised from the dead by #{necromancer.full_name} (from GAME)")
             necromancee.revive
-            self.get_player(necromancee.user_id).inc_revived
+            self.temp_stats[necromancee.user_id] ||= []
+            self.temp_stats[necromancee.user_id] << 'revived'
+            self.save
             if necromancer.role == SUPER_NECROMANCER
               self.update_attribute(:super_necromancer_done, self.super_necromancer_done.merge(necromancer.user_id.to_s => true))
             else
