@@ -63,13 +63,13 @@ Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pen
    - Setiap malam akan diberitahu siapa yang akan dibunuh oleh para TTS.
 1. Pengidap Ebola
    - Sama seperti Warga Kampung.
-   - Jika dibunuh TTS, maka salah satu dari TTS akan ikut mati (dipilih secara acak).
+   - Jika dibunuh serigala, maka salah satu dari TTS akan ikut mati (dipilih secara acak).
 
 ##### Warga sakti (aktif)
 1. Tukang Ngintip
    - Mengintip peran pemain lain.
 1. Penjual Jimat
-   - Melindungi salah satu pemain dari dibunuh TTS.
+   - Melindungi salah satu pemain dari dibunuh serigala.
    - Jika yang dilindungi adalah TTS, ada 25% kemungkinan si Penjual Jimat akan mati.
 1. Mujahid
    - Menghidupkan salah satu pemain yang sudah mati.
@@ -78,15 +78,21 @@ Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pen
    - Menghidupkan salah satu pemain yang sudah mati.
    - Setelah menghidupkan, si Super Mujahid masih tetap hidup (dan tidak diberitahu ke publik).
 1. Gelandangan
-   - Menumpang di rumah warga lain jadi imun terhadap serangan langsung TTS.
-   - Apabila menumpang di rumah TTS atau warga yang dibunuh TTS, maka mati.
-   - Apabila menumpang di rumah TTS dan akan dibunuh TTS, tidak mati.
+   - Menumpang di rumah warga lain jadi imun terhadap serangan langsung serigala.
+   - Apabila menumpang di rumah serigala dan akan dibunuh serigala, tidak mati.
+   - Apabila menumpang di rumah serigala (tapi tidak diincar serigala) atau warga yang dibunuh serigala, maka mati.
 
 ##### Penjahat
 1. TTS (Tulul-Tulul Serigala)
-   - Membunuh semua yang bukan TTS.
-   - Jika ada lebih dari 1 TTS, maka proses membunuh adalah voting antara para TTS. Jika tidak ada suara yang mayoritas, tidak ada yang mati.
-   - Jika membunuh Pengidap Ebola, salah satu serigala yang masih hidup akan ikut mati (dipilih secara acak).
+   - Membunuh semua yang bukan serigala.
+   - Jika ada lebih dari 1 serigala, maka proses membunuh adalah voting antara para serigala. Jika tidak ada suara yang mayoritas, tidak ada yang mati.
+   - Jika membunuh Pengidap Ebola, salah satu TTS yang masih hidup akan ikut mati (dipilih secara acak).
+1. PPS (Pinter-Pinter Serigala)
+   - TTS yang punya suara 2 saat voting siapa yang mau dibunuh.
+   - Tidak akan dipilih ikut mati saat membunuh Pengidap Ebola.
+   - Tidak akan didengar oleh Tamaki Shinichi saat ingin membunuh seseorang.
+   - Akan terlihat sebagai Warga Kampung oleh Tukang Ngintip dan Dukun.
+   - Peluang Penjual Jimat mati saat menjual jimat ke PPS menjadi 75%.
 
 #### Jumlah dan Pola Kemunculan Peran
 
@@ -103,29 +109,10 @@ Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pen
 1. Anak Presiden: muncul saat jumlah pemain 15 orang
 1. Gelandangan: muncul saat jumlah pemain 16 orang
 1. Super Mujahid: muncul saat jumlah pemain 18 orang
-
-Rujukan daftar peran sampai 20 pemain:
-- 5: 1 TTS
-- 6: 1 TTS, 1 Tukang Ngintip
-- 7: 1 TTS, 1 Tukang Ngintip
-- 8: 1 TTS, 1 Tukang Ngintip, 1 Penjual Jimat
-- 9: 1 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah
-- 10: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah 
-- 11: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden
-- 12: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid
-- 13: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid
-- 14: 2 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun
-- 15: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden
-- 16: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Gelandangan
-- 17: 3 TTS, 1 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Gelandangan
-- 18: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Gelandangan, 1 Super Mujahid
-- 19: 3 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Gelandangan, 1 Super Mujahid
-- 20: 4 TTS, 2 Tukang Ngintip, 1 Penjual Jimat, 1 Pak Ogah, 1 Pak Raden, 1 Mujahid, 1 Pengidap Ebola, 1 Dukun, 1 Anak Presiden, 1 Tamaki Shinichi, 1 Gelandangan, 1 Super Mujahid
-
-Jika tidak puas dengan komposisi di atas, silakan diatur sendiri menggunakan perintah `/ganti_settingan_peran`
+1. Pinter-Pinter Serigala: muncul saat jumlah pemain 18 orang
 
 ### Akhir Permainan
 
 Permainan berakhir saat:
-- Tidak ada lagi yang bisa dibunuh oleh TTS (jumlah TTS yang hidup lebih banyak atau sama dengan jumlah pemain non-TTS yang hidup). Kemenangan bagi TTS.
-- Semua TTS sudah mati dieksekusi. Kemenangan bagi warga.
+- Tidak ada lagi yang bisa dibunuh oleh serigala (jumlah serigala yang hidup lebih banyak atau sama dengan jumlah pemain non-serigala yang hidup). Kemenangan bagi serigala.
+- Semua serigala sudah mati dieksekusi. Kemenangan bagi warga.

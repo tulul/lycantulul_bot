@@ -3,7 +3,7 @@ module Lycantulul
     include Mongoid::Document
     include Mongoid::Locker
 
-    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet', 'greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty', 'homeless']
+    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet', 'greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty', 'homeless', 'super_werewolf']
     DEFAULT_ROLES = ['villager']
     ROLES = DEFAULT_ROLES + IMPORTANT_ROLES
 
@@ -124,11 +124,12 @@ module Lycantulul
     def role_setting_keyboard
       keyboard = []
       max = IMPORTANT_ROLES.count
+      sorted_roles = IMPORTANT_ROLES.sort_by{ |role| self.get_role(self.class.const_get(role.upcase)) }
       count = -1
       while count < max
         tmp = []
         3.times do
-          role = IMPORTANT_ROLES[count += 1].upcase rescue nil
+          role = sorted_roles[count += 1].upcase rescue nil
           tmp << self.get_role(self.class.const_get(role)) if role
         end
         keyboard << tmp.compact
@@ -192,19 +193,7 @@ module Lycantulul
     end
 
     def role_valid?
-      !self.custom_roles || IMPORTANT_ROLES.inject(0){ |sum, role| sum + self.role_count(self.class.const_get(role.upcase)) } <= self.players.count
-    end
-
-    def set_voting_time(time)
-      self.group.with_lock(wait: true) do
-        self.group.update_attribute(:voting_time, time)
-      end
-    end
-
-    def set_night_time(time)
-      self.group.with_lock(wait: true) do
-        self.group.update_attribute(:night_time, time)
-      end
+      !self.custom_roles || ((IMPORTANT_ROLES.inject(0){ |sum, role| sum + self.role_count(self.class.const_get(role.upcase)) } <= self.players.count) && (self.living_werewolves.count + self.living_super_werewolves.count < self.killables.count))
     end
 
     # never call unless really needed (will ruin statistics)
@@ -234,15 +223,21 @@ module Lycantulul
     def add_victim(killer_id, victim)
       self.with_lock(wait: true) do
         return RESPONSE_DOUBLE if self.victim.any?{ |vi| vi[:killer_id] == killer_id }
-        return RESPONSE_INVALID unless valid_action?(killer_id, victim, 'werewolf')
+        return RESPONSE_INVALID unless valid_action?(killer_id, victim, 'werewolf') || valid_action?(killer_id, victim, 'super_werewolf')
 
+        werewolf = self.living_players.with_id(killer_id)
         victim = self.killables.with_name(victim).full_name
 
-        new_victim = {
-          killer_id: killer_id,
-          full_name: victim
-        }
-        self.victim << new_victim
+        victim_count = werewolf.role == SUPER_WEREWOLF ? 2 : 1
+
+        victim_count.times do
+          new_victim = {
+            killer_id: killer_id,
+            full_name: victim
+          }
+          self.victim << new_victim
+        end
+
         self.save
         RESPONSE_OK
       end
@@ -346,6 +341,7 @@ module Lycantulul
         self.waiting = false
         self.voting_time ||= Lycantulul::InputProcessorJob::VOTING_TIME.call
         self.night_time ||= Lycantulul::InputProcessorJob::NIGHT_TIME.call
+        self.discussion_time ||= Lycantulul::InputProcessorJob::DISCUSSION_TIME.call
         ROLES.each do |role|
           assign(self.class.const_get(role.upcase))
         end
@@ -383,7 +379,7 @@ module Lycantulul
           end
           self.group.with_lock(wait: true) do
             self.group.inc_game
-            if self.living_werewolves.count == 0
+            if self.living_werewolves.count + self.living_super_werewolves.count == 0
               self.group.inc_village_victory
             else
               self.group.inc_werewolf_victory
@@ -434,7 +430,7 @@ module Lycantulul
               dead_homeless = []
               hhost.each do |hh|
                 vh = hh[:full_name] == victim.full_name
-                wh = self.living_werewolves.with_name(hh[:full_name])
+                wh = self.living_werewolves.with_name(hh[:full_name]) || self.living_super_werewolves.with_name(hh[:full_name])
                 if vh || wh
                   dh = self.players.with_id(hh[:homeless_id])
                   dh.kill
@@ -503,7 +499,8 @@ module Lycantulul
           seen = self.living_players.with_name(vc[:full_name])
           if seen && self.living_seers.with_id(vc[:seer_id])
             LycantululBot.log("#{seen.full_name} is seen (from GAME)")
-            res << [seen.full_name, self.get_role(seen.role), vc[:seer_id]]
+            seen_role = seen.role == SUPER_WEREWOLF ? self.get_role(VILLAGER) : self.get_role(seen.role)
+            res << [seen.full_name, seen_role, vc[:seer_id]]
           end
         end
 
@@ -522,7 +519,7 @@ module Lycantulul
         res = []
         ss && ss.each do |vc|
           protectee = self.living_players.with_name(vc[:full_name])
-          if protectee && protectee.role == WEREWOLF && rand.round + rand.round == 0 # 25% ded if protecting werewolf
+          if protectee && ((protectee.role == WEREWOLF && rand.round + rand.round == 0) || (protectee.role == SUPER_WEREWOLF && rand.round + rand.round < 2)) # 25% ded if protecting werewolf, 75% if super werewolf
             ded = self.living_players.with_id(vc[:protector_id])
             ded.kill
             LycantululBot.log("#{ded.full_name} is killed because they protected werewolf (from GAME)")
@@ -568,7 +565,7 @@ module Lycantulul
     def round_finished?
       self.with_lock(wait: true) do
         res =
-          self.victim.count == self.living_werewolves.count &&
+          self.victim.count == self.living_werewolves.count + (self.living_super_werewolves.count * 2) &&
           self.seen.count == self.living_seers.count &&
           self.protectee.count == self.living_protectors.count &&
           self.homeless_host.count == self.living_homelesses.count
@@ -593,7 +590,7 @@ module Lycantulul
         actor = self.send("living_#{role.pluralize}").with_id(actor_id)
 
         actee =
-          if role == 'werewolf'
+          if role == 'werewolf' || role == 'super_werewolf'
             self.killables.with_name(actee_name)
           elsif role == 'necromancer' || role == 'super_necromancer'
             return true if actee_name == NECROMANCER_SKIP
@@ -611,7 +608,8 @@ module Lycantulul
       ded_count = self.dead_players.count
 
       res = "Masi idup: <b>#{liv_count} makhluk</b>\n"
-      IMPORTANT_ROLES.each do |role|
+      sorted_roles = IMPORTANT_ROLES.sort_by{ |role| self.get_role(self.class.const_get(role.upcase)) }
+      sorted_roles.each do |role|
         count = self.send("living_#{role.pluralize}").count
         count > 0 && res += "<i>#{count} #{self.get_role(self.class.const_get(role.upcase))}</i>\n"
       end
@@ -686,30 +684,32 @@ module Lycantulul
       when NECROMANCER
         'Mujahid'
       when SUPER_NECROMANCER
-        'Super Mujahid'
+        "Super #{self.get_role(NECROMANCER)}"
       when SILVER_BULLET
         'Pengidap Ebola'
       when AMNESTY
         'Anak Presiden'
       when HOMELESS
         'Gelandangan'
+      when SUPER_WEREWOLF
+        'Pinter-Pinter Serigala'
       end
     end
 
     def get_task(role)
       case role
       when VILLAGER
-        'Diam menunggu kematian. Seriously. Tapi bisa bantu-bantu yang lain lah sumbang suara buat bunuh para serigala, sekalian berdoa biar dilindungi sama penjual jimat kalo ada'
+        "Diam menunggu kematian. Seriously. Tapi bisa bantu-bantu yang lain lah sumbang suara buat bunuh para serigala, sekalian berdoa biar dilindungi sama #{self.get_role(PROTECTOR)} kalo ada"
       when GREEDY_VILLAGER
         'Diam menunggu kematian. Tapi saat bertulul dan bermufakat untuk mengeksekusi, bobot suara lu adalah 3'
       when USELESS_VILLAGER
         'Diam menunggu kematian. Seriously kenapa lu harus ada sih? Bahkan saat voting eksekusi suara lu ga dianggep. Cian. Tiaja'
       when WEREWOLF
-        "Tulul-Tulul Serigala -- BUNUH, BUNUH, BUNUH\n\nSetiap malam, bakal ditanya mau bunuh siapa (oiya, kalo misalnya ada serigala yang lain, kalian harus berunding soalnya ntar voting, kalo ga ada suara mayoritas siapa yang mau dibunuh, ga ada yang mati, ntar gua kasih tau kok pas gua tanyain)\n\nHati-hati, bisa jadi ada pengidap ebola di antara para warga kampung, kalo bunuh dia, 1 ekor serigala akan ikut mati"
+        "BUNUH, BUNUH, BUNUH\n\nSetiap malam, bakal ditanya mau bunuh siapa (oiya, kalo misalnya ada serigala yang lain, kalian harus berunding soalnya ntar voting, kalo ga ada suara mayoritas siapa yang mau dibunuh, ga ada yang mati, ntar gua kasih tau kok pas gua tanyain)\n\nHati-hati, bisa jadi ada #{self.get_role(SILVER_BULLET)} di antara para warga kampung, kalo bunuh dia, 1 ekor serigala akan ikut mati"
       when SEER
         'Bantuin kemenangan para rakyat jelata dengan ngintipin ke rumah orang-orang. Pas ngintip ntar bisa tau mereka siapa sebenarnya. Tapi kalo misalnya yang mau diintip (atau elunya sendiri) mati dibunuh serigala, jadi gatau dia siapa sebenarnya :\'( hidup memang keras'
       when FAUX_SEER
-        'Bantuin kemenangan para rakyat jelata, di mana setiap malam lu bakal dikasih tau role salah seorang pemain yang masih hidup secara random (ga jamin sih besoknya dikasih tau orang yang berbeda apa engga hahaha)'
+        'Bantuin kemenangan para rakyat jelata, di mana setiap malam lu bakal dikasih tau peran salah seorang pemain yang masih hidup secara random (ga jamin sih besoknya dikasih tau orang yang berbeda apa engga hahaha)'
       when PROTECTOR
         'Jualin jimat ke orang-orang. Orang yang dapet jimat akan terlindungi dari serangan para serigala. Ntar tiap malem ditanyain mau jual ke siapa (sebenernya ga jualan juga sih, ga dapet duit, maap yak). Hati-hati loh tapi, kalo lu jual jimat ke serigala bisa-bisa lu dibunuh dengan 25% kemungkinan, kecil lah, peluang lu buat dapet pasangan hidup masih lebih gede :)'
       when SPY
@@ -717,13 +717,15 @@ module Lycantulul
       when NECROMANCER
         'Menghidupkan kembali 1 orang mayat. Sebagai gantinya, lu yang bakal mati. Ingat, cuma ada 1 kesempatan! Dan jangan sampe lu malah dibunuh duluan sama serigala. Allaaaaahuakbar!'
       when SUPER_NECROMANCER
-        'Menghidupkan kembali 1 orang mayat. Karena lu mujahid versi super, setelah menghidupkan seseorang, lu akan tetap hidup. Tenang, peran lu ga bakal dikasih tau ke siapa-siapa, hanya lu dan Allah yang tahu. Allaaaaahuakbar!'
+        "Menghidupkan kembali 1 orang mayat. Karena lu #{self.get_role(NECROMANCER)} versi super, setelah menghidupkan seseorang, lu akan tetap hidup, tapi cuma ada 1 kesempatan ngidupin orang. Tenang, peran lu ga bakal dikasih tau ke siapa-siapa, hanya lu dan Allah yang tahu. Allaaaaahuakbar!"
       when SILVER_BULLET
-        'Diam menunggu kematian. Tapi, kalo lu dibunuh serigala, 1 ekor serigalanya ikutan mati. Aduh itu kenapa kena ebola lu ga dikarantina aja sih'
+        'Diam menunggu kematian. Tapi, kalo lu dibunuh serigala, 1 ekor serigalanya ikutan mati. Aduh itu kenapa penyakit lu ga dikarantina aja sih'
       when AMNESTY
         'Diam menunggu kematian. Tapi, kalo lu dieksekusi oleh warga, lu bakal selamat (tapi cuma bisa sekali itu aja). Tiati aja sih malam berikutnya dibunuh serigala'
       when HOMELESS
-        'Nebeng ke rumah orang lain tiap malem, jadi lu selalu aman dari serangan TTS. Tapi kalo orang yang lu tebengi dibunuh TTS atau malah TTS itu sendiri, lu ikutan mati. Tapi lu jago ngumpet juga sih, kalo TTS ngincer lu dan lu nebeng di TTS lu tetep aman.'
+        'Nebeng ke rumah orang lain tiap malem, jadi lu selalu aman dari serangan serigala. Tapi kalo orang yang lu tebengi dibunuh serigala atau malah serigala itu sendiri, lu ikutan mati. Tapi lu jago ngumpet juga sih, kalo serigala ngincer lu dan lu nebeng di serigala lu tetep aman.'
+      when SUPER_WEREWOLF
+        "#{self.get_task(WEREWOLF)}\n\nBedanya lu dengan serigala tulul adalah:\n- Lu ga bakal terjangkit kalo ngebunuh #{self.get_role(SILVER_BULLET)}\n- Siapa yang mau lu bunuh ga bakal ketahuan sama #{self.get_role(SPY)}\n- Kalo ada beberapa serigala, suara lu buat voting ngebunuh siapa diitung 2\n- #{self.get_role(SEER)} dan #{self.get_role(FAUX_SEER)} bakal liat lu sebagai #{self.get_role(VILLAGER)}\n- Kalo dijualin jimat sama #{self.get_role(PROTECTOR)}, dia pasti mati"
       end
     end
 
@@ -761,6 +763,8 @@ module Lycantulul
         count > 9 ? 1 : 0 # [15-..., 1]
       when HOMELESS
         count > 10 ? 1 : 0 # [16-..., 1]
+      when SUPER_WEREWOLF
+        count > 12 ? 1 : 0 # [18-..., 1]
       end
     end
 
@@ -803,7 +807,7 @@ module Lycantulul
     end
 
     def killables
-      self.living_players.without_role(WEREWOLF)
+      self.living_players.without_role(WEREWOLF).without_role(SUPER_WEREWOLF)
     end
 
     def pending_voters

@@ -1,6 +1,9 @@
 load 'Rakefile'
 
 updates = "latest updates:\n"
+updates += "<b>Peran Baru</b>: Pinter-Pinter Serigala. Baca kekuatan dan kapan munculnya di /help\n"
+updates += "- Ga bisa mulai main kalo jumlah serigala >= non-serigala\n"
+updates += "- Perbaiki keyboard /ganti_settingan_peran jadi diurutkan berdasarkan alfabet\n"
 updates += "\n"
 updates += "- <a href='https://github.com/tulul/lycantulul_bot'>Klik sini kalo mau saran/lapor bug/dll (github)</a>\n"
 updates += "- <a href='https://storebot.me/bot/lycantulul_bot'>Klik sini kalo mau ngasih rating/review (storebot)</a>\n"

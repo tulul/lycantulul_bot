@@ -251,7 +251,7 @@ module Lycantulul
                         message_action(game, BROADCAST_ROLE)
                         message_action(game, ROUND_START)
                       else
-                        send(message, 'Pembagian peran yang dikasih kebanyakan jumlahnya, /apus_settingan_peran atau /ganti_settingan_peran!', reply: true)
+                        send(message, 'Pembagian peran yang dikasih kebanyakan jumlahnya/ga seimbang, /apus_settingan_peran atau /ganti_settingan_peran!', reply: true)
                       end
                     else
                       send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", reply: true)
@@ -386,7 +386,7 @@ module Lycantulul
                 log('werewolf confirmed')
                 case game.add_victim(message.from.id, message.text)
                 when Lycantulul::Game::RESPONSE_OK
-                  message_action(game, WEREWOLF_KILL_BROADCAST, [message.from.first_name, message.text])
+                  message_action(game, WEREWOLF_KILL_BROADCAST, [message.from.id, message.text])
                 when Lycantulul::Game::RESPONSE_INVALID
                   send_kill_voting(game, message.chat.id)
                 end
@@ -532,11 +532,11 @@ module Lycantulul
         game.next_round
         log('new round')
 
-        send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count} serigala tulul dan culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu <b>#{game.night_time} detik</b>! Kecuali warga kampung, diam aja menunggu kematian ya", parse_mode: 'HTML')
+        send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count + game.living_super_werewolves.count} serigala culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu <b>#{game.night_time} detik</b>! Kecuali warga kampung, diam aja menunggu kematian ya", parse_mode: 'HTML')
         log('enqueuing night job')
         Lycantulul::NightTimerJob.perform_in(game.night_time, game, game.round, self)
 
-        game.living_werewolves.each do |ww|
+        (game.living_werewolves + game.living_super_werewolves).each do |ww|
           send_kill_voting(game, ww[:user_id])
         end
 
@@ -566,15 +566,15 @@ module Lycantulul
           !game.super_necromancer_done[se[:user_id].to_s] && send_necromancer(dp, se[:user_id])
         end
       when WEREWOLF_KILL_BROADCAST
-        lw = (game.living_werewolves + game.living_spies)
-        killer = aux[0]
+        lw = (game.living_werewolves + game.living_super_werewolves + game.living_spies)
+        killer = game.players.with_id(aux[0])
         victim_name = aux[1]
 
         lw.each do |ww|
-          log("broadcasting killing from #{killer}")
+          log("broadcasting killing from #{killer.full_name}")
           brd = "#{victim_name} pengen dibunuh"
-          ww.role == Lycantulul::Game::WEREWOLF && brd += " oleh #{killer}"
-          send_to_player(ww.user_id, brd)
+          [Lycantulul::Game::WEREWOLF, Lycantulul::Game::SUPER_WEREWOLF].include?(ww.role) && brd += " oleh #{killer.full_name}"
+          send_to_player(ww.user_id, brd) unless ww.role == Lycantulul::Game::SPY && killer.role == Lycantulul::Game::SUPER_WEREWOLF
         end
       when WEREWOLF_KILL_SUCCEEDED
         group_chat_id = game.group_id
@@ -589,14 +589,14 @@ module Lycantulul
         send_to_player(group_chat_id, "GILS GILS GILS\nserigala berhasil memakan si #{victim_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{victim_role}")
 
         if dead_werewolf
-          send_to_player(dead_werewolf.user_id, 'MPOZ. Sial kan bunuh pengidap ebola, lu ikutan terjangkit. Mati deh')
+          send_to_player(dead_werewolf.user_id, "MPOZ. Sial kan bunuh #{game.get_role(Lycantulul::Game::SILVER_BULLET)}, lu ikutan terjangkit. Mati deh")
           send_to_player(group_chat_id, "#{victim_full_name} yang ternyata mengidap ebola ikut menjangkiti seekor serigala #{dead_werewolf.full_name} yang pada akhirnya meninggal dunia. Mari berantas ebola dari muka bumi ini secepatnya!")
         end
 
         unless dead_homeless.empty?
           dead_homeless.each do |dh|
             send_to_player(dh.user_id, 'MPOZ salah kamar woy nebeng yang bener ya besok-besok!')
-            send_to_player(group_chat_id, "#{dh.full_name} si gelandangan salah kamar tadi malem, nebeng di tempat yang salah pffft. Mati deh.")
+            send_to_player(group_chat_id, "#{dh.full_name} si #{game.get_role(dh.role)} salah kamar tadi malem, nebeng di tempat yang salah pffft. Mati deh.")
           end
         end
 
@@ -744,13 +744,13 @@ module Lycantulul
     end
 
     def send_kill_voting(game, chat_id)
-      lw = game.living_werewolves
+      lw = game.living_werewolves + game.living_super_werewolves
       single_w = lw.size == 1
       killables = game.killables.map{ |kl| kl[:full_name] }
 
       kill_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: killables, resize_keyboard: true, one_time_keyboard: true)
 
-      send_to_player(chat_id, "Daftar TTS yang masih hidup: #{lw.map{ |w| w[:full_name] }.join(', ')}\n\np.s.: harus diskusi dulu. Jawaban semua TTS dikumpulin dan yang paling banyak dibunuh. Kalo ga ada suara yang mayoritas, ga ada yang terbunuh yaa") unless single_w
+      send_to_player(chat_id, "Daftar serigala yang masih hidup: #{lw.map{ |w| w[:full_name] }.join(', ')}\n\np.s.: harus diskusi dulu. Jawaban semua serigala dikumpulin dan yang paling banyak dibunuh. Kalo ga ada suara yang mayoritas, ga ada yang terbunuh yaa") unless single_w
       send_to_player(chat_id, 'Mau bunuh siapa?', reply_markup: kill_keyboard)
     end
 
@@ -772,7 +772,9 @@ module Lycantulul
       while chosen.user_id == seer.user_id
         chosen = game.living_players.sample
       end
-      send_to_player(seer.user_id, "Hum bala hum bala hum naga cinta membuka mata acha septriasa: peran #{chosen.full_name} adalah #{game.get_role(chosen.role)}")
+
+      chosen_role = chosen.role == Lycantulul::Game::SUPER_WEREWOLF ? game.get_role(Lycantulul::Game::VILLAGER) : game.get_role(chosen.role)
+      send_to_player(seer.user_id, "Hum bala hum bala hum naga cinta membuka mata acha septriasa: peran #{chosen.full_name} adalah #{chosen_role}")
     end
 
     def send_protector(living_players, protector_full_name, protector_chat_id)
@@ -869,7 +871,7 @@ module Lycantulul
     def check_werewolf_in_game(message)
       log('checking werewolf votes')
       Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
-        if wwg.valid_action?(message.from.id, message.text, 'werewolf')
+        if wwg.valid_action?(message.from.id, message.text, 'werewolf') || wwg.valid_action?(message.from.id, message.text, 'super_werewolf')
           return wwg
         end
       end
@@ -987,13 +989,13 @@ module Lycantulul
       log('checking win condition')
       game.reload
       win = false
-      if game.living_werewolves.count == 0
+      if game.living_werewolves.count + game.living_super_werewolves.count == 0
         log('wereworlves ded')
-        send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh TTS telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
+        send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh serigala telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
         win = true
-      elsif game.living_werewolves.count == game.killables.count || game.killables.count == 0
+      elsif game.living_werewolves.count + game.living_super_werewolves.count == game.killables.count || game.killables.count == 0
         log('villagers ded')
-        send_to_player(game.group_id, 'Dan permainan pun berakhir karena TTS telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
+        send_to_player(game.group_id, 'Dan permainan pun berakhir karena serigala telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
         win = true
       end
 
