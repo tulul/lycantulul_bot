@@ -109,7 +109,7 @@ module Lycantulul
                 if check_player(message)
                   if game.waiting?
                     user = message.from
-                    if game.duplicate_name?(user)
+                    unless game.duplicate_name?(user)
                       if game.add_player(user)
                         additional_text =
                           if game.players.count >= MINIMUM_PLAYER.call
