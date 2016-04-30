@@ -444,8 +444,10 @@ module Lycantulul
               dead_werewolf =
                 if victim.role == SILVER_BULLET
                   ded = self.living_werewolves.sample
-                  ded.kill
-                  LycantululBot.log("#{ded.full_name} is killed because werewolves killed a silver bullet (from GAME)")
+                  if ded
+                    ded.kill
+                    LycantululBot.log("#{ded.full_name} is killed because werewolves killed a silver bullet (from GAME)")
+                  end
                   ded
                 end
 
