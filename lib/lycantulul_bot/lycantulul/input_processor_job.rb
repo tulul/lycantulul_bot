@@ -388,6 +388,9 @@ module Lycantulul
             else
               wrong_room(message)
             end
+          when /^\/stats/
+            return unless message.from.username == 'araishikeiwai'
+            (stat = Lycantulul::Statistics.get_stats(message.text)) && send(message, stat)
           else
             if in_private?(message)
               if game = check_werewolf_in_game(message)
