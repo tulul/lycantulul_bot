@@ -255,7 +255,7 @@ module Lycantulul
                         message_action(game, BROADCAST_ROLE)
                         message_action(game, ROUND_START)
                       else
-                        send(message, 'Pembagian peran yang dikasih kebanyakan jumlahnya/ga seimbang, /apus_settingan_peran atau /ganti_settingan_peran!', reply: true)
+                        send(message, 'Pembagian peran yang dikasih ga valid, /apus_settingan_peran atau /ganti_settingan_peran!', reply: true)
                       end
                     else
                       send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", reply: true)

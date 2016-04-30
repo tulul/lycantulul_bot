@@ -193,8 +193,24 @@ module Lycantulul
     end
 
     def role_valid?
-      ww_count = self.living_werewolves.count + self.living_super_werewolves.count
-      !self.custom_roles || ((IMPORTANT_ROLES.inject(0){ |sum, role| sum + self.role_count(self.class.const_get(role.upcase)) } <= self.players.count) && ww_count > 0 && ww_count < self.killables.count)
+      ww_count_valid =
+        if self.custom_roles && ((ww = self.custom_roles[WEREWOLF]) || (sww = self.custom_roles[SUPER_WEREWOLF]))
+          val = true
+          wwc = ww > 0 rescue true
+          wwc ||= sww > 0 rescue true
+
+          ww ||= 0
+          sww ||= 0
+
+          pc = self.players.count / 2.0
+          wwc &&= ww + sww < pc
+
+          wwc
+        else
+          true
+        end
+
+      !self.custom_roles || ((IMPORTANT_ROLES.inject(0){ |sum, role| sum + self.role_count(self.class.const_get(role.upcase)) } <= self.players.count) && ww_count_valid)
     end
 
     # never call unless really needed (will ruin statistics)
