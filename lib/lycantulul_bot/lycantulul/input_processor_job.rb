@@ -874,68 +874,56 @@ module Lycantulul
     end
 
     def check_werewolf_in_game(message)
-      log('checking werewolf votes')
       Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'werewolf') || wwg.valid_action?(message.from.id, message.text, 'super_werewolf')
           return wwg
         end
       end
-      log('not found')
       nil
     end
 
     def check_voting(message)
-      log('checking voters')
       Lycantulul::Game.where(finished: false, waiting: false, night: false, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'player')
           return wwg
         end
       end
-      log('not found')
       nil
     end
 
     def check_seer(message)
-      log('checking seer')
       Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'seer')
           return wwg
         end
       end
-      log('not found')
       nil
     end
 
     def check_protector(message)
-      log('checking protector')
       Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'protector')
           return wwg
         end
       end
-      log('not found')
       nil
     end
 
     def check_necromancer(message)
-      log('checking necromancer')
       Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'necromancer') || wwg.valid_action?(message.from.id, message.text, 'super_necromancer')
           return wwg
         end
       end
-      log('not found')
       nil
     end
 
     def check_homeless(message)
-      log('checking homeless')
       Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'homeless')
           return wwg
         end
       end
-      log('not found')
       nil
     end
 
