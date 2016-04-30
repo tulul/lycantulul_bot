@@ -109,20 +109,24 @@ module Lycantulul
                 if check_player(message)
                   if game.waiting?
                     user = message.from
-                    if game.add_player(user)
-                      additional_text =
-                        if game.players.count >= MINIMUM_PLAYER.call
-                          res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
-                          res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran\n"
-                          res += "#{game.list_settings}"
-                          res
-                        else
-                          "#{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
-                        end
+                    if game.duplicate_name?(user)
+                      if game.add_player(user)
+                        additional_text =
+                          if game.players.count >= MINIMUM_PLAYER.call
+                            res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
+                            res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran\n"
+                            res += "#{game.list_settings}"
+                            res
+                          else
+                            "#{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
+                          end
 
-                      send(message, "Welcome to the game, #{user.first_name}!\n\nUdah <b>#{game.players.count} orang</b> nich~ #{additional_text}", html: true)
+                        send(message, "Welcome to the game, #{user.first_name}!\n\nUdah <b>#{game.players.count} orang</b> nich~ #{additional_text}", html: true)
+                      else
+                        send(message, 'Duh udah masuk lu', reply: true)
+                      end
                     else
-                      send(message, 'Duh udah masuk lu', reply: true)
+                      send(message, 'Namanya ga boleh sama kaya yang udah gabung, ganti nama!', reply: true)
                     end
                   else
                     send(message, 'Telat woy udah mulai!', reply: true)
@@ -1037,8 +1041,14 @@ module Lycantulul
 
     def player_invalid?(message)
       player = message.from
+
       string = "#{player.first_name}#{player.last_name}#{player.username}".downcase
-      string =~ /[`\/\\:*_\[\](){}]/
+      res = string =~ /[`\/\\:*_\[\](){}]/
+
+      reserved_words = [Lycantulul::Game::NECROMANCER_SKIP, Lycantulul::Game::USELESS_VILLAGER_SKIP]
+      res ||= reserved_words.include?(Lycantulul::Player.get_full_name(player))
+
+      res
     end
 
     def log(message)

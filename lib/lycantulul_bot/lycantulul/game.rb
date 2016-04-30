@@ -112,6 +112,10 @@ module Lycantulul
       end
     end
 
+    def duplicate_player?(user)
+      self.players.any?{ |pl| pl.full_name == Lycantulul::Player.get_full_name(user) && pl.user_id != user.id }
+    end
+
     def add_player(user)
       return false if self.players.with_id(user.id)
       return self.players.create_player(user, self.id)
