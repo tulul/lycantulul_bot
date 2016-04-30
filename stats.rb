@@ -19,8 +19,11 @@ puts "Role frequency statistics"
 
 sum = Lycantulul::RegisteredPlayer.all.sum(&:game)
 tot = {}
-Lycantulul::Game::ROLES.each do |role|
-  tot[role] = Lycantulul::RegisteredPlayer.all.sum{ |x| x.send(role) }
+Lycantulul::RegisteredPlayer.all.each do |x|
+  Lycantulul::Game::ROLES.each do |role|
+    tot[role] ||= 0
+    tot[role] += x.send(role)
+  end
 end
 
 tot.sort_by{ |_, v| v }.reverse.each do |role, count|
