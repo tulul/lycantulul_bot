@@ -514,11 +514,11 @@ module Lycantulul
       $redis.set('lycantulul::maintenance_prevent', 1)
       $redis.set('lycantulul::maintenance', 1)
       rg = Lycantulul::Game.running
+      send_to_player(Lycantulul::RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, "EXCEPTION! CHECK SERVER! #{rg.count} GAMES STOPPED\n\n#{err}")
       rg.each do |rg|
+        rg.finish(stats: false)
         send_to_player(rg.group_id, 'Maaf ada error sesuatu, permainan terpaksa dihentikan dan main tenis. Maap yak')
       end
-      send_to_player(Lycantulul::RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, "EXCEPTION! CHECK SERVER! #{rg.count} GAMES STOPPED\n\n#{err}")
-      rg.each{ |rg| rg.finish(stats: false) }
       retry
     end
 
