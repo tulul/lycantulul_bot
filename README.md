@@ -43,7 +43,7 @@ Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pen
 
 #### Penjelasan Tugas Peran
 
-##### Warga Biasa (pasif)
+##### Warga Pasif
 1. Warga Kampung
    - Dibunuh dan ikut voting eksekusi.
 1. Pak Raden
@@ -64,8 +64,11 @@ Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pen
 1. Pengidap Ebola
    - Sama seperti Warga Kampung.
    - Jika dibunuh serigala, maka salah satu dari TTS akan ikut mati (dipilih secara acak).
+1. Biduan
+   - Tidak mati saat dibunuh serigala.
+   - Punya 2x kesempatan untuk tidak mati dibunuh, setelah 2x percobaan, akan mati jika dibunuh untuk ketiga kalinya.
 
-##### Warga sakti (aktif)
+##### Warga Aktif
 1. Tukang Ngintip
    - Mengintip peran pemain lain.
 1. Penjual Jimat
@@ -110,6 +113,7 @@ Demi fleksibilitas dalam bermain, bot ini menyediakan pilihan untuk mengubah pen
 1. Gelandangan: muncul saat jumlah pemain 16 orang
 1. Super Mujahid: muncul saat jumlah pemain 18 orang
 1. Pinter-Pinter Serigala: muncul saat jumlah pemain 18 orang
+1. Biduan: muncul saat jumlah pemain 22 orang
 
 ### Akhir Permainan
 

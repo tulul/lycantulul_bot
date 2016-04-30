@@ -14,6 +14,7 @@ module Lycantulul
     field :mauled,                        type: Integer, default: 0
     field :mauled_first_day,              type: Integer, default: 0
     field :mauled_under_protection,       type: Integer, default: 0
+    field :jester_safe,                   type: Integer, default: 0
 
     field :homeless_safe,                 type: Integer, default: 0
     field :homeless_mauled,               type: Integer, default: 0
@@ -84,6 +85,7 @@ module Lycantulul
       res += "Jumlah dibunuh TTS <b>#{self.mauled}</b>\n"
       res += "Hari pertama <b>#{self.mauled_first_day}</b>\n"
       res += "Dijimatin <b>#{self.mauled_under_protection}</b>\n"
+      res += "Menghibur TTS sambil joget <b>#{self.jester_safe}</b>\n"
       res += "\n"
       res += "Ndak di rumah pas mau dibunuh TTS <b>#{self.homeless_safe}</b>\n"
       res += "Salah nebeng di rumah korban <b>#{self.homeless_mauled}</b>\n"

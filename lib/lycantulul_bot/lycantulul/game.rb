@@ -4,7 +4,7 @@ module Lycantulul
     include Mongoid::Locker
     include Mongoid::Timestamps
 
-    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet', 'greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty', 'homeless', 'super_werewolf']
+    IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet', 'greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty', 'homeless', 'super_werewolf', 'jester']
     DEFAULT_ROLES = ['villager']
     ROLES = DEFAULT_ROLES + IMPORTANT_ROLES
 
@@ -18,6 +18,7 @@ module Lycantulul
 
     NECROMANCER_SKIP = 'NDAK DULU DEH'
     USELESS_VILLAGER_SKIP = 'OGAH NDAK VOTING KAK'
+    JESTER_LIMIT = 2
 
     field :group_id, type: Integer
     field :round, type: Integer, default: 0
@@ -36,6 +37,7 @@ module Lycantulul
 
     field :super_necromancer_done, type: Hash, default: {}
     field :amnesty_done, type: Hash, default: {}
+    field :jester_done, type: Hash, default: {}
 
     field :pending_custom_id, type: Integer, default: nil
     field :pending_custom_role, type: Integer, default: nil
@@ -434,50 +436,56 @@ module Lycantulul
         if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])
           victim = self.living_players.with_name(vc[0][0])
           if victim.role != HOMELESS
-            if !under_protection?(victim.full_name)
-              victim.kill
-              self.temp_stats[victim.user_id] ||= []
-              self.temp_stats[victim.user_id] << 'mauled'
-              self.temp_stats[victim.user_id] << 'mauled_first_day' if self.round == 1
-              self.save
-              LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
-              dead_werewolf =
-                if victim.role == SILVER_BULLET
-                  ded = self.living_werewolves.sample
-                  if ded
-                    ded.kill
-                    LycantululBot.log("#{ded.full_name} is killed because werewolves killed a silver bullet (from GAME)")
+            if victim.role != JESTER || ((jd = self.jester_done[victim.user_id]) && jd >= JESTER_LIMIT)
+              if !under_protection?(victim.full_name)
+                victim.kill
+                self.temp_stats[victim.user_id] ||= []
+                self.temp_stats[victim.user_id] << 'mauled'
+                self.temp_stats[victim.user_id] << 'mauled_first_day' if self.round == 1
+                self.save
+                LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
+                dead_werewolf =
+                  if victim.role == SILVER_BULLET
+                    ded = self.living_werewolves.sample
+                    if ded
+                      ded.kill
+                      LycantululBot.log("#{ded.full_name} is killed because werewolves killed a silver bullet (from GAME)")
+                    end
+                    ded
                   end
-                  ded
+
+                dead_homeless = []
+                hhost.each do |hh|
+                  vh = hh[:full_name] == victim.full_name
+                  wh = self.living_werewolves.with_name(hh[:full_name]) || self.living_super_werewolves.with_name(hh[:full_name])
+                  if vh || wh
+                    dh = self.players.with_id(hh[:homeless_id])
+                    dh.kill
+                    self.temp_stats[dh.user_id] ||= []
+                    self.temp_stats[dh.user_id] << 'homeless_mauled' if vh
+                    self.temp_stats[dh.user_id] << 'homeless_werewolf' if wh
+                    self.save
+                    dead_homeless << dh
+                  end
                 end
 
-              dead_homeless = []
-              hhost.each do |hh|
-                vh = hh[:full_name] == victim.full_name
-                wh = self.living_werewolves.with_name(hh[:full_name]) || self.living_super_werewolves.with_name(hh[:full_name])
-                if vh || wh
-                  dh = self.players.with_id(hh[:homeless_id])
-                  dh.kill
-                  self.temp_stats[dh.user_id] ||= []
-                  self.temp_stats[dh.user_id] << 'homeless_mauled' if vh
-                  self.temp_stats[dh.user_id] << 'homeless_werewolf' if wh
-                  self.save
-                  dead_homeless << dh
-                end
+                return [victim.user_id, victim.full_name, self.get_role(victim.role), dead_werewolf, dead_homeless]
+              else
+                self.temp_stats[victim.user_id] ||= []
+                self.temp_stats[victim.user_id] << 'mauled_under_protection'
+                self.save
               end
-
-              return [victim.user_id, victim.full_name, self.get_role(victim.role), dead_werewolf, dead_homeless]
             else
+              self.jester_done[victim.user_id] ||= 0
+              self.jester_done[victim.user_id] += 1
               self.temp_stats[victim.user_id] ||= []
-              self.temp_stats[victim.user_id] << 'mauled_under_protection'
+              self.temp_stats[victim.user_id] << 'jester_safe'
               self.save
-              return nil
             end
           else
             self.temp_stats[victim.user_id] ||= []
             self.temp_stats[victim.user_id] << 'homeless_safe'
             self.save
-            return nil
           end
         end
 
@@ -653,7 +661,7 @@ module Lycantulul
       if self.waiting?
         res += "\n\n#{self.role_composition}" unless self.role_composition.empty?
         res += "\n\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
-        res += "\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran"
+        res += ""
         res += "\n\n#{self.list_settings}"
       end
 
@@ -717,6 +725,8 @@ module Lycantulul
         'Gelandangan'
       when SUPER_WEREWOLF
         'Pinter-Pinter Serigala'
+      when JESTER
+        'Biduan'
       end
     end
 
@@ -750,6 +760,8 @@ module Lycantulul
         'Nebeng ke rumah orang lain tiap malem, jadi lu selalu aman dari serangan serigala. Tapi kalo orang yang lu tebengi dibunuh serigala atau malah serigala itu sendiri, lu ikutan mati. Tapi lu jago ngumpet juga sih, kalo serigala ngincer lu dan lu nebeng di serigala lu tetep aman.'
       when SUPER_WEREWOLF
         "#{self.get_task(WEREWOLF)}\n\nBedanya lu dengan serigala tulul adalah:\n- Lu ga bakal terjangkit kalo ngebunuh #{self.get_role(SILVER_BULLET)}\n- Siapa yang mau lu bunuh ga bakal ketahuan sama #{self.get_role(SPY)}\n- Kalo ada beberapa serigala, suara lu buat voting ngebunuh siapa diitung 2\n- #{self.get_role(SEER)} dan #{self.get_role(FAUX_SEER)} bakal liat lu sebagai #{self.get_role(VILLAGER)}\n- Kalo dijualin jimat sama #{self.get_role(PROTECTOR)}, dia pasti mati"
+      when JESTER
+        "Diam menunggu kematian sambil joget-joget, jadi kalo lu dibunuh serigala, lu ga mati. Cuma punya #{JESTER_LIMIT} kesempatan, abis itu kalo dibunuh lagi ya mati soalnya udah trauma joget-joget"
       end
     end
 
@@ -789,6 +801,8 @@ module Lycantulul
         count > 10 ? 1 : 0 # [16-..., 1]
       when SUPER_WEREWOLF
         count > 12 ? 1 : 0 # [18-..., 1]
+      when JESTER
+        count > 16 ? 1 : 0 # [22-..., 1]
       end
     end
 

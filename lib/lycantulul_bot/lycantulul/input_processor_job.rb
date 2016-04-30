@@ -114,7 +114,7 @@ module Lycantulul
                         additional_text =
                           if game.players.count >= MINIMUM_PLAYER.call
                             res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
-                            res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\nOiya bisa ganti jumlah peran juga pake /ganti_settingan_peran\n"
+                            res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan."
                             res += "#{game.list_settings}"
                             res
                           else
