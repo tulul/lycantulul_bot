@@ -5,6 +5,7 @@ module Lycantulul
     include Mongoid::Timestamps
 
     field :group_id,                      type: Integer
+    field :title,                         type: String
 
     field :voting_time,                   type: Integer
     field :night_time,                    type: Integer
@@ -36,8 +37,10 @@ module Lycantulul
       end
     end
 
-    def self.get(group_id)
-      self.find_or_create_by(group_id: group_id)
+    def self.get(message)
+      group = self.find_or_create_by(group_id: message.chat.id)
+      group.update_attribute(:title, message.chat.title)
+      group
     end
 
     def statistics

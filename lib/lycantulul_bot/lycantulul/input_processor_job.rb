@@ -344,7 +344,7 @@ module Lycantulul
             end
           when /^\/ganti_settingan_waktu(@lycantulul_bot)?/
             if in_group?(message)
-              if group = Lycantulul::Group.get(message.chat.id)
+              if group = Lycantulul::Group.get(message)
                 if !group.pending_time_id
                   keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: group.time_setting_keyboard, resize_keyboard: true, one_time_keyboard: true, selective: true)
                   pending = send(message, 'Ubah waktu apa?', reply: true, keyboard: keyboard)
@@ -358,7 +358,7 @@ module Lycantulul
             end
           when /^\/batal_nyetting_waktu(@lycantulul_bot)?/
             if in_group?(message)
-              if group = Lycantulul::Group.get(message.chat.id)
+              if group = Lycantulul::Group.get(message)
                 if group.pending_time_id
                   group.cancel_pending_time
                   send(message, 'Yosh. Udah boleh /ganti_settingan_waktu lagi', reply: true)
@@ -374,7 +374,7 @@ module Lycantulul
             send(message, 'OK', reply: in_group?(message), keyboard: keyboard)
           when /^\/statistik_grup(@lycantulul_bot)?/
             if in_group?(message)
-              send_to_player(message.chat.id, Lycantulul::Group.get(message.chat.id).statistics, parse_mode: 'HTML')
+              send_to_player(message.chat.id, Lycantulul::Group.get(message).statistics, parse_mode: 'HTML')
             else
               wrong_room(message)
             end
@@ -479,7 +479,7 @@ module Lycantulul
                 else
                   send(message, 'WUT?', reply: true)
                 end
-              elsif (group = Lycantulul::Group.get(message.chat.id)) && (group.pending_time_id == message.reply_to_message.message_id rescue false)
+              elsif (group = Lycantulul::Group.get(message)) && (group.pending_time_id == message.reply_to_message.message_id rescue false)
                 if message.text =~ /^\d+$/ && group.pending_time
                   time = message.text.to_i
                   if time >= 10 && time <= 300
