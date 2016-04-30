@@ -16,7 +16,13 @@ puts "Games waiting: #{Lycantulul::Game.where(finished: false, waiting: true).co
 puts "Games running: #{Lycantulul::Game.running.count}"
 puts
 puts "Role frequency statistics"
+
 sum = Lycantulul::RegisteredPlayer.all.sum(&:game)
+tot = {}
 Lycantulul::Game::ROLES.each do |role|
-  puts "#{role}: #{"%.2f%" % ((Lycantulul::RegisteredPlayer.all.sum{ |x| x.send(role) }) * 100.0 / sum)}"
+  tot[role] = Lycantulul::RegisteredPlayer.all.sum{ |x| x.send(role) }
+end
+
+tot.sort_by{ |_, v| v }.reverse.each do |role, count|
+  puts "#{role}: #{"%.2f%" % (count * 100.0 / sum)}"
 end
