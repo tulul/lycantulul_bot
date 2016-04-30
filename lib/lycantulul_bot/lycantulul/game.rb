@@ -193,7 +193,8 @@ module Lycantulul
     end
 
     def role_valid?
-      !self.custom_roles || ((IMPORTANT_ROLES.inject(0){ |sum, role| sum + self.role_count(self.class.const_get(role.upcase)) } <= self.players.count) && (self.living_werewolves.count + self.living_super_werewolves.count < self.killables.count))
+      ww_count = self.living_werewolves.count + self.living_super_werewolves.count
+      !self.custom_roles || ((IMPORTANT_ROLES.inject(0){ |sum, role| sum + self.role_count(self.class.const_get(role.upcase)) } <= self.players.count) && ww_count > 0 && ww_count < self.killables.count)
     end
 
     # never call unless really needed (will ruin statistics)
