@@ -2,6 +2,7 @@ module Lycantulul
   class Game
     include Mongoid::Document
     include Mongoid::Locker
+    include Mongoid::Timestamps
 
     IMPORTANT_ROLES = ['werewolf', 'seer', 'protector', 'spy', 'necromancer', 'silver_bullet', 'greedy_villager', 'useless_villager', 'super_necromancer', 'faux_seer', 'amnesty', 'homeless', 'super_werewolf']
     DEFAULT_ROLES = ['villager']

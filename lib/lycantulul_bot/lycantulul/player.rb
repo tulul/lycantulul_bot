@@ -2,6 +2,7 @@ module Lycantulul
   class Player
     include Mongoid::Document
     include Mongoid::Locker
+    include Mongoid::Timestamps
 
     field :user_id, type: Integer
     field :first_name, type: String

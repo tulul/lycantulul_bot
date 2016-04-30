@@ -2,6 +2,7 @@ module Lycantulul
   class Group
     include Mongoid::Document
     include Mongoid::Locker
+    include Mongoid::Timestamps
 
     field :group_id,                      type: Integer
 
