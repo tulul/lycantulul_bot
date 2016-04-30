@@ -112,7 +112,7 @@ module Lycantulul
       end
     end
 
-    def duplicate_player?(user)
+    def duplicate_name?(user)
       self.players.any?{ |pl| pl.full_name == Lycantulul::Player.get_full_name(user) && pl.user_id != user.id }
     end
 
