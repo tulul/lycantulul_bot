@@ -23,6 +23,7 @@ module Lycantulul
       'werewolf_kill_failed',
       'discussion_start',
       'voting_start',
+      'abstain',
       'voting_succeeded',
       'voting_failed',
       'enlighten_seer',
@@ -621,6 +622,7 @@ module Lycantulul
         group_chat_id = game.group_id
         log('no victim')
         send_to_player(group_chat_id, 'PFFFTTT CUPU BANGET SERIGALA PADA, ga ada yang mati')
+        return if check_win(game)
         message_action(game, DISCUSSION_START)
       when DISCUSSION_START
         group_chat_id = game.group_id
@@ -637,6 +639,15 @@ module Lycantulul
         livp.each do |lp|
           send_voting(livp, lp[:full_name], lp[:user_id])
         end
+      when ABSTAIN
+        group_chat_id = game.group_id
+        abstains = aux
+
+        abstains.each do |abs|
+          send_to_player(abs.user_id, "#{Lycantulul::Player::ABSTAIN_LIMIT}x tidak voting, terpaksa harus dibunuh")
+        end
+
+        send_to_player(group_chat_id, "Pemain yang tidak voting #{Lycantulul::Player::ABSTAIN_LIMIT}x dan dibunuh paksa:\n#{abstains.map{ |abs| "- <b>#{abs.full_name}</b>" }.join("\n")}", parse_mode: 'HTML')
       when VOTING_SUCCEEDED
         group_chat_id = game.group_id
         votee = aux
@@ -658,6 +669,7 @@ module Lycantulul
         group_chat_id = game.group_id
         log('voting failed')
         send_to_player(group_chat_id, 'Nulul tidak membuahkan mufakat')
+        return if check_win(game)
         message_action(game, ROUND_START)
       when ENLIGHTEN_SEER
         aux.each do |seen|
@@ -962,7 +974,12 @@ module Lycantulul
       log('continuing')
       if force || game.check_voting_finished
         list_voting(game)
-        if killed = game.kill_votee
+        killed = game.kill_votee
+        abstains = game.kill_abstain
+
+        message_action(game, ABSTAIN, abstains) unless abstains.empty?
+
+        if killed
           message_action(game, VOTING_SUCCEEDED, killed)
         else
           message_action(game, VOTING_FAILED)

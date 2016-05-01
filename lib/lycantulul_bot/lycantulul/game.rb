@@ -501,11 +501,21 @@ module Lycantulul
       end
     end
 
+    def kill_abstain
+      self.with_lock(wait: true) do
+        voted = self.votee.map{ |v| v[:voter_id] }
+        self.update_attribute(:votee, [])
+        self.living_players.without_id(voted).each(&:inc_abstain)
+        abs_list = self.living_players.abstain.to_a
+        abs_list.each(&:kill)
+        abs_list
+      end
+    end
+
     def kill_votee
       self.with_lock(wait: true) do
         vc = self.sort(votee)
         LycantululBot.log(vc.to_s)
-        self.update_attribute(:votee, [])
         self.update_attribute(:night, true)
 
         if vc.count == 1 || (vc.count > 1 && vc[0][1] > vc[1][1])

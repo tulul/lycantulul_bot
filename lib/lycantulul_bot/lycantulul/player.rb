@@ -11,17 +11,25 @@ module Lycantulul
     field :role, type: Integer, default: Lycantulul::Game::VILLAGER
     field :alive, type: Boolean, default: true
     field :ready, type: Boolean, default: false
+    field :abstain, type: Integer, default: 0
 
     index({ user_id: 1 })
     index({ full_name: 1 })
 
     belongs_to :game, class_name: 'Lycantulul::Game', index: true
 
+    ABSTAIN_LIMIT = 3
+
     default_scope -> { order_by(full_name: :asc) }
 
     def self.with_id(user_id)
       self.find_by(user_id: user_id)
     end
+
+    def self.without_id(id)
+      self.where(:user_id.nin => id)
+    end
+
 
     def self.with_name(name)
       self.find_by(full_name: name) || self.find_by(first_name: name) || self.find_by(username: name)
@@ -41,6 +49,10 @@ module Lycantulul
 
     def self.dead
       self.where(alive: false)
+    end
+
+    def self.abstain
+      self.where(:abstain.gte => ABSTAIN_LIMIT)
     end
 
     def self.create_player(user, game_id)
@@ -82,6 +94,12 @@ module Lycantulul
     def assign(role)
       self.with_lock(wait: true) do
         self.update_attribute(:role, role)
+      end
+    end
+
+    def inc_abstain
+      self.with_lock(wait: true) do
+        self.inc(abstain: 1)
       end
     end
   end
