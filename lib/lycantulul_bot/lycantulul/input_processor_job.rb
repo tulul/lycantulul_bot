@@ -705,7 +705,6 @@ module Lycantulul
       options.merge!({ reply_to_message_id: message.message_id }) if reply
       options.merge!({ parse_mode: 'HTML' }) if html
       options.merge!({ reply_markup: keyboard }) if keyboard
-      log("sending to #{message.chat.id}: #{text}")
       retry_count = 0
       begin
         @bot.api.send_message(options)
@@ -734,7 +733,6 @@ module Lycantulul
         chat_id: chat_id,
         text: text[0...4000],
       })
-      log("sending to #{chat_id}: #{text}")
       retry_count = 0
       begin
         @bot.api.send_message(options)
@@ -993,7 +991,7 @@ module Lycantulul
       game.reload
       win = false
       if game.living_werewolves.count + game.living_super_werewolves.count == 0
-        log('wereworlves ded')
+        log('werewolves ded')
         send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh serigala telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
         win = true
       elsif game.living_werewolves.count + game.living_super_werewolves.count == game.killables.count || game.killables.count == 0
