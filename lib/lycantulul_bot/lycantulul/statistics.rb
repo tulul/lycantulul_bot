@@ -17,7 +17,7 @@ module Lycantulul
         stats << "Blocking players: #{Lycantulul::RegisteredPlayer.where(blocked: true).count}"
         stats << "Registered groups: #{Lycantulul::Group.count}"
         stats << ''
-        stats << "Games waiting: #{Lycantulul::Game.where(finished: false, waiting: true).count}"
+        stats << "Games waiting: #{Lycantulul::Game.waiting.count}"
         stats << "Games running: #{Lycantulul::Game.running.count}"
         stats << ''
         stats << "Role frequency statistics"

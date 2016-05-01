@@ -62,6 +62,10 @@ module Lycantulul
       self.where(finished: false, waiting: false)
     end
 
+    def self.waiting
+      self.where(finished: false, waiting: true)
+    end
+
     def get_player(user_id)
       Lycantulul::RegisteredPlayer.get(user_id)
     end
