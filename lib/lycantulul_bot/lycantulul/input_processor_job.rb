@@ -508,7 +508,7 @@ module Lycantulul
           log('stale message. purged')
         end
       end
-    rescue Net::ReadTimeout => e
+    rescue Faraday::TimeoutError => e
       puts Time.now.utc
       puts 'TIMEOUT'
       sleep(1)
@@ -708,7 +708,7 @@ module Lycantulul
       retry_count = 0
       begin
         @bot.api.send_message(options)
-      rescue Net::ReadTimeout => e
+      rescue Faraday::TimeoutError => e
         puts Time.now.utc
         puts 'TIMEOUT'
         sleep(1)
@@ -736,7 +736,7 @@ module Lycantulul
       retry_count = 0
       begin
         @bot.api.send_message(options)
-      rescue Net::ReadTimeout => e
+      rescue Faraday::TimeoutError => e
         puts Time.now.utc
         puts 'TIMEOUT'
         sleep(1)
