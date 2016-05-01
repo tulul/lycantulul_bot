@@ -41,7 +41,7 @@ module Lycantulul
           stats << "===== #{g.title} ====="
           stats << "Round #{g.round}"
           g.players.each do |y|
-            stats << "#{y.full_name} @#{g.username}"
+            stats << "#{y.full_name} @#{y.username}"
           end
           stats << ''
         end

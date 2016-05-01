@@ -70,6 +70,10 @@ module Lycantulul
       Lycantulul::Group.find_or_create_by(group_id: group_id)
     end
 
+    def title
+      self.group.title
+    end
+
     def voting_time
       self.group.voting_time || Lycantulul::InputProcessorJob::VOTING_TIME.call
     end

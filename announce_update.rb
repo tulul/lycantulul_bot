@@ -1,8 +1,6 @@
 load 'Rakefile'
 
 updates = "latest updates:\n"
-updates += "- <b>Peran Baru</b>: Biduan. Baca kekuatan dan kapan munculnya di /help\n"
-updates += "- Ngilangin shortcut buat /ganti_settingan_peran di /siapa_aja buat men-discourage penggunaannya. Harap gunakan seperlunya (misalnya mau ngetes peran apa gitu)\n"
 updates += "\n"
 updates += "- <a href='https://github.com/tulul/lycantulul_bot'>Klik sini kalo mau saran/lapor bug/dll (github)</a>\n"
 updates += "- <a href='https://storebot.me/bot/lycantulul_bot'>Klik sini kalo mau ngasih rating/review (storebot)</a>\n"
