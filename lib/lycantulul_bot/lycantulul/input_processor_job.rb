@@ -181,7 +181,7 @@ module Lycantulul
                 if game.waiting?
                   if !game.pending_custom_id
                     keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: game.role_setting_keyboard, resize_keyboard: true, one_time_keyboard: true, selective: true)
-                    pending = send(message, 'Ubah jumlah peran siapa?', reply: true, keyboard: keyboard)
+                    pending = send(message, 'Ubah jumlah peran siapa?', reply: true, keyboard: keyboard, async: false)
                     game.pending_reply(pending['result']['message_id']) rescue nil
                   else
                     send(message, 'Udah ada yang mulai nyetting tadi, selesaiin dulu atau /batal_nyetting_peran', reply: true)
@@ -347,7 +347,7 @@ module Lycantulul
               if group = Lycantulul::Group.get(message)
                 if !group.pending_time_id
                   keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: group.time_setting_keyboard, resize_keyboard: true, one_time_keyboard: true, selective: true)
-                  pending = send(message, 'Ubah waktu apa?', reply: true, keyboard: keyboard)
+                  pending = send(message, 'Ubah waktu apa?', reply: true, keyboard: keyboard, async: false)
                   group.pending_reply(pending['result']['message_id']) rescue nil
                 else
                   send(message, 'Udah ada yang mulai nyetting tadi, selesaiin dulu atau /batal_nyetting_waktu', reply: true)
@@ -477,7 +477,7 @@ module Lycantulul
                   send(message, "Sip. Jumlah #{res[0]} ntar jadi #{res[1]}", reply: true, keyboard: keyboard)
                 elsif (role = game.check_custom_role(message.text))
                   force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
-                  pending = send(message, "Mau berapa #{game.get_role(role)}?", reply: true, keyboard: force)
+                  pending = send(message, "Mau berapa #{game.get_role(role)}?", reply: true, keyboard: force, async: false)
                   game.pending_reply(pending['result']['message_id']) rescue nil
                 else
                   send(message, 'WUT?', reply: true)
@@ -496,7 +496,7 @@ module Lycantulul
                   end
                 elsif group.check_time_setting(message.text)
                   force = Telegram::Bot::Types::ForceReply.new(force_reply: true, selective: true)
-                  pending = send(message, "Mau berapa detik? (10-300 detik)", reply: true, keyboard: force)
+                  pending = send(message, "Mau berapa detik? (10-300 detik)", reply: true, keyboard: force, async: false)
                   group.pending_reply(pending['result']['message_id']) rescue nil
                 else
                   send(message, 'WUT?', reply: true)
@@ -697,7 +697,7 @@ module Lycantulul
       end
     end
 
-    def send(message, text, reply: nil, html: nil, keyboard: nil)
+    def send(message, text, reply: nil, html: nil, keyboard: nil, async: true)
       options = {
         chat_id: message.chat.id,
         text: text[0...4000],
@@ -705,26 +705,30 @@ module Lycantulul
       options.merge!({ reply_to_message_id: message.message_id }) if reply
       options.merge!({ parse_mode: 'HTML' }) if html
       options.merge!({ reply_markup: keyboard }) if keyboard
-      retry_count = 0
-      begin
-        @bot.api.send_message(options)
-      rescue Faraday::TimeoutError => e
-        puts Time.now.utc
-        puts 'TIMEOUT'
-        sleep(1)
-        retry
-      rescue Telegram::Bot::Exceptions::ResponseError => e
-        puts Time.now.utc
-        puts e.message
-        puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
-        puts "retrying: #{retry_count}"
+      if async
+        Lycantulul::MessageSendingJob.perform_async(@bot, options)
+      else
+        retry_count = 0
+        begin
+          @bot.api.send_message(options)
+        rescue Faraday::TimeoutError => e
+          puts Time.now.utc
+          puts 'TIMEOUT'
+          sleep(2)
+          retry
+        rescue Telegram::Bot::Exceptions::ResponseError => e
+          puts Time.now.utc
+          puts e.message
+          puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
+          puts "retrying: #{retry_count}"
 
-        if e.message =~ /429/
-          sleep(3)
-        elsif e.message =~ /403/
-          Lycantulul::RegisteredPlayer.find_by(user_id: message.chat.id).update_attribute(:blocked, true) rescue nil
+          if e.message =~ /429/
+            sleep(3)
+          elsif e.message =~ /403/
+            Lycantulul::RegisteredPlayer.find_by(user_id: message.chat.id).update_attribute(:blocked, true) rescue nil
+          end
+          retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
         end
-        retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
       end
     end
 
@@ -733,27 +737,7 @@ module Lycantulul
         chat_id: chat_id,
         text: text[0...4000],
       })
-      retry_count = 0
-      begin
-        @bot.api.send_message(options)
-      rescue Faraday::TimeoutError => e
-        puts Time.now.utc
-        puts 'TIMEOUT'
-        sleep(1)
-        retry
-      rescue Telegram::Bot::Exceptions::ResponseError => e
-        puts Time.now.utc
-        puts e.message
-        puts e.backtrace.select{ |err| err =~ /tulul/ }.join(', ')
-        puts "retrying: #{retry_count}"
-
-        if e.message =~ /429/
-          sleep(3)
-        elsif e.message =~ /403/
-          Lycantulul::RegisteredPlayer.find_by(user_id: chat_id).update_attribute(:blocked, true) rescue nil
-        end
-        retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
-      end
+      Lycantulul::MessageSendingJob.perform_async(@bot, options)
     end
 
     def send_kill_voting(game, chat_id)
