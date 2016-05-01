@@ -700,7 +700,7 @@ module Lycantulul
     def send(message, text, reply: nil, html: nil, keyboard: nil)
       options = {
         chat_id: message.chat.id,
-        text: text,
+        text: text[0...4000],
       }
       options.merge!({ reply_to_message_id: message.message_id }) if reply
       options.merge!({ parse_mode: 'HTML' }) if html
@@ -732,7 +732,7 @@ module Lycantulul
     def send_to_player(chat_id, text, options = {})
       options.merge!({
         chat_id: chat_id,
-        text: text,
+        text: text[0...4000],
       })
       log("sending to #{chat_id}: #{text}")
       retry_count = 0

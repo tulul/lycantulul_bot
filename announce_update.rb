@@ -6,7 +6,7 @@ updates += "- Ngilangin shortcut buat /ganti_settingan_peran di /siapa_aja buat 
 updates += "\n"
 updates += "- <a href='https://github.com/tulul/lycantulul_bot'>Klik sini kalo mau saran/lapor bug/dll (github)</a>\n"
 updates += "- <a href='https://storebot.me/bot/lycantulul_bot'>Klik sini kalo mau ngasih rating/review (storebot)</a>\n"
-updates += "- <a href='https://telegram.me/lycantulul'>Klik sini kalo grup kalian sepi dan pengen main bareng di grup publik</a>"
+updates += "- <a href='https://telegram.me/lycantulul'>Klik sini kalo grup kalian sepi dan pengen main bareng di grup publik</a>\n"
 updates += "\n"
 updates += 'Kalo nemu yang aneh2 dan darurat kontak @araishikeiwai (time zone WIB-6 --> kalo di Jakarta jam 9 pagi, dia masih jam 3 pagi jadi maklum kalo slow response) yak, kalo engga ke github aja bikin issue'
 groups = Lycantulul::Game.all.map(&:group_id).uniq
@@ -17,7 +17,7 @@ failure = 0
 Telegram::Bot::Client.run($token) do |bot|
   groups.each do |g|
     begin
-      bot.api.send_message(chat_id: g, text: updates, parse_mode: 'HTML')
+      bot.api.send_message(chat_id: g, text: updates, parse_mode: 'HTML', disable_web_page_preview: true)
       success += 1
       sleep(0.1)
     rescue StandardError => e
