@@ -39,7 +39,7 @@ module Lycantulul
       when '/stats_player_run'
         Lycantulul::Game.running.each do |g|
           stats << "===== #{g.title} ====="
-          stats << "Round #{g.round}"
+          stats << "Round #{g.round}, #{g.living_players.count}/#{g.players.count} alive"
           g.players.each do |y|
             stats << "#{y.full_name} @#{y.username}"
           end
