@@ -19,7 +19,7 @@ module Lycantulul
         stats << ''
         stats << "Games waiting: #{Lycantulul::Game.waiting.count}"
         stats << "Games running: #{Lycantulul::Game.running.count}"
-        stats << ''
+      when '/stats_role'
         stats << "Role frequency statistics"
 
         sum = 0
