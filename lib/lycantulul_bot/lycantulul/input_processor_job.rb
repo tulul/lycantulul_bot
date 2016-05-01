@@ -390,7 +390,7 @@ module Lycantulul
             end
           when /^\/stats/
             return unless message.from.username == 'araishikeiwai'
-            (stat = Lycantulul::Statistics.get_stats(message.text)) && send(message, stat)
+            (stat = Lycantulul::Statistics.get_stats(message.text)) && send(message, stat, html: true)
           else
             if in_private?(message)
               if game = check_werewolf_in_game(message)

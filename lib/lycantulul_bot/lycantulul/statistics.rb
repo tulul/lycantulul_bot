@@ -32,23 +32,26 @@ module Lycantulul
           end
         end
 
+        g = Lycantulul::Game.new
         tot.sort_by{ |_, v| v }.reverse.each do |role, count|
-          stats << "#{role}: #{"%.2f%" % (count * 100.0 / sum)}"
+          stats << "<code>#{"%5.2f%" % (count * 100.0 / sum)}</code> #{g.get_role(g.class.const_get(role.upcase))}"
         end
       when '/stats_player_run'
-        Lycantulul::Game.running.map(&:players).each do |x|
-          x.each do |y|
-            stats << y.full_name
+        Lycantulul::Game.running.each do |g|
+          stats << "===== #{g.title} ====="
+          stats << "Round #{g.round}"
+          g.players.each do |y|
+            stats << "#{y.full_name} @#{g.username}"
           end
           stats << ''
         end
       when '/stats_player'
         Lycantulul::RegisteredPlayer.all.sort_by(&:game).reverse.each do |x|
-          stats << "#{"%-3d" % x.game} #{x.full_name}"
+          stats << "<code>#{"%3d" % x.game}</code> #{x.first_name}"
         end
       when '/stats_group'
         Lycantulul::Group.all.sort_by(&:game).reverse.each do |x|
-          stats << "#{"%-3d" % x.game} #{x.title}"
+          stats << "<code>#{"%3d" % x.game}</code> #{x.title}"
         end
       end
 
