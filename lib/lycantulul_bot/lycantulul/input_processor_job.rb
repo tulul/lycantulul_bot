@@ -586,7 +586,6 @@ module Lycantulul
         victim_name = aux[1]
 
         lw.each do |ww|
-          log("broadcasting killing from #{killer.full_name}")
           brd = "#{victim_name} pengen dibunuh"
           [Lycantulul::Game::WEREWOLF, Lycantulul::Game::SUPER_WEREWOLF].include?(ww.role) && brd += " oleh #{killer.full_name}"
           send_to_player(ww.user_id, brd) unless ww.role == Lycantulul::Game::SPY && killer.role == Lycantulul::Game::SUPER_WEREWOLF
@@ -599,7 +598,6 @@ module Lycantulul
         dead_werewolf = aux[3]
         dead_homeless = aux[4]
 
-        log("#{victim_full_name} is killed by werewolves")
         send_to_player(victim_chat_id, 'MPOZ LO MATEK')
         send_to_player(group_chat_id, "GILS GILS GILS\nserigala berhasil memakan si #{victim_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{victim_role}")
 
@@ -619,7 +617,6 @@ module Lycantulul
         message_action(game, DISCUSSION_START)
       when WEREWOLF_KILL_FAILED
         group_chat_id = game.group_id
-        log('no victim')
         send_to_player(group_chat_id, 'PFFFTTT CUPU BANGET SERIGALA PADA, ga ada yang mati')
         message_action(game, DISCUSSION_START)
       when DISCUSSION_START
@@ -644,11 +641,9 @@ module Lycantulul
         amnestied = votee.role == Lycantulul::Game::AMNESTY && votee.alive
 
         if amnestied
-          log("voting amnestied, resulting in #{votee.full_name}'s survival")
           send_to_player(votee.user_id, 'CIYEEE ANAK PRESIDEN SELAMET YEE GA JADI MATI')
           send_to_player(group_chat_id, "Hasil bertulul berbuah eksekusi si #{votee.full_name}\nNamun ternyata dia itu #{game.get_role(votee.role)}, selamatlah dia dari eksekusi kali ini")
         else
-          log("voting succeeded, resulting in #{votee.full_name}'s death")
           send_to_player(votee.user_id, 'MPOZ LO DIEKSEKUSI')
           send_to_player(group_chat_id, "Hasil bertulul berbuah eksekusi si #{votee.full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{game.get_role(votee.role)}")
         end
@@ -656,7 +651,6 @@ module Lycantulul
         message_action(game, ROUND_START)
       when VOTING_FAILED
         group_chat_id = game.group_id
-        log('voting failed')
         send_to_player(group_chat_id, 'Nulul tidak membuahkan mufakat')
         message_action(game, ROUND_START)
       when ENLIGHTEN_SEER
@@ -665,7 +659,6 @@ module Lycantulul
           seen_role = seen[1]
           seer_id = seen[2]
 
-          log("sending #{seen_full_name}'s role #{seen_role} to seer: #{seer_id}")
           send_to_player(seer_id, "Dengan kekuatan maksiat, peran si #{seen_full_name} pun terlihat: #{seen_role}")
         end
       when DEAD_PROTECTORS
@@ -673,7 +666,6 @@ module Lycantulul
           protector_name = dp[0]
           protector_id = dp[1]
 
-          log("sending #{protector_name} failed protection notification")
           send_to_player(protector_id, "Jangan jualan ke sembarang orang! Lu jualan ke serigala, mati aja.")
           send_to_player(game.group_id, "Bego nih penjual jimat #{protector_name} malah jualan ke serigala :'))")
         end
@@ -682,7 +674,6 @@ module Lycantulul
           necromancer = nc[0]
           necromancee = nc[1]
 
-          log("sending necromancing messages to necromancer #{necromancer.full_name} and the raised #{necromancee.full_name}")
           send_to_player(necromancee.user_id, "Kamu telah dihidupkan kembali oleh seorang mujahid! Selamat datang kembali!")
           send_to_player(necromancer.user_id, "Kamu berhasil menghidupkan kembali #{necromancee.full_name}. Terima kasih, terima kasih, terima kasih. Kamu memang makhluk paling keren di muka bumi ini :*")
 
@@ -770,19 +761,16 @@ module Lycantulul
     end
 
     def send_voting(living_players, player_full_name, player_chat_id)
-      log("sending voting to #{player_full_name}")
       vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [player_full_name], resize_keyboard: true, one_time_keyboard: true)
       send_to_player(player_chat_id, 'Ayo voting eksekusi siapa nih~', reply_markup: vote_keyboard)
     end
 
     def send_seer(living_players, seer_full_name, seer_chat_id)
-      log("sending seer instruction to #{seer_full_name}")
       vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [seer_full_name], resize_keyboard: true, one_time_keyboard: true)
       send_to_player(seer_chat_id, 'Mau ngintip perannya siapa kak? :3', reply_markup: vote_keyboard)
     end
 
     def send_faux_seer(game, seer)
-      log("sending seer instruction to #{seer.full_name}")
       chosen = seer
       while chosen.user_id == seer.user_id
         chosen = game.living_players.sample
@@ -793,13 +781,11 @@ module Lycantulul
     end
 
     def send_protector(living_players, protector_full_name, protector_chat_id)
-      log("sending protector instruction to #{protector_full_name}")
       vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [protector_full_name], resize_keyboard: true, one_time_keyboard: true)
       send_to_player(protector_chat_id, 'Mau jual jimat ke siapa?', reply_markup: vote_keyboard)
     end
 
     def send_necromancer(dead_players, necromancer_chat_id)
-      log("sending necromancer instruction to #{necromancer_chat_id}")
       options = [Lycantulul::Game::NECROMANCER_SKIP]
       options << dead_players.map{ |lv| lv[:full_name] }
       vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: options, resize_keyboard: true, one_time_keyboard: true)
@@ -807,7 +793,6 @@ module Lycantulul
     end
 
     def send_homeless(living_players, homeless_full_name, homeless_chat_id)
-      log("sending homeless instruction to #{homeless_full_name}")
       vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [homeless_full_name], resize_keyboard: true, one_time_keyboard: true)
       send_to_player(homeless_chat_id, 'Mau nebeng di rumah siapa?', reply_markup: vote_keyboard)
     end
@@ -993,7 +978,7 @@ module Lycantulul
       game.reload
       win = false
       if game.living_werewolves.count + game.living_super_werewolves.count == 0
-        log('wereworlves ded')
+        log('werewolves ded')
         send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh serigala telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
         win = true
       elsif game.living_werewolves.count + game.living_super_werewolves.count == game.killables.count || game.killables.count == 0

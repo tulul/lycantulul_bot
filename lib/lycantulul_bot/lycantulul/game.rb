@@ -443,13 +443,11 @@ module Lycantulul
                 self.temp_stats[victim.user_id] << 'mauled'
                 self.temp_stats[victim.user_id] << 'mauled_first_day' if self.round == 1
                 self.save
-                LycantululBot.log("#{victim.full_name} is mauled (from GAME)")
                 dead_werewolf =
                   if victim.role == SILVER_BULLET
                     ded = self.living_werewolves.sample
                     if ded
                       ded.kill
-                      LycantululBot.log("#{ded.full_name} is killed because werewolves killed a silver bullet (from GAME)")
                     end
                     ded
                   end
@@ -512,7 +510,6 @@ module Lycantulul
             self.temp_stats[votee.user_id] << 'executed_first_day' if self.round == 1
           end
           self.save
-          LycantululBot.log("#{votee.full_name} is executed (from GAME)")
           return votee
         end
 
@@ -530,7 +527,6 @@ module Lycantulul
         ss && ss.each do |vc|
           seen = self.living_players.with_name(vc[:full_name])
           if seen && self.living_seers.with_id(vc[:seer_id])
-            LycantululBot.log("#{seen.full_name} is seen (from GAME)")
             seen_role = seen.role == SUPER_WEREWOLF ? self.get_role(self.living_players.without_role([SEER]).sample.role) : self.get_role(seen.role)
             res << [seen.full_name, seen_role, vc[:seer_id]]
           end
@@ -554,7 +550,6 @@ module Lycantulul
           if protectee && ((protectee.role == WEREWOLF && rand.round + rand.round == 0) || (protectee.role == SUPER_WEREWOLF && rand.round + rand.round < 2)) # 25% ded if protecting werewolf, 75% if super werewolf
             ded = self.living_players.with_id(vc[:protector_id])
             ded.kill
-            LycantululBot.log("#{ded.full_name} is killed because they protected werewolf (from GAME)")
             res << [ded.full_name, ded.user_id]
           end
         end
@@ -575,7 +570,6 @@ module Lycantulul
           necromancee = self.dead_players.with_name(vc[:full_name])
           necromancer = self.living_necromancers.with_id(vc[:necromancer_id]) || (!self.super_necromancer_done[vc[:necromancer_id].to_s] && self.living_super_necromancers.with_id(vc[:necromancer_id]))
           if necromancee && necromancer
-            LycantululBot.log("#{necromancee.full_name} is raised from the dead by #{necromancer.full_name} (from GAME)")
             necromancee.revive
             self.temp_stats[necromancee.user_id] ||= []
             self.temp_stats[necromancee.user_id] << 'revived'
