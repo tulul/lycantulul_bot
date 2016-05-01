@@ -47,11 +47,11 @@ module Lycantulul
         end
       when '/stats_player'
         Lycantulul::RegisteredPlayer.all.sort_by(&:game).reverse.each do |x|
-          stats << "<code>#{"%3d" % x.game}</code> #{x.first_name}"
+          stats << "#{"%3d" % x.game} #{x.first_name}"
         end
       when '/stats_group'
         Lycantulul::Group.all.sort_by(&:game).reverse.each do |x|
-          stats << "<code>#{"%3d" % x.game}</code> #{x.title}"
+          stats << "#{"%3d" % x.game} #{x.title}"
         end
       end
 
