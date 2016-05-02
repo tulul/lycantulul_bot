@@ -177,6 +177,7 @@ module Lycantulul
 
     def set_custom_role(amount)
       self.with_lock(wait: true) do
+        return nil unless self.pending_custom_role
         self.update_custom_roles(self.pending_custom_role, amount)
         res = [self.get_role(self.pending_custom_role), amount]
         self.cancel_pending_custom
