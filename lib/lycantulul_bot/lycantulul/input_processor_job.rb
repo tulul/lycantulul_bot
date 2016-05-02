@@ -663,11 +663,11 @@ module Lycantulul
         if amnestied
           log("voting amnestied, resulting in #{votee.full_name}'s survival")
           send_to_player(votee.user_id, 'CIYEEE ANAK PRESIDEN SELAMET YEE GA JADI MATI')
-          send_to_player(group_chat_id, "#{voting_result}\nNamun ternyata dia itu #{game.get_role(votee.role)}, selamatlah dia dari eksekusi kali ini")
+          send_to_player(group_chat_id, "#{voting_result}\nNamun ternyata dia itu #{game.get_role(votee.role)}, selamatlah dia dari eksekusi kali ini", parse_mode: 'HTML')
         else
           log("voting succeeded, resulting in #{votee.full_name}'s death")
           send_to_player(votee.user_id, 'MPOZ LO DIEKSEKUSI')
-          send_to_player(group_chat_id, "#{voting_result}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{game.get_role(votee.role)}")
+          send_to_player(group_chat_id, "#{voting_result}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{game.get_role(votee.role)}", parse_mode: 'HTML')
         end
         return if check_win(game)
         message_action(game, ROUND_START)
@@ -675,7 +675,7 @@ module Lycantulul
         group_chat_id = game.group_id
         voting_result = aux
         log('voting failed')
-        send_to_player(group_chat_id, "#{voting_result}\n\nNulul tidak membuahkan mufakat")
+        send_to_player(group_chat_id, "#{voting_result}\n\nNulul tidak membuahkan mufakat", parse_mode: 'HTML')
         return if check_win(game)
         message_action(game, ROUND_START)
       when ENLIGHTEN_SEER
