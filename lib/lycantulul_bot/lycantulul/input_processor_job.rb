@@ -40,6 +40,7 @@ module Lycantulul
       if MAINTENANCE.call
         reply = in_group?(message)
         if !reply || message.text =~ /@lycantulul_(dev_)?bot/
+          $redis.rpush('lycantulul::maintenance_info', message.chat.id)
           send(message, 'Lagi bermain bersama Ecchi-men Ryoman dan Nopak Jokowi', reply: reply)
         end
       elsif player_invalid?(message)
@@ -266,6 +267,7 @@ module Lycantulul
                       send(message, "Belom #{MINIMUM_PLAYER.call} orang! Tidak bisa~ Yang lain mending /ikutan dulu biar bisa mulai", reply: true)
                     end
                   else
+                    $redis.rpush('lycantulul::maintenance_info', message.chat.id)
                     send(message, 'Jangan /mulai_main dulu ya, mau main tenis bentar', reply: true)
                   end
                 else
