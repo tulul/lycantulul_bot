@@ -8,14 +8,19 @@ module Lycantulul
         stats << "Current stats:"
         stats << Time.now.utc.to_s
         stats << ''
-        stats << "Games started: #{Lycantulul::Game.count}"
+        stats << "Players registered: #{Lycantulul::RegisteredPlayer.count}"
+        stats << "Last 24|4|1 hours: #{Lycantulul::RegisteredPlayer.where(:created_at.gte => 24.hours.ago).count} | #{Lycantulul::RegisteredPlayer.where(:created_at.gte => 4.hours.ago).count} | #{Lycantulul::RegisteredPlayer.where(:created_at.gte => 1.hour.ago).count}"
+        stats << "Blocking players: #{Lycantulul::RegisteredPlayer.where(blocked: true).count}"
+        stats << ''
+        stats << "Groups registered: #{Lycantulul::Group.count}"
+        stats << "Last 24|4|1 hours: #{Lycantulul::Group.where(:created_at.gte => 24.hours.ago).count} | #{Lycantulul::Group.where(:created_at.gte => 4.hours.ago).count} | #{Lycantulul::Group.where(:created_at.gte => 1.hour.ago).count}"
+        stats << ''
+        stats << "Games created: #{Lycantulul::Game.count}"
+        stats << "Last 24|4|1 hours: #{Lycantulul::Game.where(:created_at.gte => 24.hours.ago).count} | #{Lycantulul::Game.where(:created_at.gte => 4.hours.ago).count} | #{Lycantulul::Game.where(:created_at.gte => 1.hour.ago).count}"
+        stats << ''
         stats << "Ranked games played: #{g = Lycantulul::Group.all.sum(&:game)}"
         stats << "Werewolf victory: #{w = Lycantulul::Group.all.sum(&:werewolf_victory)} (#{"%.2f\%" % (w * 100.0 / g)})"
         stats << "Villager victory: #{v = Lycantulul::Group.all.sum(&:village_victory)} (#{"%.2f\%" % (v * 100.0 / g)})"
-        stats << ''
-        stats << "Registered players: #{Lycantulul::RegisteredPlayer.count}"
-        stats << "Blocking players: #{Lycantulul::RegisteredPlayer.where(blocked: true).count}"
-        stats << "Registered groups: #{Lycantulul::Group.count}"
         stats << ''
         stats << "Games waiting: #{Lycantulul::Game.waiting.count}"
         stats << "Games running: #{Lycantulul::Game.running.count}"
