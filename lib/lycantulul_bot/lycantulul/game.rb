@@ -44,6 +44,8 @@ module Lycantulul
 
     field :temp_stats, type: Hash, default: {}
 
+    field :last_player_list_query, type: Time
+
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
 
@@ -682,6 +684,10 @@ module Lycantulul
         res += "\n\n/ikutan yuk pada~ yang udah ikutan jangan pada /gajadi"
         res += "\n"
         res += "\n\n#{self.list_settings}"
+      end
+
+      self.with_lock(wait: true) do
+        self.update_attribute(:last_player_list_query, Time.now)
       end
 
       res

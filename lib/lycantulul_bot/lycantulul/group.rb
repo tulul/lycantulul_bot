@@ -19,8 +19,8 @@ module Lycantulul
     field :werewolf_victory,              type: Integer, default: 0
     field :village_victory,               type: Integer, default: 0
 
-    field :pending_time_id, type: Integer, default: nil
-    field :pending_time, type: String, default: nil
+    field :pending_time_id,               type: Integer, default: nil
+    field :pending_time,                  type: String, default: nil
 
     index({ group_id: 1 }, { unique: true })
 

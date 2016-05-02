@@ -282,7 +282,9 @@ module Lycantulul
           when /^\/siapa_aja(@lycantulul_bot)?/
             if in_group?(message)
               if game = check_game(message)
-                list_players(game)
+                if (Time.now - game.last_player_list_query rescue 11).ceil > 10
+                  list_players(game)
+                end
               else
                 send(message, 'Ga ada, orang ga ada yang maen. /bikin_baru gih', reply: true)
               end
@@ -653,25 +655,27 @@ module Lycantulul
         send_to_player(group_chat_id, "Pemain yang tidak voting #{Lycantulul::Player::ABSTAIN_LIMIT}x dan dibunuh paksa:\n#{abstains.map{ |abs| "- <b>#{abs.full_name}</b> - <i>#{game.get_role(abs.role)}</i>" }.join("\n")}", parse_mode: 'HTML')
       when VOTING_SUCCEEDED
         group_chat_id = game.group_id
-        votee = aux
+        votee = aux[0]
+        voting_result = "#{aux[1]}\n\nHasil bertulul berbuah eksekusi si #{votee.full_name}"
 
         amnestied = votee.role == Lycantulul::Game::AMNESTY && votee.alive
 
         if amnestied
           log("voting amnestied, resulting in #{votee.full_name}'s survival")
           send_to_player(votee.user_id, 'CIYEEE ANAK PRESIDEN SELAMET YEE GA JADI MATI')
-          send_to_player(group_chat_id, "Hasil bertulul berbuah eksekusi si #{votee.full_name}\nNamun ternyata dia itu #{game.get_role(votee.role)}, selamatlah dia dari eksekusi kali ini")
+          send_to_player(group_chat_id, "#{voting_result}\nNamun ternyata dia itu #{game.get_role(votee.role)}, selamatlah dia dari eksekusi kali ini")
         else
           log("voting succeeded, resulting in #{votee.full_name}'s death")
           send_to_player(votee.user_id, 'MPOZ LO DIEKSEKUSI')
-          send_to_player(group_chat_id, "Hasil bertulul berbuah eksekusi si #{votee.full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{game.get_role(votee.role)}")
+          send_to_player(group_chat_id, "#{voting_result}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{game.get_role(votee.role)}")
         end
         return if check_win(game)
         message_action(game, ROUND_START)
       when VOTING_FAILED
         group_chat_id = game.group_id
+        voting_result = aux
         log('voting failed')
-        send_to_player(group_chat_id, 'Nulul tidak membuahkan mufakat')
+        send_to_player(group_chat_id, "#{voting_result}\n\nNulul tidak membuahkan mufakat")
         return if check_win(game)
         message_action(game, ROUND_START)
       when ENLIGHTEN_SEER
@@ -976,16 +980,16 @@ module Lycantulul
       return unless round == game.round && !game.night? && !game.waiting? && !game.discussion? && !game.finished?
       log('continuing')
       if force || game.check_voting_finished
-        list_voting(game)
+        voting_result = game.list_voting
         killed = game.kill_votee
         abstains = game.kill_abstain
 
         message_action(game, ABSTAIN, abstains) unless abstains.empty?
 
         if killed
-          message_action(game, VOTING_SUCCEEDED, killed)
+          message_action(game, VOTING_SUCCEEDED, [killed, voting_result])
         else
-          message_action(game, VOTING_FAILED)
+          message_action(game, VOTING_FAILED, voting_result)
         end
       end
     end
@@ -994,42 +998,47 @@ module Lycantulul
       log('checking win condition')
       game.reload
       win = false
+      ending = ''
       if game.living_werewolves.count + game.living_super_werewolves.count == 0
         log('werewolves ded')
-        send_to_player(game.group_id, 'Dan permainan pun berakhir karena seluruh serigala telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.')
+        ending += 'Dan permainan pun berakhir karena seluruh serigala telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.'
         win = true
       elsif game.living_werewolves.count + game.living_super_werewolves.count == game.killables.count || game.killables.count == 0
         log('villagers ded')
-        send_to_player(game.group_id, 'Dan permainan pun berakhir karena serigala telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.')
+        ending += 'Dan permainan pun berakhir karena serigala telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.'
         win = true
       end
 
       if win
         game.finish
-        list_players(game)
 
-        ending = '<pre>'
-        ending += ".    /\\    \n"
-        ending += "    /  \\   \n"
-        ending += "   / /\\ \\  \n"
-        ending += "  / ____ \\ \n"
-        ending += " /_/__  \\_\\\n"
-        ending += " |  _ \\    \n"
-        ending += " | |_) |   \n"
-        ending += " |  _ &lt;    \n"
-        ending += " | |_) |   \n"
-        ending += " |____/    \n"
-        ending += " |_   _|   \n"
-        ending += "   | |     \n"
-        ending += "   | |     \n"
-        ending += "  _| |_    \n"
-        ending += " |_____|   \n"
-        ending += "  / ____|  \n"
-        ending += " | (___    \n"
-        ending += "  \\___ \\   \n"
-        ending += "  ____) |  \n"
-        ending += " |_____/   "
-        ending += '</pre>'
+        ending += "\n\n"
+        #ending += '<pre>'
+        #ending += ".    /\\    \n"
+        #ending += "    /  \\   \n"
+        #ending += "   / /\\ \\  \n"
+        #ending += "  / ____ \\ \n"
+        #ending += " /_/__  \\_\\\n"
+        #ending += " |  _ \\    \n"
+        #ending += " | |_) |   \n"
+        #ending += " |  _ &lt;    \n"
+        #ending += " | |_) |   \n"
+        #ending += " |____/    \n"
+        #ending += " |_   _|   \n"
+        #ending += "   | |     \n"
+        #ending += "   | |     \n"
+        #ending += "  _| |_    \n"
+        #ending += " |_____|   \n"
+        #ending += "  / ____|  \n"
+        #ending += " | (___    \n"
+        #ending += "  \\___ \\   \n"
+        #ending += "  ____) |  \n"
+        #ending += " |_____/   "
+        #ending += '</pre>'
+        #ending += "\n\n"
+
+        ending += game.list_players
+
         send_to_player(game.group_id, ending, parse_mode: 'HTML')
       end
 
