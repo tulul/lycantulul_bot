@@ -647,7 +647,7 @@ module Lycantulul
           send_to_player(abs.user_id, "#{Lycantulul::Player::ABSTAIN_LIMIT}x tidak voting, terpaksa harus dibunuh")
         end
 
-        send_to_player(group_chat_id, "Pemain yang tidak voting #{Lycantulul::Player::ABSTAIN_LIMIT}x dan dibunuh paksa:\n#{abstains.map{ |abs| "- <b>#{abs.full_name}</b>" }.join("\n")}", parse_mode: 'HTML')
+        send_to_player(group_chat_id, "Pemain yang tidak voting #{Lycantulul::Player::ABSTAIN_LIMIT}x dan dibunuh paksa:\n#{abstains.map{ |abs| "- <b>#{abs.full_name}</b> - <i>#{game.get_role(abs.role)}</i>" }.join("\n")}", parse_mode: 'HTML')
       when VOTING_SUCCEEDED
         group_chat_id = game.group_id
         votee = aux
