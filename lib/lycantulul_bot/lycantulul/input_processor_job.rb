@@ -1013,7 +1013,8 @@ module Lycantulul
         game.finish
 
         ending += "\n\n"
-        #ending += '<pre>'
+        ending += '<pre>'
+
         #ending += ".    /\\    \n"
         #ending += "    /  \\   \n"
         #ending += "   / /\\ \\  \n"
@@ -1034,9 +1035,29 @@ module Lycantulul
         #ending += "  \\___ \\   \n"
         #ending += "  ____) |  \n"
         #ending += " |_____/   "
-        #ending += '</pre>'
-        #ending += "\n\n"
+        ending += "_________\n"
+        ending += "__  ____/\n"
+        ending += "_  / __  \n"
+        ending += "/ /_/ /  \n"
+        ending += "\\____/   \n"
+        ending += "_________\n"
+        ending += "__  ____/\n"
+        ending += "_  / __  \n"
+        ending += "/ /_/ /  \n"
+        ending += "\\____/   \n"
+        ending += "___       __\n"
+        ending += "__ |     / /\n"
+        ending += "__ | /| / / \n"
+        ending += "__ |/ |/ /  \n"
+        ending += "____/|__/   \n"
+        ending += "________ \n"
+        ending += "___  __ \\\n"
+        ending += "__  /_/ /\n"
+        ending += "_  ____/ \n"
+        ending += "/_/      \n"
 
+        ending += '</pre>'
+        ending += "\n\n"
         ending += game.list_players
 
         send_to_player(game.group_id, ending, parse_mode: 'HTML')
