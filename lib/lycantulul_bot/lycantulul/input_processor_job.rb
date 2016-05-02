@@ -1044,7 +1044,7 @@ module Lycantulul
     def player_invalid?(message)
       player = message.from
 
-      string = "#{player.first_name}#{player.last_name}#{player.username}".downcase
+      string = "#{player.first_name}#{player.last_name}".downcase
       res = string =~ /[`\/\\:*_\[\](){}]/
 
       reserved_words = [Lycantulul::Game::NECROMANCER_SKIP, Lycantulul::Game::USELESS_VILLAGER_SKIP]
