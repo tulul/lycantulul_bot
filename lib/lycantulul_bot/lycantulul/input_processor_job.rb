@@ -689,7 +689,7 @@ module Lycantulul
 
           log("sending #{protector_name} failed protection notification")
           send_to_player(protector_id, "Jangan jualan ke sembarang orang! Lu jualan ke serigala, mati aja.")
-          send_to_player(game.group_id, "Bego nih penjual jimat #{protector_name} malah jualan ke serigala :'))")
+          send_to_player(game.group_id, "Bego nih #{game.get_role(Lycantulul::Game::PROTECTOR)} si #{protector_name} malah jualan ke serigala :'))")
         end
       when ZOMBIE_REVIVED
         aux.each do |nc|
