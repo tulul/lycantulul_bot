@@ -45,6 +45,7 @@ module Lycantulul
     field :temp_stats, type: Hash, default: {}
 
     field :last_player_list_query, type: Time
+    field :last_voting_list_query, type: Time
 
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
@@ -712,8 +713,12 @@ module Lycantulul
         if self.discussion?
           return 'Belom mulai waktu voting'
         else
-          return 'Belum ada yang mulai voting, MULAI WOY!'
+          return 'Ga ada yang voting'
         end
+      end
+
+      self.with_lock(wait: true) do
+        self.update_attribute(:last_voting_list_query, Time.now)
       end
 
       res

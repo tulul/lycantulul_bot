@@ -287,7 +287,9 @@ module Lycantulul
               if game = check_game(message)
                 unless game.waiting?
                   unless game.night?
-                    list_voting(game)
+                    if (Time.now - game.last_voting_list_query rescue 11).ceil > 10
+                      list_voting(game)
+                    end
                   else
                     send(message, 'Masih malem, belom mulai voting', reply: true)
                   end
