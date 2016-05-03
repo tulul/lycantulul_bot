@@ -71,22 +71,13 @@ module Lycantulul
                 send(message, 'Terdaftar! Lood Guck and Fave hun! Kalo mau ikutan main, balik ke grup, terus pencet /ikutan')
               end
             else
-              wrong_room(message)
+              start_new_game(message)
             end
           when /^\/help(@lycantulul_bot)?/
             send(message, bot_help)
           when /^\/bikin_baru(@lycantulul_bot)?/
             if in_group?(message)
-              if check_game(message)
-                send(message, 'Udah ada yang ngemulai gan tadi. /ikutan ae', reply: true)
-              else
-                if check_player(message)
-                  Lycantulul::Game.create_from_message(message)
-                  send(message, "Oke yok maen! Yang mau /ikutan buruan yee. Kalo udah #{MINIMUM_PLAYER.call} pemain ntar bisa dimulai")
-                else
-                  unregistered(message)
-                end
-              end
+              start_new_game(message)
             else
               wrong_room(message)
             end
@@ -137,7 +128,7 @@ module Lycantulul
                   unregistered(message)
                 end
               else
-                send(message, 'Ikutan apaan gan orang ga ada yang maen dah, kalo mau /bikin_baru', reply: true)
+                start_new_game(message)
               end
             else
               wrong_room(message)
@@ -274,7 +265,7 @@ module Lycantulul
                   send(message, 'Udah mulai tjoy dari tadi', reply: true)
                 end
               else
-                send(message, 'Apa yang mau dimulai heh? /bikin_baru dulu!', reply: true)
+                start_new_game(message)
               end
             else
               wrong_room(message)
@@ -533,6 +524,19 @@ module Lycantulul
         send_to_player(rg.group_id, 'Maaf ada error sesuatu, permainan terpaksa dihentikan dan main tenis. Maap yak')
       end
       retry
+    end
+
+    def start_new_game(message)
+      if check_game(message)
+        send(message, 'Udah ada yang ngemulai gan tadi. /ikutan ae', reply: true)
+      else
+        if check_player(message)
+          Lycantulul::Game.create_from_message(message)
+          send(message, "Oke yok maen! Yang mau /ikutan buruan yee. Kalo udah #{MINIMUM_PLAYER.call} pemain ntar bisa dimulai")
+        else
+          unregistered(message)
+        end
+      end
     end
 
     def message_action(game, action, aux = nil)
