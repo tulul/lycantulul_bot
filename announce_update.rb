@@ -1,7 +1,8 @@
 load 'Rakefile'
 
 updates = "latest updates:\n"
-updates += "- Pemain yang tidak voting selama 3x (tidak harus berturut2) akan dibunuh paksa\n"
+updates += "- yang jarang jadi <i>x</i>, peluang buat dapet peran <i>x</i> lebih tinggi\n"
+updates += "- /siapa_aja cuma bisa sekali tiap 10 detik\n"
 updates += "\n"
 updates += "- <a href='https://github.com/tulul/lycantulul_bot'>Klik sini kalo mau saran/lapor bug/dll (github)</a>\n"
 updates += "- <a href='https://storebot.me/bot/lycantulul_bot'>Klik sini kalo mau ngasih rating/review (storebot)</a>\n"

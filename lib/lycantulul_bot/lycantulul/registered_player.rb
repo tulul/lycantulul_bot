@@ -109,6 +109,10 @@ module Lycantulul
       ("%.2f" % prc) + '%'
     end
 
+    def role_proportion(role)
+      self.game > 0 ? self.send(role).to_f / self.game : 0
+    end
+
     def top_role
       res = []
       top = -1

@@ -378,7 +378,7 @@ module Lycantulul
         self.night_time ||= Lycantulul::InputProcessorJob::NIGHT_TIME.call
         self.discussion_time ||= Lycantulul::InputProcessorJob::DISCUSSION_TIME.call
         ROLES.each do |role|
-          assign(self.class.const_get(role.upcase))
+          assign(role)
         end
         self.save
       end
@@ -391,9 +391,18 @@ module Lycantulul
     end
 
     def assign(role)
-      role_count(role).times do
-        self.living_villagers.sample.assign(role)
-        LycantululBot.log("assigning #{get_role(role)}")
+      # https://gist.github.com/O-I/3e0654509dd8057b539a
+      role_const = self.class.const_get(role.upcase)
+      role_count(role_const).times do
+        arr = self.living_villagers.to_a
+        weights = arr.map{ |x| self.get_player(x.user_id).role_proportion(role) }
+        sum = weights.reduce(:+)
+        weights.map!{ |w| w / sum }
+
+        weighted_players = arr.zip(weights).to_h
+        to_assign = weighted_players.min_by{ |_, weight| rand ** (1.0 / weight) }.first
+        to_assign.assign(role_const)
+        LycantululBot.log("assigning #{get_role(role_const)}")
       end
     rescue
     end

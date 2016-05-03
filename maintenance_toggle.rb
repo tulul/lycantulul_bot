@@ -26,6 +26,7 @@ $redis.set('lycantulul::maintenance', res ^ 1)
 
 if res == 1
   queue = $redis.lrange('lycantulul::maintenance_info', 0, -1).uniq
+  puts "Sending 'im back' to #{queue.size} chats"
   Telegram::Bot::Client.run($token) do |bot|
     queue.each do |q|
       bot.api.send_message(chat_id: q, text: 'Sudah selesai bermain tenis. Silakan mulai main lagi~') rescue nil
