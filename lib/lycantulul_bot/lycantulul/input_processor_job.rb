@@ -104,17 +104,7 @@ module Lycantulul
                     user = message.from
                     unless game.duplicate_name?(user)
                       if game.add_player(user)
-                        additional_text =
-                          if game.players.count >= MINIMUM_PLAYER.call
-                            res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
-                            res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\n\n"
-                            res += "#{game.list_settings}"
-                            res
-                          else
-                            "#{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
-                          end
-
-                        send(message, "Welcome to the game, #{user.first_name}!\n\nUdah <b>#{game.players.count} orang</b> nich~ #{additional_text}", html: true)
+                        Lycantulul::WelcomeMessageJob.perform_in(3, game, self)
                       else
                         send(message, 'Duh udah masuk lu', reply: true)
                       end
@@ -974,6 +964,24 @@ module Lycantulul
         else
           message_action(game, WEREWOLF_KILL_FAILED)
         end
+      end
+    end
+
+    def send_welcome_message(game)
+      game.reload
+      welcomed = game.clear_unwelcomed
+      unless welcomed.empty?
+        additional_text =
+          if game.players.count >= MINIMUM_PLAYER.call
+            res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
+            res += "Tambah <b>#{game.next_new_role}</b> orang lagi ada peran peran penting tambahan.\n\n"
+            res += "#{game.list_settings}"
+            res
+          else
+            "#{MINIMUM_PLAYER.call - game.players.count} orang lagi buruan /ikutan"
+          end
+
+        send_to_player(game.group_id, "Welcome to the game, #{welcomed.map(&:first_name).join(', ')}!\n\nUdah <b>#{game.players.count} orang</b> nich~ #{additional_text}", parse_mode: 'HTML')
       end
     end
 

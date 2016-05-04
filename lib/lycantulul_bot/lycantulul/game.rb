@@ -56,6 +56,7 @@ module Lycantulul
     def self.create_from_message(message)
       res = self.create(group_id: message.chat.id)
       res.add_player(message.from)
+      res.players.first.welcome
     end
 
     def self.active_for_group(group)
@@ -255,6 +256,12 @@ module Lycantulul
         self.temp_stats = {}
         self.save
       end
+    end
+
+    def clear_unwelcomed
+      res = self.players.unwelcomed.to_a
+      res.map(&:welcome)
+      res
     end
 
     def add_victim(killer_id, victim)

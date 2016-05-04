@@ -12,6 +12,7 @@ module Lycantulul
     field :alive, type: Boolean, default: true
     field :ready, type: Boolean, default: false
     field :abstain, type: Integer, default: 0
+    field :welcomed, type: Boolean, default: false
 
     index({ user_id: 1 })
     index({ full_name: 1 })
@@ -55,6 +56,10 @@ module Lycantulul
       self.where(:abstain.gte => ABSTAIN_LIMIT)
     end
 
+    def self.unwelcomed
+      self.where(welcomed: false)
+    end
+
     def self.create_player(user, game_id)
       self.create(
         user_id: user.id,
@@ -88,6 +93,12 @@ module Lycantulul
     def revive
       self.with_lock(wait: true) do
         self.update_attribute(:alive, true)
+      end
+    end
+
+    def welcome
+      self.with_lock(wait: true) do
+        self.update_attribute(:welcomed, true)
       end
     end
 
