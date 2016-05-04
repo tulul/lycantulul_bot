@@ -46,6 +46,7 @@ module Lycantulul
 
     field :last_player_list_query, type: Time
     field :last_voting_list_query, type: Time
+    field :last_summon_query,      type: Time
 
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
