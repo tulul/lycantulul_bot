@@ -48,6 +48,8 @@ module Lycantulul
     field :last_voting_list_query, type: Time
     field :last_summon_query,      type: Time
 
+    field :voter_message_queue, type: Array, default: []
+
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
 
@@ -254,6 +256,7 @@ module Lycantulul
         self.pending_custom_id = nil
         self.pending_custom_role = nil
         self.temp_stats = {}
+        self.voter_message_queue = []
         self.save
       end
     end
@@ -284,6 +287,18 @@ module Lycantulul
 
         self.save
         RESPONSE_OK
+      end
+    end
+
+    def add_voter_message(message)
+      self.with_lock(wait: true) do
+        self.update_attribute(:voter_message_queue, self.voter_message_queue << message)
+      end
+    end
+
+    def clear_voter_message
+      self.with_lock(wait: true) do
+        self.update_attribute(:voter_message_queue, [])
       end
     end
 

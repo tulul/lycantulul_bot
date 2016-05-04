@@ -398,7 +398,8 @@ module Lycantulul
                   keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
                   send(message, 'Seeep', keyboard: keyboard)
                   voter = game.public_vote? ? "<b>#{message.from.first_name}</b>" : '<i>Seseorang</i>'
-                  send_to_player(game.group_id, "#{voter} <i>udah nge-vote:</i> <b>#{message.text}</b>", parse_mode: 'HTML')
+                  game.add_voter_message("#{voter} <i>udah nge-vote:</i> <b>#{message.text}</b>")
+                  Lycantulul::VotingBroadcastJob.perform_in(3, game, self)
                 when Lycantulul::Game::RESPONSE_INVALID
                   full_name = Lycantulul::Player.get_full_name(message.from)
                   send_voting(game.living_players, full_name, message.chat.id)
@@ -982,6 +983,15 @@ module Lycantulul
           end
 
         send_to_player(game.group_id, "Welcome to the game, #{welcomed.map(&:first_name).join(', ')}!\n\nUdah <b>#{game.players.count} orang</b> nich~ #{additional_text}", parse_mode: 'HTML')
+      end
+    end
+
+    def send_voting_broadcast(game)
+      game.reload
+      voter = game.voter_message_queue
+      unless voter.empty?
+        game.clear_voter_message
+        send_to_player(game.group_id, voter.join("\n"), parse_mode: 'HTML')
       end
     end
 
