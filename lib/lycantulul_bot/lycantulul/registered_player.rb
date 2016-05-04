@@ -98,8 +98,8 @@ module Lycantulul
       res += "Diidupin mujahid <b>#{self.revived}</b>\n"
       res += "\n"
 
-      top_role_ = top_role
-      res += "Peran paling sering <b>#{top_role_[0]}</b> - <b>#{percentage(top_role_[1])}</b>\n"
+      res += "Pembagian peran:\n"
+      res += roles_statistics
 
       res
     end
@@ -113,21 +113,23 @@ module Lycantulul
       self.game > 0 ? self.send(role).to_f / self.game : 0
     end
 
-    def top_role
-      res = []
-      top = -1
-      Lycantulul::Game::ROLES.each do |role_|
-        role_count = self.send(role_)
-        role_name = Lycantulul::Game.new.get_role(Lycantulul::Game.const_get(role_.upcase))
-        if role_count > top
-          top = role_count
-          res = [role_name]
-        elsif role_count == top
-          res << role_name
-        end
+    def roles_statistics
+      sum = self.game
+      tot = {}
+      Lycantulul::Game::ROLES.each do |role|
+        tot[role] ||= 0
+        tot[role] += self.send(role)
       end
 
-      [res.sort.join(', '), top]
+      g = Lycantulul::Game.new
+      res = []
+      tot.sort_by{ |_, v| v }.reverse.each do |role, count|
+        prc = sum == 0 ? 0 : (count * 100.0 / sum)
+        break if prc == 0
+        res << "<code>#{"%5.2f%" % prc}</code> #{g.get_role(g.class.const_get(role.upcase))}"
+      end
+
+      res.join("\n")
     end
   end
 end
