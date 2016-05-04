@@ -569,7 +569,7 @@ module Lycantulul
           seen = self.living_players.with_name(vc[:full_name])
           if seen && self.living_seers.with_id(vc[:seer_id])
             LycantululBot.log("#{seen.full_name} is seen (from GAME)")
-            seen_role = seen.role == SUPER_WEREWOLF ? self.get_role(self.living_players.without_role([SEER]).sample.role) : self.get_role(seen.role)
+            seen_role = seen.role == SUPER_WEREWOLF ? self.get_role(self.killables.without_role([SEER]).sample.role) : self.get_role(seen.role)
             res << [seen.full_name, seen_role, vc[:seer_id]]
           end
         end

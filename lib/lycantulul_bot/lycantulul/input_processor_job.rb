@@ -795,7 +795,7 @@ module Lycantulul
         chosen = game.living_players.sample
       end
 
-      chosen_role = chosen.role == Lycantulul::Game::SUPER_WEREWOLF ? game.get_role(game.living_players.without_role([Lycantulul::Game::FAUX_SEER]).sample.role) : game.get_role(chosen.role)
+      chosen_role = chosen.role == Lycantulul::Game::SUPER_WEREWOLF ? game.get_role(game.killables.without_role([Lycantulul::Game::FAUX_SEER]).sample.role) : game.get_role(chosen.role)
       send_to_player(seer.user_id, "Hum bala hum bala hum naga cinta membuka mata acha septriasa: peran #{chosen.full_name} adalah #{chosen_role}")
     end
 
