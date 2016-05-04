@@ -388,7 +388,7 @@ module Lycantulul
 
     def next_round
       self.with_lock(wait: true) do
-        self.update_attribute(:round, self.round + 1)
+        self.inc(round: 1)
       end
     end
 
