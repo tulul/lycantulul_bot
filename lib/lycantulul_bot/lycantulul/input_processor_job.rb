@@ -259,7 +259,7 @@ module Lycantulul
                     end
                   else
                     $redis.rpush('lycantulul::maintenance_info', message.chat.id)
-                    send(message, 'Jangan /mulai_main dulu ya, mau main tenis bentar', reply: true)
+                    send(message, "Jangan /mulai_main dulu ya, mau main tenis bentar. Masih nungguin #{Lycantulul::Game.running.count} game selesai dulu", reply: true)
                   end
                 else
                   send(message, 'Udah mulai tjoy dari tadi', reply: true)
