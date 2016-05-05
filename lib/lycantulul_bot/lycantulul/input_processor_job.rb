@@ -759,7 +759,7 @@ module Lycantulul
     def send_kill_voting(game, chat_id)
       lw = game.living_werewolves + game.living_super_werewolves
       single_w = lw.size == 1
-      killables = game.killables.map{ |kl| kl[:full_name] }
+      killables = convert_to_square_keyboard(game.killables.map{ |kl| kl[:full_name] })
 
       kill_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: killables, resize_keyboard: true, one_time_keyboard: true)
 
@@ -769,13 +769,15 @@ module Lycantulul
 
     def send_voting(living_players, player_full_name, player_chat_id)
       log("sending voting to #{player_full_name}")
-      vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [player_full_name], resize_keyboard: true, one_time_keyboard: true)
+      options = convert_to_square_keyboard(living_players.map{ |lv| lv[:full_name] } - [player_full_name])
+      vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: options, resize_keyboard: true, one_time_keyboard: true)
       send_to_player(player_chat_id, 'Ayo voting eksekusi siapa nih~', reply_markup: vote_keyboard)
     end
 
     def send_seer(living_players, seer_full_name, seer_chat_id)
       log("sending seer instruction to #{seer_full_name}")
-      vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [seer_full_name], resize_keyboard: true, one_time_keyboard: true)
+      options = convert_to_square_keyboard(living_players.map{ |lv| lv[:full_name] } - [seer_full_name])
+      vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: options, resize_keyboard: true, one_time_keyboard: true)
       send_to_player(seer_chat_id, 'Mau ngintip perannya siapa kak? :3', reply_markup: vote_keyboard)
     end
 
@@ -792,7 +794,8 @@ module Lycantulul
 
     def send_protector(living_players, protector_full_name, protector_chat_id)
       log("sending protector instruction to #{protector_full_name}")
-      vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [protector_full_name], resize_keyboard: true, one_time_keyboard: true)
+      options = convert_to_square_keyboard(living_players.map{ |lv| lv[:full_name] } - [protector_full_name])
+      vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: options, resize_keyboard: true, one_time_keyboard: true)
       send_to_player(protector_chat_id, 'Mau jual jimat ke siapa?', reply_markup: vote_keyboard)
     end
 
@@ -800,14 +803,33 @@ module Lycantulul
       log("sending necromancer instruction to #{necromancer_chat_id}")
       options = [Lycantulul::Game::NECROMANCER_SKIP]
       options << dead_players.map{ |lv| lv[:full_name] }
+      options = convert_to_square_keyboard(options.flatten)
       vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: options, resize_keyboard: true, one_time_keyboard: true)
       send_to_player(necromancer_chat_id, 'Mau menghidupkan siapa?', reply_markup: vote_keyboard)
     end
 
     def send_homeless(living_players, homeless_full_name, homeless_chat_id)
       log("sending homeless instruction to #{homeless_full_name}")
-      vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: living_players.map{ |lv| lv[:full_name] } - [homeless_full_name], resize_keyboard: true, one_time_keyboard: true)
+      options = convert_to_square_keyboard(living_players.map{ |lv| lv[:full_name] } - [homeless_full_name])
+      vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: options, resize_keyboard: true, one_time_keyboard: true)
       send_to_player(homeless_chat_id, 'Mau nebeng di rumah siapa?', reply_markup: vote_keyboard)
+    end
+
+    def convert_to_square_keyboard(arr)
+      keyboard = []
+      max = arr.count
+      sq = Math.sqrt(max).ceil
+      sq = 4 if sq > 4
+      count = -1
+      while count < max
+        tmp = []
+        sq.times do
+          role = arr[count += 1] rescue nil
+          tmp << role
+        end
+        keyboard << tmp.compact
+      end
+      keyboard.reject{ |x| x.empty? }
     end
 
     def wrong_room(message)
