@@ -987,7 +987,7 @@ module Lycantulul
     def send_welcome_message(game)
       game.reload
       welcomed = game.clear_unwelcomed
-      unless welcomed.empty?
+      if !welcomed.empty? && game.waiting?
         additional_text =
           if game.players.count >= MINIMUM_PLAYER.call
             res = "Udah bisa mulai btw, kalo mau /mulai_main yak. Atau enaknya nunggu makin rame lagi sih. Yok yang lain pada /ikutan\n\nPembagian peran:\n#{game.role_composition}\n"
@@ -1005,7 +1005,7 @@ module Lycantulul
     def send_voting_broadcast(game)
       game.reload
       voter = game.voter_message_queue
-      unless voter.empty?
+      if !voter.empty? && !game.night? && !game.discussion?
         game.clear_voter_message
         send_to_player(game.group_id, voter.join("\n"), parse_mode: 'HTML')
       end
