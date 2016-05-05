@@ -814,16 +814,11 @@ module Lycantulul
       max = arr.count
       sq = Math.sqrt(max).ceil
       sq = 4 if sq > 4
-      count = -1
+      count = 0
       while count < max
-        tmp = []
-        sq.times do
-          role = arr[count += 1] rescue nil
-          tmp << role
-        end
-        keyboard << tmp.compact
+        keyboard << arr[count...(count += sq)]
       end
-      keyboard.reject{ |x| x.empty? }
+      keyboard.reject{ |x| !x || x.empty? }
     end
 
     def wrong_room(message)
