@@ -360,12 +360,6 @@ module Lycantulul
           when /^\/ilangin_keyboard(@lycantulul_bot)?/
             keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
             send(message, 'OK', reply: in_group?(message), keyboard: keyboard)
-          when /^\/statistik_grup(@lycantulul_bot)?/
-            if in_group?(message)
-              send_to_player(message.chat.id, Lycantulul::Group.get(message).statistics, parse_mode: 'HTML')
-            else
-              wrong_room(message)
-            end
           when /^\/statistik(@lycantulul_bot)?/
             if in_private?(message)
               if check_player(message)
@@ -374,7 +368,7 @@ module Lycantulul
                 send(message, 'Maaf belum kedaftar, /start dulu yak')
               end
             else
-              wrong_room(message)
+              send_to_player(message.chat.id, Lycantulul::Group.get(message).statistics, parse_mode: 'HTML')
             end
           when /^\/stats/
             return unless message.from.username == 'araishikeiwai'

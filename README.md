@@ -25,8 +25,7 @@ inspired by [WerewolfBot](https://telegram.me/werewolfbot)
 - `/panggil_yang_belom_voting` - cukup jelas
 - `/ganti_settingan_waktu` - Ngubah waktu (malam, diskusi, voting)
 - `/batal_nyetting_waktu` - Batalin settingan waktu yang lagi di-setting sekarang
-- `/statistik_grup` - Liat statistik grup
-- `/statistik` - Liat statistik diri sendiri
+- `/statistik` - Liat statistik grup/diri sendiri
 - `/ilangin_keyboard` - Reply keyboard muncul terus? Cobain nih
 
 ### Kustomisasi
