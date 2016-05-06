@@ -24,6 +24,7 @@ module Lycantulul
     field :round, type: Integer, default: 0
 
     field :waiting, type: Boolean, default: true
+    field :waiting_for_ready, type: Boolean, default: false
     field :night, type: Boolean, default: true
     field :discussion, type: Boolean, default: false
     field :finished, type: Boolean, default: false
@@ -237,6 +238,12 @@ module Lycantulul
       !self.custom_roles || ((IMPORTANT_ROLES.inject(0){ |sum, role| sum + self.role_count(self.class.const_get(role.upcase)) } <= self.players.count) && ww_count_valid)
     end
 
+    def start_ready_round
+      self.with_lock(wait: true) do
+        self.update_attribute(:waiting_for_ready, true)
+      end
+    end
+
     def add_ready(player_id)
       self.with_lock(wait: true) do
         self.update_attribute(:ready, self.ready << player_id)
@@ -246,6 +253,7 @@ module Lycantulul
     def clear_ready
       self.with_lock(wait: true) do
         self.update_attribute(:ready, [])
+        self.update_attribute(:waiting_for_ready, false)
       end
     end
 
@@ -262,6 +270,7 @@ module Lycantulul
         self.round = 0
         self.night = true
         self.waiting = true
+        self.waiting_for_ready = false
         self.discussion = false
         self.finished = false
         self.victim = []
