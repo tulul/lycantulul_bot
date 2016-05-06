@@ -419,19 +419,9 @@ module Lycantulul
       role_const = self.class.const_get(role.upcase)
       role_count(role_const).times do
         arr = self.living_villagers.to_a
-        weights = arr.map{ |x| self.get_player(x.user_id).role_proportion(role) }
+        weights = arr.map{ |x| self.get_player(x.user_id).role_proportion(role) + 1 }
         sum = weights.reduce(:+)
-
-        to_assign =
-          if sum == 0
-            self.living_villagers.sample
-          else
-            weights.map!{ |w| w / sum }
-            weighted_players = arr.zip(weights).to_h
-            weighted_players.min_by{ |_, weight| rand ** (1.0 / weight) }.first
-          end
-
-        to_assign.assign(role_const)
+        arr.zip(weights.map{ |w| w / sum }).min_by{ |w| rand ** (1.0 / w[1]) }[0].assign(role_const)
         LycantululBot.log("assigning #{get_role(role_const)}")
       end
     rescue
