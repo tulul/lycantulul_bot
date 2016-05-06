@@ -238,9 +238,28 @@ module Lycantulul
                   if !MAINTENANCE_PREVENT.call
                     if game.players.count >= MINIMUM_PLAYER.call
                       if game.role_valid?
-                        game.start
-                        message_action(game, BROADCAST_ROLE)
-                        message_action(game, ROUND_START)
+                        send(message, 'Waktunya 30 detik sebelom mulai, semua harus klik /rede dulu')
+                        sleep(15)
+                        summon(game, :all)
+                        sleep(10)
+                        send(message, '5 detik lagi, klik /rede yang belom')
+                        sleep(2)
+                        send(message, '3')
+                        sleep(1)
+                        send(message, '2')
+                        sleep(1)
+                        send(message, '1')
+                        sleep(1)
+                        game.reload
+
+                        if (nr = game.not_ready_count) != 0
+                          game.clear_ready
+                          send(message, "Belum pada ngumpul #{nr} orang belom /rede. Kumpulin dulu semua baru ulang /mulai_main dan /rede lagi")
+                        else
+                          game.start
+                          message_action(game, BROADCAST_ROLE)
+                          message_action(game, ROUND_START)
+                        end
                       else
                         send(message, 'Pembagian peran yang dikasih ga valid, /apus_settingan_peran atau /ganti_settingan_peran!', reply: true)
                       end
@@ -259,6 +278,10 @@ module Lycantulul
               end
             else
               wrong_room(message)
+            end
+          when /^\/rede(@lycantulul_bot)?/
+            if in_group?(message) && (game = check_game(message)) && game.waiting? && !MAINTENANCE_PREVENT.call && game.players.count >= MINIMUM_PLAYER.call && game.role_valid?
+              game.add_ready(message.from.id)
             end
           when /^\/siapa_aja(@lycantulul_bot)?/
             if in_group?(message)
