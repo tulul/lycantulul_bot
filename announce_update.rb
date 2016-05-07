@@ -18,10 +18,13 @@ Telegram::Bot::Client.run($token) do |bot|
     begin
       bot.api.send_message(chat_id: g, text: updates, parse_mode: 'HTML', disable_web_page_preview: true)
       success += 1
-      sleep(0.1)
     rescue StandardError => e
       failure += 1
       puts e.message
+      if e.message =~ /400/
+        r = Lycantulul::Group.find_by(group_id: g)
+        r && r.destroy
+      end
     end
   end
 end

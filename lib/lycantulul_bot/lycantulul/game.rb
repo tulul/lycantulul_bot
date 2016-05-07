@@ -425,6 +425,7 @@ module Lycantulul
 
     def start
       self.with_lock(wait: true) do
+        return unless game.waiting?
         self.waiting = false
         self.voting_time ||= Lycantulul::InputProcessorJob::VOTING_TIME.call
         self.night_time ||= Lycantulul::InputProcessorJob::NIGHT_TIME.call
