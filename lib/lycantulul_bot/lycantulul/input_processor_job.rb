@@ -1038,9 +1038,9 @@ module Lycantulul
       game.reload
       voter = game.voter_message_queue
       if !voter.empty? && !game.night? && !game.discussion?
-        game.clear_voter_message
         send_to_player(game.group_id, voter.join("\n"), parse_mode: 'HTML')
       end
+      game.clear_voter_message
     end
 
     def end_discussion_and_start_voting(game, round, force = false)
