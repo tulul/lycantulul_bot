@@ -1157,8 +1157,8 @@ module Lycantulul
       string = "#{player.first_name}#{player.last_name}".downcase
       res = string =~ /[`\/\\:*_\[\](){}]/
 
-      reserved_words = [Lycantulul::Game::NECROMANCER_SKIP, Lycantulul::Game::USELESS_VILLAGER_SKIP]
-      res ||= reserved_words.include?(Lycantulul::Player.get_full_name(player))
+      reserved_words = [Lycantulul::Game::NECROMANCER_SKIP, Lycantulul::Game::USELESS_VILLAGER_SKIP, 'Lycantulul']
+      res ||= reserved_words.map(&:downcase).include?(Lycantulul::Player.get_full_name(player).downcase)
 
       res
     end
