@@ -1,9 +1,7 @@
 load 'Rakefile'
 
 updates = "latest updates:\n"
-updates += "- beberapa ada yang bingung dong, /mulai_main dulu baru semua pada /rede, jangan /rede sebelom /mulai_main. /rede yang diitung cuma yang sejak /mulai_main dipanggil\n"
-updates += "- bahasa gampang nih: /mulai_main itu ngasih aba2 30 detik lagi game dimulai, tapi dalam 30 detik itu semua pemain harus stand-by dan ngasih tanda /rede. kalo ada pemain yang belom /rede, game ga bisa dimulai dan harus ulang ngasih aba-aba /mulai_main lagi dan semua /rede ulang lagi\n"
-updates += "- 1 hari ini testing dulu. kalo fiturnya kurang guna, besok diilangin deh. soalnya sering game dimulai padahal pemain2 lagi pada afk\n"
+updates += "- sebelom mulai main, semua pemain harus ngumpul dalam 30 detik dan /rede dulu baru bisa dimulai\n"
 updates += "\n"
 updates += "- <a href='https://github.com/tulul/lycantulul_bot'>Klik sini kalo mau saran/lapor bug/dll (github)</a>\n"
 updates += "- <a href='https://storebot.me/bot/lycantulul_bot'>Klik sini kalo mau ngasih rating/review (storebot)</a>\n"
