@@ -1050,7 +1050,7 @@ module Lycantulul
         log('werewolves ded')
         ending += 'Dan permainan pun berakhir karena seluruh serigala telah meninggal dunia. Mari doakan agar mereka tenang di sisi-Nya.'
         win = true
-      elsif game.living_werewolves.count + game.living_super_werewolves.count == game.killables.count || game.killables.count == 0
+      elsif game.living_werewolves.count + game.living_super_werewolves.count >= game.killables.count
         log('villagers ded')
         ending += 'Dan permainan pun berakhir karena serigala telah memenangkan permainan. Semoga mereka terkutuk seumur hidup.'
         win = true
