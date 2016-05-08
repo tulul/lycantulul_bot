@@ -41,7 +41,7 @@ module Lycantulul
         reply = in_group?(message)
         if !reply || message.text =~ /@lycantulul_(dev_)?bot/
           $redis.rpush('lycantulul::maintenance_info', message.chat.id)
-          send(message, 'Lagi bermain bersama Ecchi-men Ryoman dan Nopak Jokowi', reply: reply)
+          send(message, 'Lagi bermain tenis bersama Ecchi-men Ryoman dan Nopak Jokowi', reply: reply)
         end
       elsif player_invalid?(message)
         reply = in_group?(message)
