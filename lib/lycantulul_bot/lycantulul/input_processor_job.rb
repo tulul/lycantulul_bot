@@ -875,7 +875,7 @@ module Lycantulul
     end
 
     def bot_help
-      'Lihat penjelasan permainan di https://github.com/tulul/lycantulul_bot/blob/master/README.md'
+      'Lihat penjelasan permainan di https://github.com/tulul/lycantulul_bot/blob/master/Player-Guide.md'
     end
 
     def remind(game, round, time, next_reminder, state)
