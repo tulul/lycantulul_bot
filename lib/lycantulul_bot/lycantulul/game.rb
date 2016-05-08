@@ -43,7 +43,6 @@ module Lycantulul
     field :pending_custom_role, type: Integer, default: nil
 
     field :temp_stats, type: Hash, default: {}
-    field :ready, type: Array, default: []
 
     field :last_player_list_query, type: Time
     field :last_voting_list_query, type: Time
@@ -235,24 +234,6 @@ module Lycantulul
         end
 
       !self.custom_roles || ((IMPORTANT_ROLES.inject(0){ |sum, role| sum + self.role_count(self.class.const_get(role.upcase)) } <= self.players.count) && ww_count_valid)
-    end
-
-    def add_ready(player_id)
-      self.with_lock(wait: true) do
-        self.update_attribute(:ready, self.ready << player_id)
-      end
-    end
-
-    def clear_ready
-      self.with_lock(wait: true) do
-        self.update_attribute(:ready, [])
-      end
-    end
-
-    def not_ready_count
-      re = self.ready.sort.uniq
-      pl = self.players.map(&:user_id).sort.uniq
-      (pl - re).count
     end
 
     # never call unless really needed (will ruin statistics)
