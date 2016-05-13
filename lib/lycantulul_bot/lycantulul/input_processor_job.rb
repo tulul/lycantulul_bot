@@ -784,7 +784,7 @@ module Lycantulul
 
       chosen_role =
         if chosen.role == Lycantulul::Game::SUPER_WEREWOLF
-          rand_role = game.killables.without_role([FAUX_SEER]).sample.role rescue chosen.role
+          rand_role = game.killables.without_id([seer.user_id]).sample.role rescue chosen.role
           game.get_role(rand_role)
         else
           game.get_role(chosen.role)

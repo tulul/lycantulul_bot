@@ -584,7 +584,7 @@ module Lycantulul
             LycantululBot.log("#{seen.full_name} is seen (from GAME)")
             seen_role =
               if seen.role == SUPER_WEREWOLF
-                rand_role = self.killables.without_role([SEER]).sample.role rescue seen.role
+                rand_role = self.killables.without_id([vc[:seer_id]]).sample.role rescue seen.role
                 self.get_role(rand_role)
               else
                 self.get_role(seen.role)
