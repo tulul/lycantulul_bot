@@ -41,6 +41,15 @@ module Lycantulul
         tot.sort_by{ |_, v| v }.reverse.each do |role, count|
           stats << "<code>#{"%5.2f%" % (count * 100.0 / sum)}</code> #{g.get_role(g.class.const_get(role.upcase))}"
         end
+      when '/stats_game_run'
+        Lycantulul::Game.running.each do |g|
+          stats << "===== #{g.title} ====="
+          stats << "Round #{g.round}"
+          stats << "#{g.living_players.count}/#{g.players.count} alive"
+          stats << "#{g.killables.count} killables"
+          stats << "N|D|V time: #{g.night_time}, #{g.discussion_time}, #{g.voting_time}"
+          stats << ''
+        end
       when '/stats_player_run'
         Lycantulul::Game.running.each do |g|
           stats << "===== #{g.title} ====="
