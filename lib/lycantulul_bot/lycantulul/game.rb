@@ -162,6 +162,7 @@ module Lycantulul
     def check_custom_role(role_string)
       self.with_lock(wait: true) do
         custom = nil
+        return nil unless role_string
         role_string = role_string.gsub(/[^A-Za-z]/, '').downcase
 
         if role_string =~ /tts/
