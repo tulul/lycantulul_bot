@@ -18,7 +18,7 @@ module Lycantulul
 
     NECROMANCER_SKIP = 'NDAK DULU DEH'
     USELESS_VILLAGER_SKIP = 'OGAH NDAK VOTING KAK'
-    JESTER_LIMIT = 2
+    JESTER_LIMIT = 1
 
     field :group_id, type: Integer
     field :round, type: Integer, default: 0

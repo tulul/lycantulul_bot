@@ -1,12 +1,14 @@
 load 'Rakefile'
 
-updates = "latest updates:\n"
-updates += "- yang jarang jadi <i>x</i>, peluang buat dapet peran <i>x</i> lebih tinggi\n"
-updates += "- /siapa_aja cuma bisa sekali tiap 10 detik\n"
-updates += "\n"
-updates += "- <a href='https://github.com/tulul/lycantulul_bot'>Klik sini kalo mau saran/lapor bug/dll (github)</a>\n"
-updates += "- <a href='https://storebot.me/bot/lycantulul_bot'>Klik sini kalo mau ngasih rating/review (storebot)</a>\n"
-updates += "- <a href='https://telegram.me/lycantulul'>Klik sini kalo grup kalian sepi dan pengen main bareng di grup publik</a>\n"
+updates = []
+updates << 'latest updates:'
+updates << '- Biduan dilemahin jadi cuma bisa 1x selamat dari serangan serigala. Soalnya lumayan banyak yang pake peran itu, imba'
+updates << ''
+updates << "- <a href='https://github.com/tulul/lycantulul_bot'>Klik sini kalo mau saran/lapor bug/dll (github)</a>"
+updates << "- <a href='https://storebot.me/bot/lycantulul_bot'>Klik sini kalo mau ngasih rating/review (storebot)</a>"
+updates << "- <a href='https://telegram.me/lycantulul'>Klik sini kalo grup kalian sepi dan pengen main bareng di grup publik</a>"
+updates = updates.join("\n")
+
 groups = Lycantulul::Game.all.map(&:group_id).uniq
 
 success = 0
