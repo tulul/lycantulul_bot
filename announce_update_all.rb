@@ -50,6 +50,7 @@ Telegram::Bot::Client.run($token) do |bot|
     begin
       bot.api.send_message(chat_id: g, text: updates, parse_mode: 'HTML', disable_web_page_preview: true, disable_notification: true)
       success += 1
+      sleep(0.05)
     rescue StandardError => e
       if e.message =~ /403/
         Lycantulul::RegisteredPlayer.find_by(user_id: g).update_attribute(:blocked, true) rescue nil
