@@ -43,7 +43,7 @@ module Lycantulul
         end
       when '/stats_game_run'
         Lycantulul::Game.running.each do |g|
-          stats << "===== #{g.title.gsub(/[<>]/, '')} ====="
+          stats << "===== #{g.title.gsub(/[<>]/, '') rescue ''} ====="
           stats << "Round #{g.round}"
           stats << "#{g.living_players.count}/#{g.players.count} alive"
           stats << "#{g.killables.count} killables"
@@ -52,7 +52,7 @@ module Lycantulul
         end
       when '/stats_player_run'
         Lycantulul::Game.running.each do |g|
-          stats << "===== #{g.title.gsub(/[<>]/, '')} ====="
+          stats << "===== #{g.title.gsub(/[<>]/, '') rescue ''} ====="
           stats << "Round #{g.round}, #{g.living_players.count}/#{g.players.count} alive"
           g.players.each do |y|
             stats << "#{y.full_name} @#{y.username}"
@@ -65,7 +65,7 @@ module Lycantulul
         end
       when '/stats_group'
         Lycantulul::Group.all.sort_by(&:game).reverse.each do |x|
-          stats << "#{"%3d" % x.game} #{x.title.gsub(/[<>]/, '')}"
+          stats << "#{"%3d" % x.game} #{x.title.gsub(/[<>]/, '') rescue ''}"
         end
       end
 
