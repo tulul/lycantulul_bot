@@ -1,7 +1,7 @@
 production:
   clients:
     default:
-      database: mongoid
+      database: lycantulul
       hosts:
         - localhost:27017
   options:
