@@ -1,4 +1,4 @@
-module Lycantulul
+module LycantululBot
   class Group
     include Mongoid::Document
     include Mongoid::Locker
@@ -21,6 +21,8 @@ module Lycantulul
 
     field :pending_time_id,               type: Integer, default: nil
     field :pending_time,                  type: String, default: nil
+
+    store_in collection: 'lycantulul_groups'
 
     index({ group_id: 1 }, { unique: true })
 

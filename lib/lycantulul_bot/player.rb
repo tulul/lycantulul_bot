@@ -1,4 +1,4 @@
-module Lycantulul
+module LycantululBot
   class Player
     include Mongoid::Document
     include Mongoid::Locker
@@ -8,7 +8,7 @@ module Lycantulul
     field :first_name, type: String
     field :full_name, type: String
     field :username, type: String
-    field :role, type: Integer, default: Lycantulul::Game::VILLAGER
+    field :role, type: Integer, default: Game::VILLAGER
     field :alive, type: Boolean, default: true
     field :ready, type: Boolean, default: false
     field :abstain, type: Integer, default: 0
@@ -17,7 +17,9 @@ module Lycantulul
     index({ user_id: 1 })
     index({ full_name: 1 })
 
-    belongs_to :game, class_name: 'Lycantulul::Game', index: true
+    belongs_to :game, class_name: 'LycantululBot::Game', index: true
+
+    store_in collection: 'lycantulul_players'
 
     ABSTAIN_LIMIT = 3
 
@@ -78,7 +80,7 @@ module Lycantulul
 
     def reset_state
       self.with_lock(wait: true) do
-        self.role = Lycantulul::Game::VILLAGER
+        self.role = Game::VILLAGER
         self.alive = true
         self.save
       end

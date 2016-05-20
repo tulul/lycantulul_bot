@@ -9,7 +9,7 @@ updates << "- <a href='https://storebot.me/bot/lycantulul_bot'>Klik sini kalo ma
 updates << "- <a href='https://telegram.me/lycantulul'>Klik sini kalo grup kalian sepi dan pengen main bareng di grup publik</a>"
 updates = updates.join("\n")
 
-groups = Lycantulul::Game.all.map(&:group_id).uniq
+groups = LycantululBot::Game.all.map(&:group_id).uniq
 
 success = 0
 failure = 0
@@ -24,7 +24,7 @@ Telegram::Bot::Client.run($token) do |bot|
       failure += 1
       puts e.message
       if e.message =~ /400/
-        r = Lycantulul::Group.find_by(group_id: g)
+        r = LycantululBot::Group.find_by(group_id: g)
         r && r.destroy
       end
     end

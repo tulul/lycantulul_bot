@@ -1,8 +1,29 @@
-class LycantululBot
+require 'redis'
+require 'mongoid'
+require 'mongoid-locker'
+require 'telegram/bot'
+require 'sucker_punch'
+require 'active_support/inflector'
+
+require 'lycantulul_bot/game'
+require 'lycantulul_bot/group'
+require 'lycantulul_bot/player'
+require 'lycantulul_bot/registered_player'
+require 'lycantulul_bot/statistics'
+require 'lycantulul_bot/jobs/discussion_timer_job'
+require 'lycantulul_bot/jobs/input_processor_job'
+require 'lycantulul_bot/jobs/message_queue_job'
+require 'lycantulul_bot/jobs/message_sending_job'
+require 'lycantulul_bot/jobs/night_timer_job'
+require 'lycantulul_bot/jobs/voting_broadcast_job'
+require 'lycantulul_bot/jobs/voting_timer_job'
+require 'lycantulul_bot/jobs/welcome_message_job'
+
+module LycantululBot
   def self.start
     Telegram::Bot::Client.run($token) do |bot|
       bot.listen do |message|
-        Lycantulul::InputProcessorJob.perform_async(message, bot)
+        InputProcessorJob.perform_async(message, bot)
       end
     end
   rescue Net::ReadTimeout => e

@@ -1,4 +1,4 @@
-module Lycantulul
+module LycantululBot
   class NightTimerJob
     include SuckerPunch::Job
 

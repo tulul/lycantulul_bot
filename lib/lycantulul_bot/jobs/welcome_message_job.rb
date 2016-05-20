@@ -1,4 +1,4 @@
-module Lycantulul
+module LycantululBot
   class WelcomeMessageJob
     include SuckerPunch::Job
 

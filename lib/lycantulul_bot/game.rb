@@ -1,4 +1,4 @@
-module Lycantulul
+module LycantululBot
   class Game
     include Mongoid::Document
     include Mongoid::Locker
@@ -53,7 +53,9 @@ module Lycantulul
     index({ group_id: 1, finished: 1 })
     index({ finished: 1, waiting: 1, night: 1 })
 
-    has_many :players, class_name: 'Lycantulul::Player'
+    has_many :players, class_name: 'LycantululBot::Player'
+
+    store_in collection: 'lycantulul_games'
 
     def self.create_from_message(message)
       res = self.create(group_id: message.chat.id)
@@ -74,11 +76,11 @@ module Lycantulul
     end
 
     def get_player(user_id)
-      Lycantulul::RegisteredPlayer.get(user_id)
+      RegisteredPlayer.get(user_id)
     end
 
     def group
-      Lycantulul::Group.find_or_create_by(group_id: group_id)
+      Group.find_or_create_by(group_id: group_id)
     end
 
     def title
@@ -86,15 +88,15 @@ module Lycantulul
     end
 
     def voting_time
-      self.group.voting_time || Lycantulul::InputProcessorJob::VOTING_TIME.call
+      self.group.voting_time || InputProcessorJob::VOTING_TIME.call
     end
 
     def night_time
-      self.group.night_time || Lycantulul::InputProcessorJob::NIGHT_TIME.call
+      self.group.night_time || InputProcessorJob::NIGHT_TIME.call
     end
 
     def discussion_time
-      self.group.discussion_time || Lycantulul::InputProcessorJob::DISCUSSION_TIME.call
+      self.group.discussion_time || InputProcessorJob::DISCUSSION_TIME.call
     end
 
     def public_vote?
@@ -130,7 +132,7 @@ module Lycantulul
     end
 
     def duplicate_name?(user)
-      self.players.any?{ |pl| pl.full_name == Lycantulul::Player.get_full_name(user) && pl.user_id != user.id }
+      self.players.any?{ |pl| pl.full_name == Player.get_full_name(user) && pl.user_id != user.id }
     end
 
     def add_player(user)
@@ -400,9 +402,9 @@ module Lycantulul
       self.with_lock(wait: true) do
         return unless self.waiting?
         self.waiting = false
-        self.voting_time ||= Lycantulul::InputProcessorJob::VOTING_TIME.call
-        self.night_time ||= Lycantulul::InputProcessorJob::NIGHT_TIME.call
-        self.discussion_time ||= Lycantulul::InputProcessorJob::DISCUSSION_TIME.call
+        self.voting_time ||= InputProcessorJob::VOTING_TIME.call
+        self.night_time ||= InputProcessorJob::NIGHT_TIME.call
+        self.discussion_time ||= InputProcessorJob::DISCUSSION_TIME.call
         ROLES.each do |role|
           assign(role)
         end
@@ -834,7 +836,7 @@ module Lycantulul
 
     def role_count(role, count = nil)
       count ||= self.players.count
-      count -= Lycantulul::InputProcessorJob::MINIMUM_PLAYER.call
+      count -= InputProcessorJob::MINIMUM_PLAYER.call
 
       custom = self.custom_roles[role] rescue nil
       return custom if custom

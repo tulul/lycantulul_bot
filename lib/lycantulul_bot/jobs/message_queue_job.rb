@@ -1,4 +1,4 @@
-module Lycantulul
+module LycantululBot
   class MessageQueueJob
     include SuckerPunch::Job
 
@@ -20,7 +20,7 @@ module Lycantulul
         if e.message =~ /429/
           sleep(3)
         elsif e.message =~ /403/
-          Lycantulul::RegisteredPlayer.find_by(user_id: message.chat.id).update_attribute(:blocked, true) rescue nil
+          RegisteredPlayer.find_by(user_id: message.chat.id).update_attribute(:blocked, true) rescue nil
         end
         retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
       end

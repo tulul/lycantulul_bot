@@ -1,4 +1,4 @@
-module Lycantulul
+module LycantululBot
   class RegisteredPlayer
     include Mongoid::Document
     include Mongoid::Locker
@@ -30,11 +30,13 @@ module Lycantulul
 
     field :blocked,                       type: Boolean, default: false
 
-    Lycantulul::Game::ROLES.each do |role|
+    Game::ROLES.each do |role|
       field role, type: Integer, default: 0
     end
 
     index({ user_id: 1 }, { unique: true })
+
+    store_in collection: 'lycantulul_registered_players'
 
     EXCEPTION = ['_id', 'user_id', 'first_name', 'last_name', 'username']
     self.fields.keys.reject{ |field| EXCEPTION.include?(field) }.each do |field|
@@ -116,12 +118,12 @@ module Lycantulul
     def roles_statistics
       sum = self.game
       tot = {}
-      Lycantulul::Game::ROLES.each do |role|
+      Game::ROLES.each do |role|
         tot[role] ||= 0
         tot[role] += self.send(role)
       end
 
-      g = Lycantulul::Game.new
+      g = Game.new
       res = []
       tot.sort_by{ |_, v| v }.reverse.each do |role, count|
         prc = sum == 0 ? 0 : (count * 100.0 / sum)

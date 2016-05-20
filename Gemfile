@@ -6,3 +6,5 @@ gem 'mongoid'
 gem 'mongoid-locker'
 gem 'telegram-bot-ruby', '~> 0.5.0'
 gem 'sucker_punch', '~> 2.0'
+
+gem 'pry', require: false

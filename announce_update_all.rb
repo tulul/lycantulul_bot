@@ -40,7 +40,7 @@ updates << "- <a href='https://telegram.me/lycantulul'>Klik sini kalo grup kalia
 updates = updates.join("\n")
 puts updates.length
 
-groups = Lycantulul::RegisteredPlayer.all.map(&:user_id).uniq
+groups = LycantululBot::RegisteredPlayer.all.map(&:user_id).uniq
 
 success = 0
 failure = 0
@@ -53,7 +53,7 @@ Telegram::Bot::Client.run($token) do |bot|
       sleep(0.05)
     rescue StandardError => e
       if e.message =~ /403/
-        Lycantulul::RegisteredPlayer.find_by(user_id: g).update_attribute(:blocked, true) rescue nil
+        LycantululBot::RegisteredPlayer.find_by(user_id: g).update_attribute(:blocked, true) rescue nil
       end
       failure += 1
       puts e.message

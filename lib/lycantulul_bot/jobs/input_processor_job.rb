@@ -1,4 +1,4 @@
-module Lycantulul
+module LycantululBot
   class InputProcessorJob
     include SuckerPunch::Job
 
@@ -51,7 +51,7 @@ module Lycantulul
       else
         if Time.now.to_i - message.date < ALLOWED_DELAY.call
           if new_member = message.new_chat_member
-            unless Lycantulul::RegisteredPlayer.get(new_member.id) || new_member.username == 'lycantulul_bot'
+            unless RegisteredPlayer.get(new_member.id) || new_member.username == 'lycantulul_bot'
               name = new_member.username ? "@#{new_member.username}" : new_member.first_name
               send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /start yaa~", reply: true)
             end
@@ -67,7 +67,7 @@ module Lycantulul
               if check_player(message)
                 send(message, 'Udah kedaftar!')
               else
-                Lycantulul::RegisteredPlayer.create_from_message(message.from)
+                RegisteredPlayer.create_from_message(message.from)
                 send(message, 'Terdaftar! Lood Guck and Fave hun! Kalo mau ikutan main, balik ke grup, terus pencet /ikutan')
               end
             else
@@ -104,7 +104,7 @@ module Lycantulul
                     user = message.from
                     unless game.duplicate_name?(user)
                       if game.add_player(user)
-                        Lycantulul::WelcomeMessageJob.perform_in(3, game, self)
+                        WelcomeMessageJob.perform_in(3, game, self)
                       else
                         send(message, 'Duh udah masuk lu', reply: true)
                       end
@@ -249,7 +249,7 @@ module Lycantulul
                     end
                   else
                     $redis.rpush('lycantulul::maintenance_info', message.chat.id)
-                    send(message, "Jangan /mulai_main dulu ya, mau main tenis bentar. Masih nungguin #{Lycantulul::Game.running.count} game selesai dulu", reply: true)
+                    send(message, "Jangan /mulai_main dulu ya, mau main tenis bentar. Masih nungguin #{Game.running.count} game selesai dulu", reply: true)
                   end
                 else
                   send(message, 'Udah mulai tjoy dari tadi', reply: true)
@@ -332,7 +332,7 @@ module Lycantulul
             end
           when /^\/ganti_settingan_waktu(@lycantulul_bot)?/
             if in_group?(message)
-              if group = Lycantulul::Group.get(message)
+              if group = Group.get(message)
                 if !group.pending_time_id
                   keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: group.time_setting_keyboard, resize_keyboard: true, one_time_keyboard: true, selective: true)
                   pending = send(message, 'Ubah waktu apa?', reply: true, keyboard: keyboard, async: false)
@@ -346,7 +346,7 @@ module Lycantulul
             end
           when /^\/batal_nyetting_waktu(@lycantulul_bot)?/
             if in_group?(message)
-              if group = Lycantulul::Group.get(message)
+              if group = Group.get(message)
                 if group.pending_time_id
                   group.cancel_pending_time
                   send(message, 'Yosh. Udah boleh /ganti_settingan_waktu lagi', reply: true)
@@ -363,24 +363,24 @@ module Lycantulul
           when /^\/statistik(@lycantulul_bot)?/
             if in_private?(message)
               if check_player(message)
-                send_to_player(message.chat.id, Lycantulul::RegisteredPlayer.get(message.from.id).statistics, parse_mode: 'HTML')
+                send_to_player(message.chat.id, RegisteredPlayer.get(message.from.id).statistics, parse_mode: 'HTML')
               else
                 send(message, 'Maaf belum kedaftar, /start dulu yak')
               end
             else
-              send_to_player(message.chat.id, Lycantulul::Group.get(message).statistics, parse_mode: 'HTML')
+              send_to_player(message.chat.id, Group.get(message).statistics, parse_mode: 'HTML')
             end
           when /^\/stats/
             return unless message.from.username == 'araishikeiwai'
-            (stat = Lycantulul::Statistics.get_stats(message.text)) && send(message, stat, html: true)
+            (stat = Statistics.get_stats(message.text)) && send(message, stat, html: true)
           else
             if in_private?(message)
               if game = check_werewolf_in_game(message)
                 log('werewolf confirmed')
                 case game.add_victim(message.from.id, message.text)
-                when Lycantulul::Game::RESPONSE_OK
+                when Game::RESPONSE_OK
                   message_action(game, WEREWOLF_KILL_BROADCAST, [message.from.id, message.text])
-                when Lycantulul::Game::RESPONSE_INVALID
+                when Game::RESPONSE_INVALID
                   send_kill_voting(game, message.chat.id)
                 end
 
@@ -388,14 +388,14 @@ module Lycantulul
               elsif game = check_voting(message)
                 log('voter confirmed')
                 case game.add_votee(message.from.id, message.text)
-                when Lycantulul::Game::RESPONSE_OK
+                when Game::RESPONSE_OK
                   keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
                   send(message, 'Seeep', keyboard: keyboard)
                   voter = game.public_vote? ? "<b>#{message.from.first_name}</b>" : '<i>Seseorang</i>'
                   game.add_voter_message("#{voter} <i>udah nge-vote:</i> <b>#{message.text}</b>")
-                  Lycantulul::VotingBroadcastJob.perform_in(3, game, self)
-                when Lycantulul::Game::RESPONSE_INVALID
-                  full_name = Lycantulul::Player.get_full_name(message.from)
+                  VotingBroadcastJob.perform_in(3, game, self)
+                when Game::RESPONSE_INVALID
+                  full_name = Player.get_full_name(message.from)
                   send_voting(game.living_players, full_name, message.chat.id)
                 end
 
@@ -403,11 +403,11 @@ module Lycantulul
               elsif game = check_seer(message)
                 log('seer confirmed')
                 case game.add_seen(message.from.id, message.text)
-                when Lycantulul::Game::RESPONSE_OK
+                when Game::RESPONSE_OK
                   keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
                   send(message, 'Seeep. Tunggu ronde berakhir yak, kalo lu atau yang mau lu liat mati, ya jadi ga ngasih tau~', keyboard: keyboard)
-                when Lycantulul::Game::RESPONSE_INVALID
-                  full_name = Lycantulul::Player.get_full_name(message.from)
+                when Game::RESPONSE_INVALID
+                  full_name = Player.get_full_name(message.from)
                   send_seer(game.living_players, full_name, message.chat.id)
                 end
 
@@ -415,11 +415,11 @@ module Lycantulul
               elsif game = check_protector(message)
                 log('protector confirmed')
                 case game.add_protectee(message.from.id, message.text)
-                when Lycantulul::Game::RESPONSE_OK
+                when Game::RESPONSE_OK
                   keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
                   send(message, 'Seeep', keyboard: keyboard)
-                when Lycantulul::Game::RESPONSE_INVALID
-                  full_name = Lycantulul::Player.get_full_name(message.from)
+                when Game::RESPONSE_INVALID
+                  full_name = Player.get_full_name(message.from)
                   send_protector(game.living_players, full_name, message.chat.id)
                 end
 
@@ -427,12 +427,12 @@ module Lycantulul
               elsif game = check_necromancer(message)
                 log('necromancer confirmed')
                 case game.add_necromancee(message.from.id, message.text)
-                when Lycantulul::Game::RESPONSE_OK
+                when Game::RESPONSE_OK
                   keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
                   send(message, 'Seeep. Kamu sungguh berjasa :\') Tapi kalo kamu dibunuh serigala, gajadi deh :\'(', keyboard: keyboard)
-                when Lycantulul::Game::RESPONSE_SKIP
+                when Game::RESPONSE_SKIP
                   send(message, 'Okay, sungguh bijaksana')
-                when Lycantulul::Game::RESPONSE_INVALID
+                when Game::RESPONSE_INVALID
                   send_necromancer(game.dead_players, message.chat.id)
                 end
 
@@ -440,11 +440,11 @@ module Lycantulul
               elsif game = check_homeless(message)
                 log('homeless confirmed')
                 case game.add_homeless_host(message.from.id, message.text)
-                when Lycantulul::Game::RESPONSE_OK
+                when Game::RESPONSE_OK
                   keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
                   send(message, 'Selamat datang! Anggap saja rumah sendiri~', keyboard: keyboard)
-                when Lycantulul::Game::RESPONSE_INVALID
-                  full_name = Lycantulul::Player.get_full_name(message.from)
+                when Game::RESPONSE_INVALID
+                  full_name = Player.get_full_name(message.from)
                   send_homeless(game.living_players, full_name, message.chat.id)
                 end
 
@@ -466,7 +466,7 @@ module Lycantulul
                 else
                   send(message, 'WUT?', reply: true)
                 end
-              elsif (group = Lycantulul::Group.get(message)) && (group.pending_time_id == message.reply_to_message.message_id rescue false)
+              elsif (group = Group.get(message)) && (group.pending_time_id == message.reply_to_message.message_id rescue false)
                 if message.text =~ /^\d+$/ && group.pending_time
                   time = message.text.to_i
                   if time >= 10 && time <= 300
@@ -504,8 +504,8 @@ module Lycantulul
       puts err
       $redis.set('lycantulul::maintenance_prevent', 1)
       $redis.set('lycantulul::maintenance', 1)
-      rg = Lycantulul::Game.running
-      send_to_player(Lycantulul::RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, "EXCEPTION! CHECK SERVER! #{rg.count} GAMES STOPPED\n\n#{err}")
+      rg = Game.running
+      send_to_player(RegisteredPlayer.find_by(username: 'araishikeiwai').user_id, "EXCEPTION! CHECK SERVER! #{rg.count} GAMES STOPPED\n\n#{err}")
       rg.each do |rg|
         rg.finish(stats: false)
         send_to_player(rg.group_id, 'Maaf ada error sesuatu, permainan terpaksa dihentikan dan main tenis. Maap yak')
@@ -518,7 +518,7 @@ module Lycantulul
         send(message, 'Udah ada yang ngemulai gan tadi. /ikutan ae', reply: true)
       else
         if check_player(message)
-          Lycantulul::Game.create_from_message(message)
+          Game.create_from_message(message)
           send(message, "Oke yok maen! Yang mau /ikutan buruan yee. Kalo udah #{MINIMUM_PLAYER.call} pemain ntar bisa dimulai")
         else
           unregistered(message)
@@ -546,7 +546,7 @@ module Lycantulul
 
         send_to_player(group_chat_id, "Malam pun tiba, para penduduk desa pun terlelap dalam gelap.\nNamun #{game.living_werewolves.count + game.living_super_werewolves.count} serigala culas diam-diam mengintai mereka yang tertidur pulas.\n\np.s.: Buruan action via PM, cuma ada waktu <b>#{game.night_time} detik</b>! Kecuali warga kampung, diam aja menunggu kematian ya", parse_mode: 'HTML')
         log('enqueuing night job')
-        Lycantulul::NightTimerJob.perform_in(game.night_time, game, game.round, self)
+        NightTimerJob.perform_in(game.night_time, game, game.round, self)
 
         (game.living_werewolves + game.living_super_werewolves).each do |ww|
           send_kill_voting(game, ww[:user_id])
@@ -585,8 +585,8 @@ module Lycantulul
         lw.each do |ww|
           log("broadcasting killing from #{killer.full_name}")
           brd = "#{victim_name} pengen dibunuh"
-          [Lycantulul::Game::WEREWOLF, Lycantulul::Game::SUPER_WEREWOLF].include?(ww.role) && brd += " oleh #{killer.full_name}"
-          send_to_player(ww.user_id, brd) unless ww.role == Lycantulul::Game::SPY && killer.role == Lycantulul::Game::SUPER_WEREWOLF
+          [Game::WEREWOLF, Game::SUPER_WEREWOLF].include?(ww.role) && brd += " oleh #{killer.full_name}"
+          send_to_player(ww.user_id, brd) unless ww.role == Game::SPY && killer.role == Game::SUPER_WEREWOLF
         end
       when WEREWOLF_KILL_SUCCEEDED
         group_chat_id = game.group_id
@@ -601,7 +601,7 @@ module Lycantulul
         send_to_player(group_chat_id, "GILS GILS GILS\nserigala berhasil memakan si #{victim_full_name}\nMPOZ MPOZ MPOZ\n\nTernyata dia itu #{victim_role}")
 
         if dead_werewolf
-          send_to_player(dead_werewolf.user_id, "MPOZ. Sial kan bunuh #{game.get_role(Lycantulul::Game::SILVER_BULLET)}, lu ikutan terjangkit. Mati deh")
+          send_to_player(dead_werewolf.user_id, "MPOZ. Sial kan bunuh #{game.get_role(Game::SILVER_BULLET)}, lu ikutan terjangkit. Mati deh")
           send_to_player(group_chat_id, "#{victim_full_name} yang ternyata mengidap ebola ikut menjangkiti seekor serigala #{dead_werewolf.full_name} yang pada akhirnya meninggal dunia. Mari berantas ebola dari muka bumi ini secepatnya!")
         end
 
@@ -624,12 +624,12 @@ module Lycantulul
         group_chat_id = game.group_id
         send_to_player(group_chat_id, "Silakan bertulul dan bermufakat, waktunya cuma <b>#{game.discussion_time} detik</b>", parse_mode: 'HTML')
         log('enqueuing discussion job')
-        Lycantulul::DiscussionTimerJob.perform_in(game.discussion_time, game, game.round, self)
+        DiscussionTimerJob.perform_in(game.discussion_time, game, game.round, self)
       when VOTING_START
         group_chat_id = game.group_id
         send_to_player(group_chat_id, "Silakan voting siapa yang mau dieksekusi.\n\np.s.: semua wajib voting, waktunya cuma <b>#{game.voting_time} detik</b>. kalo ga ada suara mayoritas, ga ada yang mati", parse_mode: 'HTML')
         log('enqueuing voting job')
-        Lycantulul::VotingTimerJob.perform_in(game.voting_time / 2, game, game.round, Lycantulul::VotingTimerJob::START, game.voting_time / 2, self)
+        VotingTimerJob.perform_in(game.voting_time / 2, game, game.round, VotingTimerJob::START, game.voting_time / 2, self)
 
         livp = game.living_players
         livp.each do |lp|
@@ -640,16 +640,16 @@ module Lycantulul
         abstains = aux
 
         abstains.each do |abs|
-          send_to_player(abs.user_id, "#{Lycantulul::Player::ABSTAIN_LIMIT}x tidak voting, terpaksa harus dibunuh")
+          send_to_player(abs.user_id, "#{Player::ABSTAIN_LIMIT}x tidak voting, terpaksa harus dibunuh")
         end
 
-        send_to_player(group_chat_id, "Pemain yang tidak voting #{Lycantulul::Player::ABSTAIN_LIMIT}x dan dibunuh paksa:\n#{abstains.map{ |abs| "- <b>#{abs.full_name}</b> - <i>#{game.get_role(abs.role)}</i>" }.join("\n")}", parse_mode: 'HTML')
+        send_to_player(group_chat_id, "Pemain yang tidak voting #{Player::ABSTAIN_LIMIT}x dan dibunuh paksa:\n#{abstains.map{ |abs| "- <b>#{abs.full_name}</b> - <i>#{game.get_role(abs.role)}</i>" }.join("\n")}", parse_mode: 'HTML')
       when VOTING_SUCCEEDED
         group_chat_id = game.group_id
         votee = aux[0]
         voting_result = "#{aux[1]}\n\nHasil bertulul berbuah eksekusi si #{votee.full_name}"
 
-        amnestied = votee.role == Lycantulul::Game::AMNESTY && votee.alive
+        amnestied = votee.role == Game::AMNESTY && votee.alive
 
         if amnestied
           log("voting amnestied, resulting in #{votee.full_name}'s survival")
@@ -685,7 +685,7 @@ module Lycantulul
 
           log("sending #{protector_name} failed protection notification")
           send_to_player(protector_id, "Jangan jualan ke sembarang orang! Lu jualan ke serigala, mati aja.")
-          send_to_player(game.group_id, "Bego nih #{game.get_role(Lycantulul::Game::PROTECTOR)} si #{protector_name} malah jualan ke serigala :'))")
+          send_to_player(game.group_id, "Bego nih #{game.get_role(Game::PROTECTOR)} si #{protector_name} malah jualan ke serigala :'))")
         end
       when ZOMBIE_REVIVED
         aux.each do |nc|
@@ -698,9 +698,9 @@ module Lycantulul
 
           end_message = " menghidupkan #{necromancee.full_name}, seorang #{game.get_role(necromancee.role)}. Ayo manfaatkan kesempatan ini sebaik mungkin!"
           case necromancer.role
-          when Lycantulul::Game::NECROMANCER
+          when Game::NECROMANCER
             send_to_player(game.group_id, "#{necromancer.full_name} sang #{game.get_role(necromancer.role)} berhasil mengorbankan dirinya untuk" + end_message)
-          when Lycantulul::Game::SUPER_NECROMANCER
+          when Game::SUPER_NECROMANCER
             send_to_player(game.group_id, "Seorang #{game.get_role(necromancer.role)} yang tidak mau disebutkan namanya berhasil" + end_message)
           end
         end
@@ -716,7 +716,7 @@ module Lycantulul
       options.merge!({ parse_mode: 'HTML' }) if html
       options.merge!({ reply_markup: keyboard }) if keyboard
       if async
-        Lycantulul::MessageSendingJob.perform_async(@bot, options)
+        MessageSendingJob.perform_async(@bot, options)
       else
         retry_count = 0
         begin
@@ -735,7 +735,7 @@ module Lycantulul
           if e.message =~ /429/
             sleep(3)
           elsif e.message =~ /403/
-            Lycantulul::RegisteredPlayer.find_by(user_id: message.chat.id).update_attribute(:blocked, true) rescue nil
+            RegisteredPlayer.find_by(user_id: message.chat.id).update_attribute(:blocked, true) rescue nil
           end
           retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
         end
@@ -747,7 +747,7 @@ module Lycantulul
         chat_id: chat_id,
         text: text[0...4000],
       })
-      Lycantulul::MessageSendingJob.perform_async(@bot, options)
+      MessageSendingJob.perform_async(@bot, options)
     end
 
     def send_kill_voting(game, chat_id)
@@ -783,7 +783,7 @@ module Lycantulul
       end
 
       chosen_role =
-        if chosen.role == Lycantulul::Game::SUPER_WEREWOLF
+        if chosen.role == Game::SUPER_WEREWOLF
           rand_role = game.killables.without_id([seer.user_id]).sample.role rescue chosen.role
           game.get_role(rand_role)
         else
@@ -802,7 +802,7 @@ module Lycantulul
 
     def send_necromancer(dead_players, necromancer_chat_id)
       log("sending necromancer instruction to #{necromancer_chat_id}")
-      options = [Lycantulul::Game::NECROMANCER_SKIP]
+      options = [Game::NECROMANCER_SKIP]
       options << dead_players.map{ |lv| lv[:full_name] }
       options = convert_to_square_keyboard(options.flatten)
       vote_keyboard = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: options, resize_keyboard: true, one_time_keyboard: true)
@@ -884,7 +884,7 @@ module Lycantulul
       return unless next_reminder && round == game.round && !game.night? && !game.waiting? && !game.finished?
       log('continuing')
       send_to_player(game.group_id, "Waktu voting tinggal #{time} detik.\n/panggil_yang_belom_voting atau liat /hasil_voting")
-      Lycantulul::VotingTimerJob.perform_in(next_reminder, game, round, Lycantulul::VotingTimerJob.next_state(state), next_reminder, self)
+      VotingTimerJob.perform_in(next_reminder, game, round, VotingTimerJob.next_state(state), next_reminder, self)
     end
 
     def list_players(game)
@@ -896,16 +896,16 @@ module Lycantulul
     end
 
     def check_game(message)
-      Lycantulul::Game.active_for_group(message.chat)
+      Game.active_for_group(message.chat)
     end
 
     def check_player(message)
-      rp = Lycantulul::RegisteredPlayer.get_and_update(message.from)
+      rp = RegisteredPlayer.get_and_update(message.from)
       rp && !rp.blocked?
     end
 
     def check_werewolf_in_game(message)
-      Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
+      Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'werewolf') || wwg.valid_action?(message.from.id, message.text, 'super_werewolf')
           return wwg
         end
@@ -914,7 +914,7 @@ module Lycantulul
     end
 
     def check_voting(message)
-      Lycantulul::Game.where(finished: false, waiting: false, night: false, discussion: false).each do |wwg|
+      Game.where(finished: false, waiting: false, night: false, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'player')
           return wwg
         end
@@ -923,7 +923,7 @@ module Lycantulul
     end
 
     def check_seer(message)
-      Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
+      Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'seer')
           return wwg
         end
@@ -932,7 +932,7 @@ module Lycantulul
     end
 
     def check_protector(message)
-      Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
+      Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'protector')
           return wwg
         end
@@ -941,7 +941,7 @@ module Lycantulul
     end
 
     def check_necromancer(message)
-      Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
+      Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'necromancer') || wwg.valid_action?(message.from.id, message.text, 'super_necromancer')
           return wwg
         end
@@ -950,7 +950,7 @@ module Lycantulul
     end
 
     def check_homeless(message)
-      Lycantulul::Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
+      Game.where(finished: false, waiting: false, night: true, discussion: false).each do |wwg|
         if wwg.valid_action?(message.from.id, message.text, 'homeless')
           return wwg
         end
@@ -1127,8 +1127,8 @@ module Lycantulul
       string = "#{player.first_name}#{player.last_name}".downcase
       res = string =~ /[`\/\\:*_\[\](){}<>]/
 
-      fn = Lycantulul::Player.get_full_name(player).downcase
-      reserved_words = [Lycantulul::Game::NECROMANCER_SKIP, Lycantulul::Game::USELESS_VILLAGER_SKIP]
+      fn = Player.get_full_name(player).downcase
+      reserved_words = [Game::NECROMANCER_SKIP, Game::USELESS_VILLAGER_SKIP]
       res ||= reserved_words.map(&:downcase).include?(fn)
       res ||= fn =~ /[l|i]ycantu[l|i]u[l|i]/
 

@@ -16,6 +16,7 @@ GEM
       thread_safe (~> 0.3, >= 0.3.1)
     bson (4.0.2)
     builder (3.2.2)
+    coderay (1.1.1)
     coercible (1.0.0)
       descendants_tracker (~> 0.0.1)
     concurrent-ruby (1.0.1)
@@ -27,6 +28,7 @@ GEM
     i18n (0.7.0)
     ice_nine (0.11.2)
     json (1.8.3)
+    method_source (0.8.2)
     minitest (5.8.4)
     mongo (2.2.3)
       bson (~> 4.0)
@@ -43,8 +45,13 @@ GEM
       mongoid-compatibility
     multipart-post (2.0.0)
     origin (2.2.0)
+    pry (0.10.3)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
+      slop (~> 3.4)
     rake (11.1.2)
     redis (3.2.2)
+    slop (3.6.0)
     sucker_punch (2.0.1)
       concurrent-ruby (~> 1.0.0)
     telegram-bot-ruby (0.5.0)
@@ -65,6 +72,7 @@ PLATFORMS
 DEPENDENCIES
   mongoid
   mongoid-locker
+  pry
   rake
   redis
   sucker_punch (~> 2.0)

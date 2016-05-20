@@ -1,18 +1,9 @@
 require 'rake'
-require 'redis'
-require 'mongoid'
-require 'mongoid-locker'
-require 'telegram/bot'
-require 'sucker_punch'
-require 'active_support/inflector'
 
-require File.dirname(__FILE__) + '/config/init.rb'
-require File.dirname(__FILE__) + '/lib/lycantulul_bot/lycantulul/game.rb'
-Dir[File.dirname(__FILE__) + '/lib/lycantulul_bot/*/*.rb'].each{ |file| require file }
-Dir[File.dirname(__FILE__) + '/lib/lycantulul_bot/**/*.rb'].each{ |file| require file }
+$LOAD_PATH.unshift(File.expand_path('../lib', __FILE__))
 
-$redis = Redis.new
-Mongoid.load!(File.dirname(__FILE__) + '/config/mongoid.yml', :production)
+require File.expand_path('../config/init', __FILE__)
+require 'lycantulul_bot'
 
 namespace :lycantulul do
   task :start do
