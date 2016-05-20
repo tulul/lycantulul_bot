@@ -1,3 +1,5 @@
+[![Code Climate](https://codeclimate.com/github/tulul/lycantulul_bot/badges/gpa.svg)](https://codeclimate.com/github/tulul/lycantulul_bot)
+
 # Tululised Werewolf Moderator Bot
 
 inspired by [WerewolfBot](https://telegram.me/werewolfbot)
