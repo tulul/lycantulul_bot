@@ -22,6 +22,7 @@ module Lycantulul
 
     field :group_id, type: Integer
     field :round, type: Integer, default: 0
+    field :creator_id, type: Integer
 
     field :waiting, type: Boolean, default: true
     field :night, type: Boolean, default: true
@@ -56,7 +57,7 @@ module Lycantulul
     has_many :players, class_name: 'Lycantulul::Player'
 
     def self.create_from_message(message)
-      res = self.create(group_id: message.chat.id)
+      res = self.create(group_id: message.chat.id, creator_id: message.from.id)
       res.add_player(message.from)
       res.players.first.welcome
     end

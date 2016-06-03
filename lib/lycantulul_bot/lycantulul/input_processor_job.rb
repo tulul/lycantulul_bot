@@ -85,8 +85,12 @@ module Lycantulul
             if in_group?(message)
               if game = check_game(message)
                 if game.waiting?
-                  game.finish(stats: false)
-                  send(message, "Sip batal maen :'(", reply: true)
+                  if can_cancel_game?(message, game)
+                    game.finish(stats: false)
+                    send(message, "Sip batal maen :'(", reply: true)
+                  else
+                    send(message, 'Cuma admin grup atau yang bikin game yang bisa batalin', reply: true)
+                  end
                 else
                   send(message, 'Udah mulai tjoy ga bisa batal enak aje', reply: true)
                 end
@@ -1133,6 +1137,11 @@ module Lycantulul
       res ||= fn =~ /[l|i]ycantu[l|i]u[l|i]/
 
       res
+    end
+
+    def can_cancel_game?(message, game)
+      ret = @bot.api.get_chat_administrators(chat_id: message.chat.id)['result'].any?{ |cm| cm['user']['id'] == message.from.id } rescue false
+      ret || game.creator_id == message.from.id
     end
 
     def log(message)
