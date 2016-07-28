@@ -741,7 +741,7 @@ module Lycantulul
           elsif e.message =~ /403/
             Lycantulul::RegisteredPlayer.find_by(user_id: message.chat.id).update_attribute(:blocked, true) rescue nil
           end
-          retry if e.message !~ /[400|403|409]/ && (retry_count += 1) < 20
+          retry if e.message !~ /error_code: .(400|403|409)./ && (retry_count += 1) < 20
         end
       end
     end

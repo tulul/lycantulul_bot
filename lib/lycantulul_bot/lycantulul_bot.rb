@@ -17,7 +17,7 @@ class LycantululBot
     if e.message =~ /429/
       sleep(3)
     end
-    retry unless e.message =~ /error_code: .[400|403|409]./
+    retry unless e.message =~ /error_code: .(400|403|409)./
   rescue StandardError => e
     puts Time.now.utc
     puts e.message
