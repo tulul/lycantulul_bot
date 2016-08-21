@@ -48,6 +48,9 @@ module Lycantulul
           stats << "#{g.living_players.count}/#{g.players.count} alive"
           stats << "#{g.killables.count} killables"
           stats << "N|D|V time: #{g.night_time}, #{g.discussion_time}, #{g.voting_time}"
+          stats << "Started: #{g.created_at}"
+          stats << "Updated: #{g.updated_at}"
+          stats << "Group id: #{g.group_id}"
           stats << ''
         end
       when '/stats_player_run'
