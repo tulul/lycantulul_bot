@@ -377,6 +377,10 @@ module Lycantulul
           when /^\/stats/
             return unless message.from.username == 'araishikeiwai'
             (stat = Lycantulul::Statistics.get_stats(message.text)) && send(message, stat, html: true)
+          when /^\/kill/
+            return unless message.from.username == 'araishikeiwai'
+            group_id = message.text.split[1]&.to_i
+            Lycantulul::Game.running.find_by(group_id: group_id)&.finish(stats: false)
           else
             if in_private?(message)
               if game = check_werewolf_in_game(message)
