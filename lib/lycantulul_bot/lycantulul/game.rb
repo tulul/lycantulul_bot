@@ -140,8 +140,7 @@ module Lycantulul
     end
 
     def remove_player(user)
-      return false unless self.players.with_id(user.id)
-      return self.players.with_id(user.id).destroy
+      return self.players.with_id(user.id)&.destroy
     end
 
     def role_setting_keyboard
