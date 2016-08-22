@@ -69,6 +69,7 @@ module Lycantulul
 
     def set_custom_time(time)
       self.with_lock(wait: true) do
+        return nil unless self.pending_time
         self.update_attribute(self.pending_time.to_sym, time)
         res = [TIME_HASH.key(self.pending_time).downcase, time]
         self.cancel_pending_time

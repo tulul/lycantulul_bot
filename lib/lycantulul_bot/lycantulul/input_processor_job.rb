@@ -479,6 +479,7 @@ module Lycantulul
                   time = message.text.to_i
                   if time >= 10 && time <= 300
                     res = group.set_custom_time(time)
+                    return unless res
                     keyboard = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true, selective: true)
                     send(message, "Sip, waktu #{res[0]} jadi #{res[1]} detik!", reply: true, keyboard: keyboard)
                   else
