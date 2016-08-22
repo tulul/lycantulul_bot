@@ -30,6 +30,7 @@ if res == 1
   Telegram::Bot::Client.run($token) do |bot|
     queue.each do |q|
       bot.api.send_message(chat_id: q, text: 'Sudah selesai bermain tenis. Silakan mulai main lagi~') rescue nil
+      sleep(0.05)
     end
   end
   $redis.del('lycantulul::maintenance_info')
