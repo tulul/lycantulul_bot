@@ -51,7 +51,11 @@ module Lycantulul
       else
         if Time.now.to_i - message.date < ALLOWED_DELAY.call
           if new_member = message.new_chat_member
-            unless Lycantulul::RegisteredPlayer.get(new_member.id) || new_member.username == 'lycantulul_bot'
+            if new_member.username =~ /bot$/i && message.chat&.username =~ /lycantulul/i
+              unless new_member.username == 'tulul_stats_bot'
+                @bot.api.kick_chat_member(chat_id: '@lycantulul', user_id: new_member.id) rescue nil
+              end
+            elsif !Lycantulul::RegisteredPlayer.get(new_member.id) && !new_member.username == 'lycantulul_bot'
               name = new_member.username ? "@#{new_member.username}" : new_member.first_name
               send(message, "Welcome #{name}. PM aku @lycantulul_bot terus /start yaa~", reply: true)
             end
