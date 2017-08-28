@@ -1,0 +1,20 @@
+engines:
+  rubocop:
+    enabled: true
+  fixme:
+    enabled: true
+  bundler-audit:
+    enabled: true
+  reek:
+    enabled: false
+  duplication:
+    enabled: true
+    config:
+      languages:
+        ruby:
+          mass_threshold: 18
+
+ratings:
+  paths:
+    - "**.rb"
+    - Gemfile.lock
